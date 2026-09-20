@@ -33,13 +33,19 @@
     max-width: 620px;
     padding: 2.5rem 1.5rem 3rem;
   }
+
+  .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-bottom: 1.1rem;
+    border-bottom: 1px solid var(--border);
+  }
   .tabs {
     display: flex;
     gap: 0.5rem;
     align-items: center;
-    padding-bottom: 1.1rem;
-    margin-bottom: 0;
-    border-bottom: 1px solid var(--border);
     overflow-x: auto;
   }
   .tab {
@@ -53,7 +59,7 @@
     padding: 0.4rem 0.9rem;
     cursor: pointer;
     white-space: nowrap;
-    transition: color 320ms ease, background 500ms ease, box-shadow 500ms ease;
+    transition: color 320ms ease, background 500ms ease, box-shadow 500ms ease, border-color 500ms ease;
   }
   .tab .dot {
     display: inline-block;
@@ -62,48 +68,92 @@
     border-radius: 50%;
     margin-right: 7px;
     background: currentColor;
-    opacity: 0.55;
+    opacity: 0.7;
     transform: translateY(-1px);
   }
-  .tab:hover {
-    color: var(--text-secondary);
-  }
+  .tab:hover { color: var(--text-secondary); }
   .tab.active {
     color: var(--text-primary);
     background:
       linear-gradient(180deg,
-        hsl(var(--hue) 70% 97% / 0.95) 0%,
-        hsl(var(--hue) 60% 93% / 0.65) 100%);
-    border-color: hsl(var(--hue) 45% 85% / 0.5);
-    box-shadow: inset 0 1px 0 hsl(var(--hue) 80% 100% / 0.9);
+        hsl(var(--hue) 85% 92% / 0.95) 0%,
+        hsl(var(--hue) 75% 84% / 0.7) 100%);
+    border-color: hsl(var(--hue) 55% 70% / 0.6);
+    box-shadow: inset 0 1px 0 hsl(var(--hue) 90% 98% / 0.9);
   }
+  .tab.active .dot { opacity: 1; }
+
+  .add-market {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .add-market select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font: inherit;
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 0.4rem 1.7rem 0.4rem 0.9rem;
+    cursor: pointer;
+  }
+  .add-market::after {
+    content: "";
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid var(--text-muted);
+    border-bottom: 1.5px solid var(--text-muted);
+    transform: translateY(-65%) rotate(45deg);
+    pointer-events: none;
+  }
+  .cap-note {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    min-height: 1em;
+  }
+
   .world {
-    margin-top: 1.75rem;
+    margin-top: 1.5rem;
     border-radius: 22px;
     padding: 2.4rem 1.6rem 1.8rem;
     position: relative;
     overflow: hidden;
     background:
-      linear-gradient(180deg,
-        hsl(var(--hue) 65% 97% / 0.9) 0%,
-        hsl(var(--hue) 55% 95% / 0.45) 45%,
+      linear-gradient(165deg,
+        hsl(var(--hue) 80% 93% / 0.95) 0%,
+        hsl(var(--hue) 65% 88% / 0.55) 40%,
         var(--surface-1) 100%);
-    border: 1px solid hsl(var(--hue) 40% 88% / 0.45);
+    border: 1px solid hsl(var(--hue) 55% 75% / 0.5);
     box-shadow:
-      inset 0 1px 0 hsl(var(--hue) 80% 100% / 0.85),
+      inset 0 1px 0 hsl(var(--hue) 90% 98% / 0.9),
       0 1px 2px rgba(0,0,0,0.03);
     transition: background 700ms ease, border-color 700ms ease;
     min-height: 300px;
+  }
+  .corner-meta {
+    position: absolute;
+    top: 18px;
+    left: 20px;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
   }
   .corner-chart {
     position: absolute;
     top: 14px;
     right: 16px;
-    width: 62px;
-    height: 26px;
-    opacity: 0.6;
+    width: 66px;
+    height: 28px;
+    opacity: 0.8;
   }
   .sentence-frame {
+    margin-top: 1.6rem;
     min-height: 5.6rem;
     display: flex;
     align-items: flex-start;
@@ -137,9 +187,7 @@
   }
   .trail-line[data-depth="1"] { color: var(--text-secondary); }
   .trail-line[data-depth="2"] { color: var(--text-muted); }
-  .trail-line.leaving {
-    opacity: 0;
-  }
+
   .controls {
     margin-top: 1.6rem;
     display: flex;
@@ -166,108 +214,115 @@
 </head>
 <body>
 <div class="app">
-  <div class="tabs" id="tabs"></div>
+  <div class="top-row">
+    <div class="tabs" id="tabs"></div>
+    <div class="add-market">
+      <select id="addMarket" aria-label="Add a market to watch"></select>
+    </div>
+  </div>
+  <p class="cap-note" id="capNote"></p>
+
   <div class="world" id="world">
-    <svg class="corner-chart" id="spark" viewBox="0 0 62 26"></svg>
+    <span class="corner-meta" id="cornerMeta"></span>
+    <svg class="corner-chart" id="spark" viewBox="0 0 66 28"></svg>
     <div class="sentence-frame">
       <p class="sentence" id="sentence"></p>
     </div>
     <div class="trail" id="trail"></div>
   </div>
+
   <div class="controls">
     <button class="advance" id="advance">→ advance time (demo)</button>
   </div>
-  <p class="note">Prototype only — sentences are scripted for feel, not generated from live prices. Advancing time simulates a state change to show the dissolve motion, not real market movement.</p>
+  <p class="note">Prototype only — sentences are scripted for feel, not generated from live prices. Advancing time simulates a state change to show the dissolve motion, not real market movement. Cross-market mentions (e.g. DXY) never appear inside another asset's sentence automatically — each world only speaks to what's true of it.</p>
 </div>
 
 <script>
-  const markets = [
+  const universe = [
     {
-      id: "btc",
-      label: "btc",
-      hue: 206,
-      spark: "M2,18 C10,16 16,10 22,11 C28,12 32,6 38,7 C44,8 50,4 60,3",
+      id: "btc", label: "btc", hue: 206,
+      spark: "M2,20 C11,17 17,9 23,11 C29,13 34,5 40,7 C47,9 54,3 64,2",
       moments: [
-        {
-          current: "Holding above last week's range for the third hour.",
-          trail: ["Recovered after sweeping Monday's low.", "Testing Monday's low."]
-        },
-        {
-          current: "Trading toward liquidity resting below the range.",
-          trail: ["Holding above last week's range for the third hour.", "Recovered after sweeping Monday's low."]
-        },
-        {
-          current: "Liquidity below the range swept.",
-          trail: ["Trading toward liquidity resting below the range.", "Holding above last week's range for the third hour."]
-        },
-        {
-          current: "Reclaimed after sweeping the lower liquidity.",
-          trail: ["Liquidity below the range swept.", "Trading toward liquidity resting below the range."]
-        }
+        { since: "since Monday's sweep", current: "Holding above last week's range for the third hour.", trail: ["Recovered after sweeping Monday's low.", "Testing Monday's low."] },
+        { since: "since the range hold", current: "Trading toward liquidity resting below the range.", trail: ["Holding above last week's range for the third hour.", "Recovered after sweeping Monday's low."] },
+        { since: "since the sweep", current: "Liquidity below the range swept.", trail: ["Trading toward liquidity resting below the range.", "Holding above last week's range for the third hour."] },
+        { since: "since the reclaim", current: "Reclaimed after sweeping the lower liquidity.", trail: ["Liquidity below the range swept.", "Trading toward liquidity resting below the range."] }
       ]
     },
     {
-      id: "nas100",
-      label: "nas100",
-      hue: 21,
-      spark: "M2,6 L10,20 L16,9 L22,22 L28,7 L36,18 L44,5 L52,17 L60,9",
+      id: "nas100", label: "nas100", hue: 21,
+      spark: "M2,6 L11,22 L18,10 L24,24 L31,8 L40,20 L48,5 L57,19 L64,10",
       moments: [
-        {
-          current: "Rejected from the premarket high, back inside range.",
-          trail: ["Traded into the premarket high.", "Opened inside Tuesday's range."]
-        },
-        {
-          current: "Testing the range low after the rejection.",
-          trail: ["Rejected from the premarket high, back inside range.", "Traded into the premarket high."]
-        },
-        {
-          current: "Range low swept, reclaim not yet confirmed.",
-          trail: ["Testing the range low after the rejection.", "Rejected from the premarket high, back inside range."]
-        }
+        { since: "since the open", current: "Rejected from the premarket high, back inside range.", trail: ["Traded into the premarket high.", "Opened inside Tuesday's range."] },
+        { since: "since the rejection", current: "Testing the range low after the rejection.", trail: ["Rejected from the premarket high, back inside range.", "Traded into the premarket high."] },
+        { since: "since the sweep", current: "Range low swept, reclaim not yet confirmed.", trail: ["Testing the range low after the rejection.", "Rejected from the premarket high, back inside range."] }
       ]
     },
     {
-      id: "eurusd",
-      label: "eurusd",
-      hue: 165,
-      spark: "M2,13 C14,12 20,15 28,13 C36,11 44,14 52,13 L60,12",
+      id: "eurusd", label: "eurusd", hue: 165,
+      spark: "M2,14 C15,13 22,17 30,14 C39,12 47,16 56,14 L64,13",
       moments: [
-        {
-          current: "Still inside Tuesday's range, no acceptance either side.",
-          trail: ["Range formed after the London open.", "Drifting without conviction."]
-        },
-        {
-          current: "Drifting lower toward range support.",
-          trail: ["Still inside Tuesday's range, no acceptance either side.", "Range formed after the London open."]
-        },
-        {
-          current: "Testing range support for the first time today.",
-          trail: ["Drifting lower toward range support.", "Still inside Tuesday's range, no acceptance either side."]
-        }
+        { since: "since London open", current: "Still inside Tuesday's range, no acceptance either side.", trail: ["Range formed after the London open.", "Drifting without conviction."] },
+        { since: "since the drift began", current: "Drifting lower toward range support.", trail: ["Still inside Tuesday's range, no acceptance either side.", "Range formed after the London open."] },
+        { since: "since the test began", current: "Testing range support for the first time today.", trail: ["Drifting lower toward range support.", "Still inside Tuesday's range, no acceptance either side."] }
+      ]
+    },
+    {
+      id: "xauusd", label: "xauusd", hue: 45,
+      spark: "M2,22 C13,19 20,12 28,13 C36,14 44,7 52,9 C58,10 61,6 64,4",
+      moments: [
+        { since: "since the high", current: "Sitting just under yesterday's high, no rejection yet.", trail: ["Pushed into yesterday's high.", "Trending up through the session."] },
+        { since: "since the stall", current: "Stalled below the high for the second hour.", trail: ["Sitting just under yesterday's high, no rejection yet.", "Pushed into yesterday's high."] }
+      ]
+    },
+    {
+      id: "spx500", label: "spx500", hue: 260,
+      spark: "M2,10 L12,14 L20,9 L30,16 L38,12 L48,17 L56,13 L64,15",
+      moments: [
+        { since: "since the open", current: "Chopping inside a narrow range since the open.", trail: ["Opened flat against yesterday's close.", "No clear direction pre-open."] },
+        { since: "since the break", current: "Broke the narrow range to the downside.", trail: ["Chopping inside a narrow range since the open.", "Opened flat against yesterday's close."] }
+      ]
+    },
+    {
+      id: "dxy", label: "dxy", hue: 130,
+      spark: "M2,8 L12,11 L20,7 L30,13 L38,9 L48,15 L56,11 L64,14",
+      moments: [
+        { since: "since the reversal", current: "Turned up off the weekly low, not yet confirmed.", trail: ["Traded down into the weekly low.", "Drifting lower through the session."] },
+        { since: "since the push", current: "Pushing into the top of last week's range.", trail: ["Turned up off the weekly low, not yet confirmed.", "Traded down into the weekly low."] }
       ]
     }
   ];
 
-  let activeIndex = 0;
+  const TAB_CAP = 5;
+  let watching = ["btc", "nas100", "eurusd"];
+  let activeId = watching[0];
   let momentIndex = 0;
 
   const tabsEl = document.getElementById("tabs");
+  const addMarketEl = document.getElementById("addMarket");
+  const capNoteEl = document.getElementById("capNote");
   const worldEl = document.getElementById("world");
   const sentenceEl = document.getElementById("sentence");
   const trailEl = document.getElementById("trail");
   const sparkEl = document.getElementById("spark");
+  const cornerMetaEl = document.getElementById("cornerMeta");
   const advanceBtn = document.getElementById("advance");
+
+  function marketById(id) {
+    return universe.find(m => m.id === id);
+  }
 
   function renderTabs() {
     tabsEl.innerHTML = "";
-    markets.forEach((m, i) => {
+    watching.forEach((id) => {
+      const m = marketById(id);
       const btn = document.createElement("button");
-      btn.className = "tab" + (i === activeIndex ? " active" : "");
+      btn.className = "tab" + (id === activeId ? " active" : "");
       btn.style.setProperty("--hue", m.hue);
       btn.innerHTML = '<span class="dot"></span>' + m.label;
       btn.addEventListener("click", () => {
-        if (i === activeIndex) return;
-        activeIndex = i;
+        if (id === activeId) return;
+        activeId = id;
         momentIndex = 0;
         renderTabs();
         renderWorld(true);
@@ -276,9 +331,38 @@
     });
   }
 
+  function renderAddMarket() {
+    const notWatching = universe.filter(m => !watching.includes(m.id));
+    addMarketEl.innerHTML = '<option value="">watch another market…</option>' +
+      notWatching.map(m => '<option value="' + m.id + '">' + m.label + '</option>').join("");
+    addMarketEl.disabled = notWatching.length === 0;
+
+    if (watching.length >= TAB_CAP) {
+      capNoteEl.textContent = "At " + TAB_CAP + " — that's the ceiling. Drop one before adding another.";
+    } else {
+      capNoteEl.textContent = "";
+    }
+  }
+
+  addMarketEl.addEventListener("change", () => {
+    const id = addMarketEl.value;
+    if (!id) return;
+    if (watching.length >= TAB_CAP) {
+      addMarketEl.value = "";
+      return;
+    }
+    watching.push(id);
+    activeId = id;
+    momentIndex = 0;
+    addMarketEl.value = "";
+    renderTabs();
+    renderAddMarket();
+    renderWorld(true);
+  });
+
   function renderSpark(market) {
     sparkEl.innerHTML =
-      '<path d="' + market.spark + '" fill="none" stroke="hsl(' + market.hue + ' 45% 45%)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>';
+      '<path d="' + market.spark + '" fill="none" stroke="hsl(' + market.hue + ' 60% 42%)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
   }
 
   function renderTrail(lines) {
@@ -293,10 +377,11 @@
   }
 
   function renderWorld(instant) {
-    const market = markets[activeIndex];
-    const moment = market.moments[momentIndex];
+    const market = marketById(activeId);
+    const moment = market.moments[momentIndex % market.moments.length];
     worldEl.style.setProperty("--hue", market.hue);
     renderSpark(market);
+    cornerMetaEl.textContent = moment.since;
 
     if (instant) {
       sentenceEl.textContent = moment.current;
@@ -313,12 +398,13 @@
   }
 
   advanceBtn.addEventListener("click", () => {
-    const market = markets[activeIndex];
+    const market = marketById(activeId);
     momentIndex = (momentIndex + 1) % market.moments.length;
     renderWorld(false);
   });
 
   renderTabs();
+  renderAddMarket();
   renderWorld(true);
 </script>
 </body>
