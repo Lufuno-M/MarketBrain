@@ -3,22 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>MarketBrain — prototype</title>
+<title>MarketBrain</title>
 <style>
   :root {
-    --surface-0: #ffffff;
-    --surface-1: #ffffff;
-    --text-primary: #1b1b18;
-    --text-secondary: #5c5b55;
-    --text-muted: #9c9b93;
-    --border: rgba(0,0,0,0.08);
+    --canvas: #ffffff;
+    --surface: #fafafa;
+    --surface-raised: #f3f4f6;
+    --ink: #111827;
+    --ink-muted: #6b7280;
+    --ink-faint: #9ca3af;
+    --border: rgba(17,24,39,0.07);
     color-scheme: light;
   }
   * { box-sizing: border-box; }
   html, body {
     height: 100%;
     margin: 0;
-    background: var(--surface-0);
+    background: var(--canvas);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
@@ -28,23 +29,32 @@
     display: flex;
     justify-content: center;
   }
-  .app {
+  .page {
     width: 100%;
-    max-width: 620px;
-    padding: 2.5rem 1.5rem 3rem;
+    max-width: 640px;
+    padding: 3rem 1.5rem 3.5rem;
   }
 
-  .top-row {
+  /* — ambient top strip: exists quietly, no box around it — */
+  .ambient-bar {
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.01em;
+    margin-bottom: 2.2rem;
+  }
+  .ambient-bar .sep { margin: 0 0.4em; opacity: 0.6; }
+
+  /* — nav: tabs flow directly into universe search, one row, no divider box — */
+  .nav-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    padding-bottom: 1.1rem;
-    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
   }
   .tabs {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.4rem;
     align-items: center;
     overflow-x: auto;
   }
@@ -54,9 +64,8 @@
     border-radius: 999px;
     font: inherit;
     font-size: 14px;
-    letter-spacing: 0.01em;
-    color: var(--text-muted);
-    padding: 0.4rem 0.9rem;
+    color: var(--ink-faint);
+    padding: 0.4rem 0.85rem;
     cursor: pointer;
     white-space: nowrap;
     transition: color 320ms ease, background 500ms ease, box-shadow 500ms ease, border-color 500ms ease;
@@ -71,9 +80,9 @@
     opacity: 0.7;
     transform: translateY(-1px);
   }
-  .tab:hover { color: var(--text-secondary); }
+  .tab:hover { color: var(--ink-muted); }
   .tab.active {
-    color: var(--text-primary);
+    color: var(--ink);
     background:
       linear-gradient(180deg,
         hsl(var(--hue) 85% 92% / 0.95) 0%,
@@ -83,87 +92,79 @@
   }
   .tab.active .dot { opacity: 1; }
 
-  .add-market {
-    position: relative;
+  .universe {
     flex-shrink: 0;
   }
-  .add-market select {
-    appearance: none;
-    -webkit-appearance: none;
-    background: var(--surface-1);
-    border: 1px solid var(--border);
-    border-radius: 999px;
+  .universe input {
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border);
     font: inherit;
     font-size: 13px;
-    color: var(--text-secondary);
-    padding: 0.4rem 1.7rem 0.4rem 0.9rem;
-    cursor: pointer;
+    color: var(--ink-muted);
+    padding: 0.4rem 0.1rem;
+    width: 160px;
+    outline: none;
   }
-  .add-market::after {
-    content: "";
-    position: absolute;
-    right: 0.85rem;
-    top: 50%;
-    width: 6px;
-    height: 6px;
-    border-right: 1.5px solid var(--text-muted);
-    border-bottom: 1.5px solid var(--text-muted);
-    transform: translateY(-65%) rotate(45deg);
-    pointer-events: none;
-  }
-  .cap-note {
+  .universe input::placeholder { color: var(--ink-faint); }
+  .universe input:focus { border-bottom-color: var(--ink-faint); }
+
+  .universe-note {
     font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 0.5rem;
-    min-height: 1em;
+    color: var(--ink-faint);
+    margin: 0.6rem 0 0;
   }
 
+  /* — the world: atmosphere, not a card. glow lives behind, no hard edges — */
   .world {
-    margin-top: 1.5rem;
-    border-radius: 22px;
-    padding: 2.4rem 1.6rem 1.8rem;
     position: relative;
-    overflow: hidden;
-    background:
-      linear-gradient(165deg,
-        hsl(var(--hue) 80% 93% / 0.95) 0%,
-        hsl(var(--hue) 65% 88% / 0.55) 40%,
-        var(--surface-1) 100%);
-    border: 1px solid hsl(var(--hue) 55% 75% / 0.5);
-    box-shadow:
-      inset 0 1px 0 hsl(var(--hue) 90% 98% / 0.9),
-      0 1px 2px rgba(0,0,0,0.03);
-    transition: background 700ms ease, border-color 700ms ease;
+    margin-top: 2.5rem;
+    padding: 3rem 0.4rem 1.6rem;
     min-height: 300px;
   }
-  .corner-meta {
+  .world::before {
+    content: "";
     position: absolute;
-    top: 18px;
-    left: 20px;
+    inset: -2.5rem -1.5rem;
+    background: radial-gradient(ellipse 75% 65% at 25% 15%,
+      hsl(var(--hue) 85% 88% / 0.5), transparent 72%);
+    filter: blur(28px);
+    z-index: -1;
+    border-radius: 40px;
+    transition: background 900ms ease;
+  }
+
+  .frag {
+    position: absolute;
     font-size: 11px;
     letter-spacing: 0.02em;
-    color: var(--text-muted);
+    color: var(--ink-faint);
   }
-  .corner-chart {
+  .frag-age {
+    top: 0.4rem;
+    left: 0.4rem;
+  }
+  .frag-spark {
     position: absolute;
-    top: 14px;
-    right: 16px;
+    top: -0.2rem;
+    right: 0.2rem;
     width: 66px;
     height: 28px;
-    opacity: 0.8;
+    opacity: 0.75;
   }
+
   .sentence-frame {
-    margin-top: 1.6rem;
+    margin-top: 1.4rem;
     min-height: 5.6rem;
     display: flex;
     align-items: flex-start;
   }
   .sentence {
-    font-size: 25px;
-    line-height: 1.38;
+    font-size: 26px;
+    line-height: 1.4;
     font-weight: 400;
     letter-spacing: -0.01em;
-    color: var(--text-primary);
+    color: var(--ink);
     margin: 0;
     transition: opacity 650ms ease, transform 650ms ease;
   }
@@ -171,13 +172,12 @@
     opacity: 0;
     transform: translateY(4px);
   }
+
   .trail {
-    margin-top: 1.9rem;
-    padding-top: 1.2rem;
-    border-top: 1px solid var(--border);
+    margin-top: 1.8rem;
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 0.5rem;
   }
   .trail-line {
     margin: 0;
@@ -185,63 +185,95 @@
     line-height: 1.5;
     transition: opacity 650ms ease, color 650ms ease;
   }
-  .trail-line[data-depth="1"] { color: var(--text-secondary); }
-  .trail-line[data-depth="2"] { color: var(--text-muted); }
+  .trail-line[data-depth="1"] { color: var(--ink-muted); }
+  .trail-line[data-depth="2"] { color: var(--ink-faint); }
 
-  .controls {
-    margin-top: 1.6rem;
+  /* — context strip: quieter than the trail, discovered rather than announced — */
+  .context-strip {
+    margin-top: 2.6rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--border);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 0.35rem;
   }
+  .context-line {
+    margin: 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--ink-faint);
+  }
+
   .advance {
+    display: block;
+    margin: 1.8rem 0 0;
     background: none;
     border: none;
     font: inherit;
     font-size: 13px;
-    color: var(--text-muted);
+    color: var(--ink-faint);
     cursor: pointer;
     padding: 0.4rem 0;
   }
-  .advance:hover { color: var(--text-secondary); }
-  .note {
+  .advance:hover { color: var(--ink-muted); }
+
+  .identity-line {
     font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 1.4rem;
-    line-height: 1.5;
+    color: var(--ink-faint);
+    margin-top: 3rem;
+    line-height: 1.6;
+    max-width: 46ch;
   }
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="top-row">
+<div class="page">
+
+  <div class="ambient-bar">
+    <span id="dateTime"></span><span class="sep">·</span><span id="session"></span>
+  </div>
+
+  <div class="nav-row">
     <div class="tabs" id="tabs"></div>
-    <div class="add-market">
-      <select id="addMarket" aria-label="Add a market to watch"></select>
+    <div class="universe">
+      <input id="universeSearch" list="universeList" placeholder="search the universe…" autocomplete="off">
+      <datalist id="universeList"></datalist>
     </div>
   </div>
-  <p class="cap-note" id="capNote"></p>
+  <p class="universe-note" id="universeNote"></p>
 
   <div class="world" id="world">
-    <span class="corner-meta" id="cornerMeta"></span>
-    <svg class="corner-chart" id="spark" viewBox="0 0 66 28"></svg>
+    <span class="frag frag-age" id="fragAge"></span>
+    <svg class="frag-spark" id="spark" viewBox="0 0 66 28"></svg>
+
     <div class="sentence-frame">
       <p class="sentence" id="sentence"></p>
     </div>
+
     <div class="trail" id="trail"></div>
+
+    <div class="context-strip" id="contextStrip">
+      <p class="context-line" id="archiveLine"></p>
+      <p class="context-line" id="obligationLine"></p>
+    </div>
   </div>
 
-  <div class="controls">
-    <button class="advance" id="advance">→ advance time (demo)</button>
-  </div>
-  <p class="note">Prototype only — sentences are scripted for feel, not generated from live prices. Advancing time simulates a state change to show the dissolve motion, not real market movement. Cross-market mentions (e.g. DXY) never appear inside another asset's sentence automatically — each world only speaks to what's true of it.</p>
+  <button class="advance" id="advance">→ advance time (demo)</button>
+
+  <p class="identity-line">MarketBrain is not a watchlist, a dashboard, or a news feed. It restores context — what you believed, under what conditions, and whether reality has confronted that belief. Sentences here are scripted for feel, not generated from live prices.</p>
+
 </div>
 
 <script>
+  // Built worlds carry real content. Unbuilt worlds are reachable — the
+  // universe is meant to feel open — but honestly show that no state has
+  // been recorded yet, rather than faking content for every symbol.
   const universe = [
     {
-      id: "btc", label: "BTC", hue: 206,
+      id: "BTC", hue: 206, built: true,
       spark: "M2,20 C11,17 17,9 23,11 C29,13 34,5 40,7 C47,9 54,3 64,2",
+      archiveNote: "This range-hold pattern has appeared three times this week.",
+      obligation: "Open thesis: reclaim continuation, unconfirmed.",
       moments: [
         { since: "since Monday's sweep", current: "Holding above last week's range for the third hour.", trail: ["Recovered after sweeping Monday's low.", "Testing Monday's low."] },
         { since: "since the range hold", current: "Trading toward liquidity resting below the range.", trail: ["Holding above last week's range for the third hour.", "Recovered after sweeping Monday's low."] },
@@ -249,43 +281,61 @@
         { since: "since the reclaim", current: "Reclaimed after sweeping the lower liquidity.", trail: ["Liquidity below the range swept.", "Trading toward liquidity resting below the range."] }
       ]
     },
+    { id: "ETH", hue: 250, built: false },
+    { id: "SOL", hue: 280, built: false },
+    { id: "XRP", hue: 198, built: false },
     {
-      id: "nas100", label: "NAS100", hue: 21,
-      spark: "M2,6 L11,22 L18,10 L24,24 L31,8 L40,20 L48,5 L57,19 L64,10",
-      moments: [
-        { since: "since the open", current: "Rejected from the premarket high, back inside range.", trail: ["Traded into the premarket high.", "Opened inside Tuesday's range."] },
-        { since: "since the rejection", current: "Testing the range low after the rejection.", trail: ["Rejected from the premarket high, back inside range.", "Traded into the premarket high."] },
-        { since: "since the sweep", current: "Range low swept, reclaim not yet confirmed.", trail: ["Testing the range low after the rejection.", "Rejected from the premarket high, back inside range."] }
-      ]
-    },
-    {
-      id: "eurusd", label: "EURUSD", hue: 165,
+      id: "EURUSD", hue: 165, built: true,
       spark: "M2,14 C15,13 22,17 30,14 C39,12 47,16 56,14 L64,13",
+      archiveNote: "Fourth session without a directional acceptance.",
+      obligation: "No standing thesis recorded.",
       moments: [
         { since: "since London open", current: "Still inside Tuesday's range, no acceptance either side.", trail: ["Range formed after the London open.", "Drifting without conviction."] },
         { since: "since the drift began", current: "Drifting lower toward range support.", trail: ["Still inside Tuesday's range, no acceptance either side.", "Range formed after the London open."] },
         { since: "since the test began", current: "Testing range support for the first time today.", trail: ["Drifting lower toward range support.", "Still inside Tuesday's range, no acceptance either side."] }
       ]
     },
+    { id: "GBPUSD", hue: 175, built: false },
+    { id: "USDJPY", hue: 10, built: false },
     {
-      id: "xauusd", label: "XAUUSD", hue: 45,
+      id: "XAUUSD", hue: 45, built: true,
       spark: "M2,22 C13,19 20,12 28,13 C36,14 44,7 52,9 C58,10 61,6 64,4",
+      archiveNote: "A similar stall preceded last week's breakout.",
+      obligation: "Open thesis: continuation above the high, unconfirmed.",
       moments: [
         { since: "since the high", current: "Sitting just under yesterday's high, no rejection yet.", trail: ["Pushed into yesterday's high.", "Trending up through the session."] },
         { since: "since the stall", current: "Stalled below the high for the second hour.", trail: ["Sitting just under yesterday's high, no rejection yet.", "Pushed into yesterday's high."] }
       ]
     },
+    { id: "XAGUSD", hue: 205, built: false },
     {
-      id: "spx500", label: "SPX500", hue: 260,
+      id: "NAS100", hue: 21, built: true,
+      spark: "M2,6 L11,22 L18,10 L24,24 L31,8 L40,20 L48,5 L57,19 L64,10",
+      archiveNote: "Second rejection from this premarket level this month.",
+      obligation: "No open thesis on this range.",
+      moments: [
+        { since: "since the open", current: "Rejected from the premarket high, back inside range.", trail: ["Traded into the premarket high.", "Opened inside Tuesday's range."] },
+        { since: "since the rejection", current: "Testing the range low after the rejection.", trail: ["Rejected from the premarket high, back inside range.", "Traded into the premarket high."] },
+        { since: "since the sweep", current: "Range low swept, reclaim not yet confirmed.", trail: ["Testing the range low after the rejection.", "Rejected from the premarket high, back inside range."] }
+      ]
+    },
+    { id: "US30", hue: 15, built: false },
+    {
+      id: "SPX500", hue: 260, built: true,
       spark: "M2,10 L12,14 L20,9 L30,16 L38,12 L48,17 L56,13 L64,15",
+      archiveNote: "This narrow-range open has preceded a breakout twice this quarter.",
+      obligation: "No standing thesis recorded.",
       moments: [
         { since: "since the open", current: "Chopping inside a narrow range since the open.", trail: ["Opened flat against yesterday's close.", "No clear direction pre-open."] },
         { since: "since the break", current: "Broke the narrow range to the downside.", trail: ["Chopping inside a narrow range since the open.", "Opened flat against yesterday's close."] }
       ]
     },
+    { id: "GER40", hue: 340, built: false },
     {
-      id: "dxy", label: "DXY", hue: 130,
+      id: "DXY", hue: 130, built: true,
       spark: "M2,8 L12,11 L20,7 L30,13 L38,9 L48,15 L56,11 L64,14",
+      archiveNote: "First reversal attempt off this low since last month.",
+      obligation: "Open thesis: dollar strength resuming, unconfirmed.",
       moments: [
         { since: "since the reversal", current: "Turned up off the weekly low, not yet confirmed.", trail: ["Traded down into the weekly low.", "Drifting lower through the session."] },
         { since: "since the push", current: "Pushing into the top of last week's range.", trail: ["Turned up off the weekly low, not yet confirmed.", "Traded down into the weekly low."] }
@@ -294,19 +344,25 @@
   ];
 
   const TAB_CAP = 5;
-  let watching = ["btc", "nas100", "eurusd"];
+  let watching = ["BTC", "NAS100", "EURUSD"];
   let activeId = watching[0];
   let momentIndex = 0;
 
   const tabsEl = document.getElementById("tabs");
-  const addMarketEl = document.getElementById("addMarket");
-  const capNoteEl = document.getElementById("capNote");
+  const universeSearchEl = document.getElementById("universeSearch");
+  const universeListEl = document.getElementById("universeList");
+  const universeNoteEl = document.getElementById("universeNote");
   const worldEl = document.getElementById("world");
   const sentenceEl = document.getElementById("sentence");
   const trailEl = document.getElementById("trail");
   const sparkEl = document.getElementById("spark");
-  const cornerMetaEl = document.getElementById("cornerMeta");
+  const fragAgeEl = document.getElementById("fragAge");
+  const archiveLineEl = document.getElementById("archiveLine");
+  const obligationLineEl = document.getElementById("obligationLine");
+  const contextStripEl = document.getElementById("contextStrip");
   const advanceBtn = document.getElementById("advance");
+  const dateTimeEl = document.getElementById("dateTime");
+  const sessionEl = document.getElementById("session");
 
   function marketById(id) {
     return universe.find(m => m.id === id);
@@ -319,7 +375,7 @@
       const btn = document.createElement("button");
       btn.className = "tab" + (id === activeId ? " active" : "");
       btn.style.setProperty("--hue", m.hue);
-      btn.innerHTML = '<span class="dot"></span>' + m.label;
+      btn.innerHTML = '<span class="dot"></span>' + m.id;
       btn.addEventListener("click", () => {
         if (id === activeId) return;
         activeId = id;
@@ -331,43 +387,56 @@
     });
   }
 
-  function renderAddMarket() {
-    const notWatching = universe.filter(m => !watching.includes(m.id));
-    addMarketEl.innerHTML = '<option value="">watch another market…</option>' +
-      notWatching.map(m => '<option value="' + m.id + '">' + m.label + '</option>').join("");
-    addMarketEl.disabled = notWatching.length === 0;
-
-    if (watching.length >= TAB_CAP) {
-      capNoteEl.textContent = "At " + TAB_CAP + " — that's the ceiling. Drop one before adding another.";
-    } else {
-      capNoteEl.textContent = "";
-    }
+  function renderUniverseList() {
+    universeListEl.innerHTML = universe
+      .map(m => '<option value="' + m.id + '">')
+      .join("");
+    const builtCount = universe.filter(m => m.built).length;
+    universeNoteEl.textContent =
+      universe.length + " markets reachable, " + builtCount + " with recorded state — more added over time.";
   }
 
-  addMarketEl.addEventListener("change", () => {
-    const id = addMarketEl.value;
-    if (!id) return;
-    if (watching.length >= TAB_CAP) {
-      addMarketEl.value = "";
-      return;
-    }
-    watching.push(id);
-    activeId = id;
-    momentIndex = 0;
-    addMarketEl.value = "";
-    renderTabs();
-    renderAddMarket();
-    renderWorld(true);
+  universeSearchEl.addEventListener("change", tryAddFromSearch);
+  universeSearchEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") tryAddFromSearch();
   });
 
+  function tryAddFromSearch() {
+    const raw = universeSearchEl.value.trim().toUpperCase();
+    universeSearchEl.value = "";
+    if (!raw) return;
+    const m = marketById(raw);
+    if (!m) return;
+    if (watching.includes(m.id)) {
+      activeId = m.id;
+      momentIndex = 0;
+      renderTabs();
+      renderWorld(true);
+      return;
+    }
+    if (watching.length >= TAB_CAP) {
+      universeNoteEl.textContent = "At " + TAB_CAP + " open — drop one before adding another.";
+      return;
+    }
+    watching.push(m.id);
+    activeId = m.id;
+    momentIndex = 0;
+    renderTabs();
+    renderWorld(true);
+  }
+
   function renderSpark(market) {
+    if (!market.built) {
+      sparkEl.innerHTML = "";
+      return;
+    }
     sparkEl.innerHTML =
       '<path d="' + market.spark + '" fill="none" stroke="hsl(' + market.hue + ' 60% 42%)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
   }
 
   function renderTrail(lines) {
     trailEl.innerHTML = "";
-    lines.slice(0, 2).forEach((line, i) => {
+    (lines || []).slice(0, 2).forEach((line, i) => {
       const p = document.createElement("p");
       p.className = "trail-line";
       p.dataset.depth = String(i + 1);
@@ -378,10 +447,27 @@
 
   function renderWorld(instant) {
     const market = marketById(activeId);
-    const moment = market.moments[momentIndex % market.moments.length];
     worldEl.style.setProperty("--hue", market.hue);
     renderSpark(market);
-    cornerMetaEl.textContent = moment.since;
+
+    if (!market.built) {
+      fragAgeEl.textContent = "newly opened world";
+      contextStripEl.style.display = "none";
+      const apply = () => {
+        sentenceEl.textContent = "No state recorded yet.";
+        renderTrail([]);
+      };
+      if (instant) { apply(); return; }
+      sentenceEl.classList.add("out");
+      setTimeout(() => { apply(); sentenceEl.classList.remove("out"); }, 400);
+      return;
+    }
+
+    contextStripEl.style.display = "";
+    const moment = market.moments[momentIndex % market.moments.length];
+    fragAgeEl.textContent = moment.since;
+    archiveLineEl.textContent = market.archiveNote;
+    obligationLineEl.textContent = market.obligation;
 
     if (instant) {
       sentenceEl.textContent = moment.current;
@@ -399,12 +485,30 @@
 
   advanceBtn.addEventListener("click", () => {
     const market = marketById(activeId);
+    if (!market.built) return;
     momentIndex = (momentIndex + 1) % market.moments.length;
     renderWorld(false);
   });
 
+  function sessionLabel(date) {
+    const h = date.getUTCHours();
+    if (h >= 0 && h < 7) return "Asia session";
+    if (h >= 7 && h < 13) return "London session";
+    if (h >= 13 && h < 21) return "New York session";
+    return "Late session";
+  }
+
+  function renderAmbient() {
+    const now = new Date();
+    dateTimeEl.textContent = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) +
+      " · " + now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    sessionEl.textContent = sessionLabel(now);
+  }
+
+  renderAmbient();
+  setInterval(renderAmbient, 30000);
   renderTabs();
-  renderAddMarket();
+  renderUniverseList();
   renderWorld(true);
 </script>
 </body>
