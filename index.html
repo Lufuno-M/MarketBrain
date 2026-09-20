@@ -35,7 +35,6 @@
     padding: 3rem 1.5rem 3.5rem;
   }
 
-  /* — ambient top strip: exists quietly, no box around it — */
   .ambient-bar {
     font-size: 12px;
     color: var(--ink-faint);
@@ -44,7 +43,6 @@
   }
   .ambient-bar .sep { margin: 0 0.4em; opacity: 0.6; }
 
-  /* — nav: tabs flow directly into universe search, one row, no divider box — */
   .nav-row {
     display: flex;
     align-items: center;
@@ -92,9 +90,7 @@
   }
   .tab.active .dot { opacity: 1; }
 
-  .universe {
-    flex-shrink: 0;
-  }
+  .universe { flex-shrink: 0; }
   .universe input {
     background: none;
     border: none;
@@ -115,7 +111,6 @@
     margin: 0.6rem 0 0;
   }
 
-  /* — the world: atmosphere, not a card. glow lives behind, no hard edges — */
   .world {
     position: relative;
     margin-top: 2.5rem;
@@ -140,10 +135,7 @@
     letter-spacing: 0.02em;
     color: var(--ink-faint);
   }
-  .frag-age {
-    top: 0.4rem;
-    left: 0.4rem;
-  }
+  .frag-age { top: 0.4rem; left: 0.4rem; }
   .frag-spark {
     position: absolute;
     top: -0.2rem;
@@ -168,10 +160,7 @@
     margin: 0;
     transition: opacity 650ms ease, transform 650ms ease;
   }
-  .sentence.out {
-    opacity: 0;
-    transform: translateY(4px);
-  }
+  .sentence.out { opacity: 0; transform: translateY(4px); }
 
   .trail {
     margin-top: 1.8rem;
@@ -188,7 +177,25 @@
   .trail-line[data-depth="1"] { color: var(--ink-muted); }
   .trail-line[data-depth="2"] { color: var(--ink-faint); }
 
-  /* — context strip: quieter than the trail, discovered rather than announced — */
+  /* — quiet, tappable vocabulary — underlined, not colored, not called out — */
+  .term {
+    border-bottom: 1px dotted var(--ink-faint);
+    cursor: help;
+  }
+  .term-popover {
+    position: absolute;
+    background: var(--surface-raised);
+    color: var(--ink);
+    font-size: 12.5px;
+    line-height: 1.55;
+    padding: 0.65rem 0.85rem;
+    border-radius: 12px;
+    max-width: 240px;
+    box-shadow: 0 6px 20px rgba(17,24,39,0.09);
+    display: none;
+    z-index: 30;
+  }
+
   .context-strip {
     margin-top: 2.6rem;
     padding-top: 1.1rem;
@@ -223,6 +230,11 @@
     margin-top: 3rem;
     line-height: 1.6;
     max-width: 46ch;
+  }
+  .glossary-hint {
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 0.6rem;
   }
 </style>
 </head>
@@ -260,11 +272,51 @@
 
   <button class="advance" id="advance">→ advance time (demo)</button>
 
-  <p class="identity-line">MarketBrain is not a watchlist, a dashboard, or a news feed. It restores context — what you believed, under what conditions, and whether reality has confronted that belief. Sentences here are scripted for feel, not generated from live prices.</p>
+  <p class="identity-line">MarketBrain is not a watchlist, a dashboard, or a news feed. It restores context — what you believed, under what conditions, and whether reality has confronted that belief. Sentences here are scripted for feel, not generated from live prices, and describe structure, never advice.</p>
+  <p class="glossary-hint">Dotted words open a plain-English definition — tap one to read it.</p>
 
 </div>
 
+<div class="term-popover" id="termPopover"></div>
+
 <script>
+  // Plain-English definitions for the structural vocabulary the sentences
+  // use. Kept separate from the sentence itself — quiet, tap-to-reveal,
+  // not explained out loud to everyone by default.
+  const glossaryDefs = {
+    range: "A price zone the market has been trading between, with a defined high and low.",
+    liquidity: "Resting orders — like stop-losses — sitting just beyond a recent high or low.",
+    sweep: "Price briefly pushes past a high or low to trigger the orders resting there, then often reverses.",
+    reclaim: "Price moves back above (or below) a level it had just broken, undoing the break.",
+    untested: "A level the market hasn't returned to revisit since it formed.",
+    rejection: "Price pushes into a level and turns away from it almost immediately.",
+    acceptance: "Price spends enough time at a level to suggest it's seen as fair value.",
+    session: "A recurring window of the trading day tied to a major financial center, like London or New York.",
+    thesis: "A stated belief about what the market will do next — distinct from a factual description of its current state."
+  };
+  const surfaceToTerm = {
+    range: "range", "range's": "range",
+    liquidity: "liquidity",
+    sweep: "sweep", swept: "sweep", sweeping: "sweep",
+    reclaim: "reclaim", reclaimed: "reclaim",
+    untested: "untested",
+    rejection: "rejection", rejected: "rejection",
+    acceptance: "acceptance",
+    session: "session",
+    thesis: "thesis"
+  };
+
+  function annotate(text) {
+    if (!text) return "";
+    return text.replace(/[A-Za-z']+/g, (word) => {
+      const key = word.toLowerCase();
+      const term = surfaceToTerm[key];
+      if (!term) return word;
+      const def = glossaryDefs[term].replace(/"/g, "&quot;");
+      return '<span class="term" data-def="' + def + '">' + word + '</span>';
+    });
+  }
+
   // Built worlds carry real content. Unbuilt worlds are reachable — the
   // universe is meant to feel open — but honestly show that no state has
   // been recorded yet, rather than faking content for every symbol.
@@ -363,10 +415,27 @@
   const advanceBtn = document.getElementById("advance");
   const dateTimeEl = document.getElementById("dateTime");
   const sessionEl = document.getElementById("session");
+  const termPopoverEl = document.getElementById("termPopover");
 
   function marketById(id) {
     return universe.find(m => m.id === id);
   }
+
+  function hidePopover() {
+    termPopoverEl.style.display = "none";
+  }
+
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest(".term");
+    if (!t) { hidePopover(); return; }
+    e.stopPropagation();
+    const def = t.getAttribute("data-def");
+    const rect = t.getBoundingClientRect();
+    termPopoverEl.innerHTML = def;
+    termPopoverEl.style.left = (rect.left + window.scrollX) + "px";
+    termPopoverEl.style.top = (rect.bottom + window.scrollY + 6) + "px";
+    termPopoverEl.style.display = "block";
+  });
 
   function renderTabs() {
     tabsEl.innerHTML = "";
@@ -426,10 +495,7 @@
   }
 
   function renderSpark(market) {
-    if (!market.built) {
-      sparkEl.innerHTML = "";
-      return;
-    }
+    if (!market.built) { sparkEl.innerHTML = ""; return; }
     sparkEl.innerHTML =
       '<path d="' + market.spark + '" fill="none" stroke="hsl(' + market.hue + ' 60% 42%)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
   }
@@ -440,12 +506,13 @@
       const p = document.createElement("p");
       p.className = "trail-line";
       p.dataset.depth = String(i + 1);
-      p.textContent = line;
+      p.innerHTML = annotate(line);
       trailEl.appendChild(p);
     });
   }
 
   function renderWorld(instant) {
+    hidePopover();
     const market = marketById(activeId);
     worldEl.style.setProperty("--hue", market.hue);
     renderSpark(market);
@@ -466,18 +533,18 @@
     contextStripEl.style.display = "";
     const moment = market.moments[momentIndex % market.moments.length];
     fragAgeEl.textContent = moment.since;
-    archiveLineEl.textContent = market.archiveNote;
-    obligationLineEl.textContent = market.obligation;
+    archiveLineEl.innerHTML = annotate(market.archiveNote);
+    obligationLineEl.innerHTML = annotate(market.obligation);
 
     if (instant) {
-      sentenceEl.textContent = moment.current;
+      sentenceEl.innerHTML = annotate(moment.current);
       renderTrail(moment.trail);
       return;
     }
 
     sentenceEl.classList.add("out");
     setTimeout(() => {
-      sentenceEl.textContent = moment.current;
+      sentenceEl.innerHTML = annotate(moment.current);
       sentenceEl.classList.remove("out");
       renderTrail(moment.trail);
     }, 400);
