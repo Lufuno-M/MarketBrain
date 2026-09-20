@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MarketBrain — prototype</title>
+<style>
+  :root {
+    --surface-0: #f4f3ef;
+    --surface-1: #ffffff;
+    --text-primary: #1b1b18;
+    --text-secondary: #5c5b55;
+    --text-muted: #9c9b93;
+    --border: rgba(0,0,0,0.08);
+    --tint-l: 94%;
+    --tint-s: 55%;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --surface-0: #111110;
+      --surface-1: #1a1a18;
+      --text-primary: #f0efe9;
+      --text-secondary: #a8a79f;
+      --text-muted: #6f6e67;
+      --border: rgba(255,255,255,0.08);
+      --tint-l: 16%;
+      --tint-s: 45%;
+    }
+  }
+  :root[data-theme="dark"] {
+    --surface-0: #111110;
+    --surface-1: #1a1a18;
+    --text-primary: #f0efe9;
+    --text-secondary: #a8a79f;
+    --text-muted: #6f6e67;
+    --border: rgba(255,255,255,0.08);
+    --tint-l: 16%;
+    --tint-s: 45%;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--surface-0);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: flex;
+    justify-content: center;
+  }
+  .app {
+    width: 100%;
+    max-width: 620px;
+    padding: 2.5rem 1.5rem 3rem;
+  }
+  .tabs {
+    display: flex;
+    gap: 1.75rem;
+    padding-bottom: 1.1rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tab {
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+    padding: 0.15rem 0;
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+    transition: color 320ms ease;
+  }
+  .tab .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 7px;
+    background: currentColor;
+    opacity: 0.55;
+    transform: translateY(-1px);
+  }
+  .tab.active {
+    color: var(--text-primary);
+  }
+  .tab.active::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -1.1rem;
+    height: 2px;
+    background: hsl(var(--hue) 55% 45%);
+  }
+  .world {
+    margin-top: 1.75rem;
+    border-radius: 16px;
+    padding: 2.4rem 1.6rem 1.8rem;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 18% 0%, hsl(var(--hue) var(--tint-s) var(--tint-l) / 0.9), transparent 62%),
+      var(--surface-1);
+    transition: background 700ms ease;
+    min-height: 300px;
+  }
+  .corner-chart {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 62px;
+    height: 26px;
+    opacity: 0.7;
+  }
+  .sentence-frame {
+    min-height: 5.6rem;
+    display: flex;
+    align-items: flex-start;
+  }
+  .sentence {
+    font-size: 25px;
+    line-height: 1.38;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    margin: 0;
+    transition: opacity 650ms ease, transform 650ms ease;
+  }
+  .sentence.out {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  .trail {
+    margin-top: 1.9rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .trail-line {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+    transition: opacity 650ms ease, color 650ms ease;
+  }
+  .trail-line[data-depth="1"] { color: var(--text-secondary); }
+  .trail-line[data-depth="2"] { color: var(--text-muted); }
+  .trail-line.leaving {
+    opacity: 0;
+  }
+  .controls {
+    margin-top: 1.6rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .advance {
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.4rem 0;
+  }
+  .advance:hover { color: var(--text-secondary); }
+  .note {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 1.4rem;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs" id="tabs"></div>
+  <div class="world" id="world">
+    <svg class="corner-chart" id="spark" viewBox="0 0 62 26"></svg>
+    <div class="sentence-frame">
+      <p class="sentence" id="sentence"></p>
+    </div>
+    <div class="trail" id="trail"></div>
+  </div>
+  <div class="controls">
+    <button class="advance" id="advance">→ advance time (demo)</button>
+  </div>
+  <p class="note">Prototype only — sentences are scripted for feel, not generated from live prices. Advancing time simulates a state change to show the dissolve motion, not real market movement.</p>
+</div>
+
+<script>
+  const markets = [
+    {
+      id: "btc",
+      label: "btc",
+      hue: 206,
+      spark: "M2,18 C10,16 16,10 22,11 C28,12 32,6 38,7 C44,8 50,4 60,3",
+      moments: [
+        {
+          current: "Holding above last week's range for the third hour.",
+          trail: ["Recovered after sweeping Monday's low.", "Testing Monday's low."]
+        },
+        {
+          current: "Trading toward liquidity resting below the range.",
+          trail: ["Holding above last week's range for the third hour.", "Recovered after sweeping Monday's low."]
+        },
+        {
+          current: "Liquidity below the range swept.",
+          trail: ["Trading toward liquidity resting below the range.", "Holding above last week's range for the third hour."]
+        },
+        {
+          current: "Reclaimed after sweeping the lower liquidity.",
+          trail: ["Liquidity below the range swept.", "Trading toward liquidity resting below the range."]
+        }
+      ]
+    },
+    {
+      id: "nas100",
+      label: "nas100",
+      hue: 21,
+      spark: "M2,6 L10,20 L16,9 L22,22 L28,7 L36,18 L44,5 L52,17 L60,9",
+      moments: [
+        {
+          current: "Rejected from the premarket high, back inside range.",
+          trail: ["Traded into the premarket high.", "Opened inside Tuesday's range."]
+        },
+        {
+          current: "Testing the range low after the rejection.",
+          trail: ["Rejected from the premarket high, back inside range.", "Traded into the premarket high."]
+        },
+        {
+          current: "Range low swept, reclaim not yet confirmed.",
+          trail: ["Testing the range low after the rejection.", "Rejected from the premarket high, back inside range."]
+        }
+      ]
+    },
+    {
+      id: "eurusd",
+      label: "eurusd",
+      hue: 165,
+      spark: "M2,13 C14,12 20,15 28,13 C36,11 44,14 52,13 L60,12",
+      moments: [
+        {
+          current: "Still inside Tuesday's range, no acceptance either side.",
+          trail: ["Range formed after the London open.", "Drifting without conviction."]
+        },
+        {
+          current: "Drifting lower toward range support.",
+          trail: ["Still inside Tuesday's range, no acceptance either side.", "Range formed after the London open."]
+        },
+        {
+          current: "Testing range support for the first time today.",
+          trail: ["Drifting lower toward range support.", "Still inside Tuesday's range, no acceptance either side."]
+        }
+      ]
+    }
+  ];
+
+  let activeIndex = 0;
+  let momentIndex = 0;
+
+  const tabsEl = document.getElementById("tabs");
+  const worldEl = document.getElementById("world");
+  const sentenceEl = document.getElementById("sentence");
+  const trailEl = document.getElementById("trail");
+  const sparkEl = document.getElementById("spark");
+  const advanceBtn = document.getElementById("advance");
+
+  function renderTabs() {
+    tabsEl.innerHTML = "";
+    markets.forEach((m, i) => {
+      const btn = document.createElement("button");
+      btn.className = "tab" + (i === activeIndex ? " active" : "");
+      btn.style.setProperty("--hue", m.hue);
+      btn.innerHTML = '<span class="dot"></span>' + m.label;
+      btn.addEventListener("click", () => {
+        if (i === activeIndex) return;
+        activeIndex = i;
+        momentIndex = 0;
+        renderTabs();
+        renderWorld(true);
+      });
+      tabsEl.appendChild(btn);
+    });
+  }
+
+  function renderSpark(market) {
+    sparkEl.innerHTML =
+      '<path d="' + market.spark + '" fill="none" stroke="hsl(' + market.hue + ' 55% 45%)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>';
+  }
+
+  function renderTrail(lines) {
+    trailEl.innerHTML = "";
+    lines.slice(0, 2).forEach((line, i) => {
+      const p = document.createElement("p");
+      p.className = "trail-line";
+      p.dataset.depth = String(i + 1);
+      p.textContent = line;
+      trailEl.appendChild(p);
+    });
+  }
+
+  function renderWorld(instant) {
+    const market = markets[activeIndex];
+    const moment = market.moments[momentIndex];
+    worldEl.style.setProperty("--hue", market.hue);
+    renderSpark(market);
+
+    if (instant) {
+      sentenceEl.textContent = moment.current;
+      renderTrail(moment.trail);
+      return;
+    }
+
+    sentenceEl.classList.add("out");
+    setTimeout(() => {
+      sentenceEl.textContent = moment.current;
+      sentenceEl.classList.remove("out");
+      renderTrail(moment.trail);
+    }, 400);
+  }
+
+  advanceBtn.addEventListener("click", () => {
+    const market = markets[activeIndex];
+    momentIndex = (momentIndex + 1) % market.moments.length;
+    renderWorld(false);
+  });
+
+  renderTabs();
+  renderWorld(true);
+</script>
+</body>
+</html>
