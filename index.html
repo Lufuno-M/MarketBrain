@@ -6,577 +6,212 @@
 <title>MarketBrain</title>
 <style>
   :root {
-    --canvas: #ffffff;
-    --surface: #fafafa;
-    --surface-raised: #f3f4f6;
-    --ink: #111827;
-    --ink-muted: #6b7280;
-    --ink-faint: #9ca3af;
-    --border: rgba(17,24,39,0.07);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    --ink: #0a0a0a; --muted: #6b6b6b; --faint: #a3a3a3; --line: #e7e7e7;
     color-scheme: light;
   }
   * { box-sizing: border-box; }
-  html, body {
-    height: 100%;
-    margin: 0;
-    background: var(--canvas);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  body {
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    display: flex;
-    justify-content: center;
-  }
-  .page {
-    width: 100%;
-    max-width: 640px;
-    padding: 3rem 1.5rem 3.5rem;
-  }
+  html { background: #fff; }
+  body { margin: 0; background: #fff; color: var(--ink); -webkit-font-smoothing: antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; }
+  .page { max-width: 860px; margin: 0 auto; padding: 1.6rem 1.5rem 4rem; }
+  button { font: inherit; color: inherit; background: none; border: none; padding: 0; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
-  .ambient-bar {
-    font-size: 12px;
-    color: var(--ink-faint);
-    letter-spacing: 0.01em;
-    margin-bottom: 2.2rem;
-  }
-  .ambient-bar .sep { margin: 0 0.4em; opacity: 0.6; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+  .mast { font-size: clamp(40px, 9vw, 76px); font-weight: 700; letter-spacing: -0.045em; line-height: 0.95; }
+  .side { text-align: right; font-size: 12px; color: var(--muted); padding-top: 0.5rem; }
+  .side input { display: block; margin: 0.6rem 0 0 auto; width: 170px; border: none; border-bottom: 1px solid var(--line);
+    font: inherit; font-size: 13px; padding: 0.3rem 0; text-align: right; outline-offset: 4px; background: none; }
 
-  .nav-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-  .tabs {
-    display: flex;
-    gap: 0.4rem;
-    align-items: center;
-    overflow-x: auto;
-  }
-  .tab {
-    background: none;
-    border: 1px solid transparent;
-    border-radius: 999px;
-    font: inherit;
-    font-size: 14px;
-    color: var(--ink-faint);
-    padding: 0.4rem 0.85rem;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: color 320ms ease, background 500ms ease, box-shadow 500ms ease, border-color 500ms ease;
-  }
-  .tab .dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    margin-right: 7px;
-    background: currentColor;
-    opacity: 0.7;
-    transform: translateY(-1px);
-  }
-  .tab:hover { color: var(--ink-muted); }
-  .tab.active {
-    color: var(--ink);
-    background:
-      linear-gradient(180deg,
-        hsl(var(--hue) 85% 92% / 0.95) 0%,
-        hsl(var(--hue) 75% 84% / 0.7) 100%);
-    border-color: hsl(var(--hue) 55% 70% / 0.6);
-    box-shadow: inset 0 1px 0 hsl(var(--hue) 90% 98% / 0.9);
-  }
-  .tab.active .dot { opacity: 1; }
+  .index { display: flex; flex-wrap: wrap; gap: 0.3rem 1.3rem; margin-top: 1.6rem; padding: 0.8rem 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
+  .index button { font-size: 13px; font-weight: 500; color: var(--muted); }
+  .index button:hover, .index button.on { color: var(--ink); }
 
-  .universe { flex-shrink: 0; }
-  .universe input {
-    background: none;
-    border: none;
-    border-bottom: 1px solid var(--border);
-    font: inherit;
-    font-size: 13px;
-    color: var(--ink-muted);
-    padding: 0.4rem 0.1rem;
-    width: 160px;
-    outline: none;
-  }
-  .universe input::placeholder { color: var(--ink-faint); }
-  .universe input:focus { border-bottom-color: var(--ink-faint); }
+  .edition { margin: 2rem 0 0.4rem; font-size: 12px; color: var(--muted); }
 
-  .universe-note {
-    font-size: 11px;
-    color: var(--ink-faint);
-    margin: 0.6rem 0 0;
-  }
+  details { border-bottom: 1px solid var(--line); }
+  summary { list-style: none; cursor: pointer; padding: 1.15rem 0; }
+  summary::-webkit-details-marker { display: none; }
+  .head { font-size: clamp(20px, 3.4vw, 26px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; }
+  .src { margin-top: 0.35rem; font-size: 12px; color: var(--faint); }
+  details[open] .head { color: var(--ink); }
+  .brief { padding: 0 0 1.4rem; max-width: 60ch; font-family: Georgia, "Times New Roman", serif; font-size: 16.5px; line-height: 1.65; }
+  .brief p { margin: 0 0 0.8rem; }
+  .brief .open { color: var(--muted); }
+  .brief b { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0; color: var(--ink); margin-right: 0.4rem; }
+  .chips { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.4rem; }
+  .chips button { font: 500 12px -apple-system, "Helvetica Neue", Arial, sans-serif; border: 1px solid var(--ink); border-radius: 999px; padding: 0.25rem 0.75rem; }
+  .chips button:hover { background: var(--ink); color: #fff; }
 
-  .world {
-    position: relative;
-    margin-top: 2.5rem;
-    padding: 3rem 0.4rem 1.6rem;
-    min-height: 300px;
-  }
-  .world::before {
-    content: "";
-    position: absolute;
-    inset: -2.5rem -1.5rem;
-    background: radial-gradient(ellipse 75% 65% at 25% 15%,
-      hsl(var(--hue) 85% 88% / 0.5), transparent 72%);
-    filter: blur(28px);
-    z-index: -1;
-    border-radius: 40px;
-    transition: background 900ms ease;
-  }
+  /* market view */
+  .back { font-size: 13px; color: var(--muted); margin: 2rem 0 0; }
+  .title { font-size: clamp(32px, 6vw, 48px); font-weight: 700; letter-spacing: -0.035em; margin: 0.4rem 0 1rem; }
+  .ctl { display: flex; gap: 1rem; font-size: 13px; color: var(--faint); align-items: baseline; }
+  .ctl button.on { color: var(--ink); border-bottom: 1px solid var(--ink); }
+  .ctl .state { margin-left: auto; font-size: 11.5px; }
+  .chart { position: relative; margin-top: 0.6rem; touch-action: pan-y; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .tip { position: absolute; top: 0; font-size: 12px; background: var(--ink); color: #fff; padding: 0.2rem 0.5rem; border-radius: 6px; pointer-events: none; display: none; white-space: nowrap; }
 
-  .frag {
-    position: absolute;
-    font-size: 11px;
-    letter-spacing: 0.02em;
-    color: var(--ink-faint);
-  }
-  .frag-age { top: 0.4rem; left: 0.4rem; }
-  .frag-spark {
-    position: absolute;
-    top: -0.2rem;
-    right: 0.2rem;
-    width: 66px;
-    height: 28px;
-    opacity: 0.75;
-  }
-
-  .sentence-frame {
-    margin-top: 1.4rem;
-    min-height: 5.6rem;
-    display: flex;
-    align-items: flex-start;
-  }
-  .sentence {
-    font-size: 26px;
-    line-height: 1.4;
-    font-weight: 400;
-    letter-spacing: -0.01em;
-    color: var(--ink);
-    margin: 0;
-    transition: opacity 650ms ease, transform 650ms ease;
-  }
-  .sentence.out { opacity: 0; transform: translateY(4px); }
-
-  .trail {
-    margin-top: 1.8rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .trail-line {
-    margin: 0;
-    font-size: 15px;
-    line-height: 1.5;
-    transition: opacity 650ms ease, color 650ms ease;
-  }
-  .trail-line[data-depth="1"] { color: var(--ink-muted); }
-  .trail-line[data-depth="2"] { color: var(--ink-faint); }
-
-  /* — quiet, tappable vocabulary — underlined, not colored, not called out — */
-  .term {
-    border-bottom: 1px dotted var(--ink-faint);
-    cursor: help;
-  }
-  .term-popover {
-    position: absolute;
-    background: var(--surface-raised);
-    color: var(--ink);
-    font-size: 12.5px;
-    line-height: 1.55;
-    padding: 0.65rem 0.85rem;
-    border-radius: 12px;
-    max-width: 240px;
-    box-shadow: 0 6px 20px rgba(17,24,39,0.09);
-    display: none;
-    z-index: 30;
-  }
-
-  .context-strip {
-    margin-top: 2.6rem;
-    padding-top: 1.1rem;
-    border-top: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-  .context-line {
-    margin: 0;
-    font-size: 11.5px;
-    line-height: 1.5;
-    color: var(--ink-faint);
-  }
-
-  .advance {
-    display: block;
-    margin: 1.8rem 0 0;
-    background: none;
-    border: none;
-    font: inherit;
-    font-size: 13px;
-    color: var(--ink-faint);
-    cursor: pointer;
-    padding: 0.4rem 0;
-  }
-  .advance:hover { color: var(--ink-muted); }
-
-  .identity-line {
-    font-size: 12px;
-    color: var(--ink-faint);
-    margin-top: 3rem;
-    line-height: 1.6;
-    max-width: 46ch;
-  }
-  .glossary-hint {
-    font-size: 11px;
-    color: var(--ink-faint);
-    margin-top: 0.6rem;
-  }
+  .shelf { margin-top: 3rem; }
+  .shelf h2 { font-size: 13px; font-weight: 600; margin: 0 0 0.3rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--ink); display: flex; justify-content: space-between; align-items: baseline; }
+  .shelf h2 button { font-weight: 400; color: var(--muted); font-size: 12px; }
+  .entry summary { padding: 0.85rem 0; display: flex; gap: 1.2rem; align-items: baseline; }
+  .entry .d { flex: 0 0 8.5rem; font-size: 12px; color: var(--faint); }
+  .entry .f { font-family: Georgia, serif; font-size: 16px; }
+  .entry .body { padding: 0 0 1.2rem 9.7rem; font-family: Georgia, serif; font-size: 16px; line-height: 1.65; white-space: pre-wrap; max-width: 62ch; }
+  .entry .rm { display: block; margin-top: 0.6rem; font: 12px -apple-system, sans-serif; color: var(--faint); }
+  .none { padding: 1rem 0; font-size: 14px; color: var(--muted); font-family: Georgia, serif; }
+  .new { display: none; padding: 1rem 0; border-bottom: 1px solid var(--line); }
+  .new textarea { width: 100%; min-height: 130px; border: 1px solid var(--line); border-radius: 8px; padding: 0.8rem; font: 16px/1.6 Georgia, serif; resize: vertical; }
+  .new button { margin-top: 0.6rem; font-size: 13px; border: 1px solid var(--ink); border-radius: 999px; padding: 0.35rem 1rem; }
+  .new button:hover { background: var(--ink); color: #fff; }
+  @media (max-width: 560px) { .entry .body { padding-left: 0; } .entry summary { flex-direction: column; gap: 0.2rem; } }
 </style>
 </head>
 <body>
 <div class="page">
-
-  <div class="ambient-bar">
-    <span id="dateTime"></span><span class="sep">·</span><span id="session"></span>
-  </div>
-
-  <div class="nav-row">
-    <div class="tabs" id="tabs"></div>
-    <div class="universe">
-      <input id="universeSearch" list="universeList" placeholder="search the universe…" autocomplete="off">
-      <datalist id="universeList"></datalist>
+  <header>
+    <button class="mast" id="mast" aria-label="MarketBrain home">MarketBrain</button>
+    <div class="side"><span id="date"></span><span id="sess"></span>
+      <input id="search" list="uni" placeholder="open a market" autocomplete="off" aria-label="Open a market">
+      <datalist id="uni"></datalist>
     </div>
-  </div>
-  <p class="universe-note" id="universeNote"></p>
-
-  <div class="world" id="world">
-    <span class="frag frag-age" id="fragAge"></span>
-    <svg class="frag-spark" id="spark" viewBox="0 0 66 28"></svg>
-
-    <div class="sentence-frame">
-      <p class="sentence" id="sentence"></p>
-    </div>
-
-    <div class="trail" id="trail"></div>
-
-    <div class="context-strip" id="contextStrip">
-      <p class="context-line" id="archiveLine"></p>
-      <p class="context-line" id="obligationLine"></p>
-    </div>
-  </div>
-
-  <button class="advance" id="advance">→ advance time (demo)</button>
-
-  <p class="identity-line">MarketBrain is not a watchlist, a dashboard, or a news feed. It restores context — what you believed, under what conditions, and whether reality has confronted that belief. Sentences here are scripted for feel, not generated from live prices, and describe structure, never advice.</p>
-  <p class="glossary-hint">Dotted words open a plain-English definition — tap one to read it.</p>
-
+  </header>
+  <nav class="index" id="index" aria-label="Markets"></nav>
+  <main id="view"></main>
 </div>
 
-<div class="term-popover" id="termPopover"></div>
-
 <script>
-  // Plain-English definitions for the structural vocabulary the sentences
-  // use. Kept separate from the sentence itself — quiet, tap-to-reveal,
-  // not explained out loud to everyone by default.
-  const glossaryDefs = {
-    range: "A price zone the market has been trading between, with a defined high and low.",
-    liquidity: "Resting orders — like stop-losses — sitting just beyond a recent high or low.",
-    sweep: "Price briefly pushes past a high or low to trigger the orders resting there, then often reverses.",
-    reclaim: "Price moves back above (or below) a level it had just broken, undoing the break.",
-    untested: "A level the market hasn't returned to revisit since it formed.",
-    rejection: "Price pushes into a level and turns away from it almost immediately.",
-    acceptance: "Price spends enough time at a level to suggest it's seen as fair value.",
-    session: "A recurring window of the trading day tied to a major financial center, like London or New York.",
-    thesis: "A stated belief about what the market will do next — distinct from a factual description of its current state."
-  };
-  const surfaceToTerm = {
-    range: "range", "range's": "range",
-    liquidity: "liquidity",
-    sweep: "sweep", swept: "sweep", sweeping: "sweep",
-    reclaim: "reclaim", reclaimed: "reclaim",
-    untested: "untested",
-    rejection: "rejection", rejected: "rejection",
-    acceptance: "acceptance",
-    session: "session",
-    thesis: "thesis"
-  };
+  const MARKETS = ["BTCUSD","SPX500","NAS100","EURUSD","XAUUSD","DXY"];
+  const UNIVERSE = MARKETS.concat(["ETHUSD","SOLUSD","XRPUSD","GBPUSD","USDJPY","XAGUSD","US30","GER40"]);
+  const FEED = { BTCUSD:"BTCUSDT", ETHUSD:"ETHUSDT", SOLUSD:"SOLUSDT", XRPUSD:"XRPUSDT" }; // Binance public klines
 
-  function annotate(text) {
-    if (!text) return "";
-    return text.replace(/[A-Za-z']+/g, (word) => {
-      const key = word.toLowerCase();
-      const term = surfaceToTerm[key];
-      if (!term) return word;
-      const def = glossaryDefs[term].replace(/"/g, "&quot;");
-      return '<span class="term" data-def="' + def + '">' + word + '</span>';
-    });
-  }
-
-  // Built worlds carry real content. Unbuilt worlds are reachable — the
-  // universe is meant to feel open — but honestly show that no state has
-  // been recorded yet, rather than faking content for every symbol.
-  const universe = [
-    {
-      id: "BTC", hue: 206, built: true,
-      spark: "M2,20 C11,17 17,9 23,11 C29,13 34,5 40,7 C47,9 54,3 64,2",
-      archiveNote: "This range-hold pattern has appeared three times this week.",
-      obligation: "Open thesis: reclaim continuation, unconfirmed.",
-      moments: [
-        { since: "since Monday's sweep", current: "Holding above last week's range for the third hour.", trail: ["Recovered after sweeping Monday's low.", "Testing Monday's low."] },
-        { since: "since the range hold", current: "Trading toward liquidity resting below the range.", trail: ["Holding above last week's range for the third hour.", "Recovered after sweeping Monday's low."] },
-        { since: "since the sweep", current: "Liquidity below the range swept.", trail: ["Trading toward liquidity resting below the range.", "Holding above last week's range for the third hour."] },
-        { since: "since the reclaim", current: "Reclaimed after sweeping the lower liquidity.", trail: ["Liquidity below the range swept.", "Trading toward liquidity resting below the range."] }
-      ]
-    },
-    { id: "ETH", hue: 250, built: false },
-    { id: "SOL", hue: 280, built: false },
-    { id: "XRP", hue: 198, built: false },
-    {
-      id: "EURUSD", hue: 165, built: true,
-      spark: "M2,14 C15,13 22,17 30,14 C39,12 47,16 56,14 L64,13",
-      archiveNote: "Fourth session without a directional acceptance.",
-      obligation: "No standing thesis recorded.",
-      moments: [
-        { since: "since London open", current: "Still inside Tuesday's range, no acceptance either side.", trail: ["Range formed after the London open.", "Drifting without conviction."] },
-        { since: "since the drift began", current: "Drifting lower toward range support.", trail: ["Still inside Tuesday's range, no acceptance either side.", "Range formed after the London open."] },
-        { since: "since the test began", current: "Testing range support for the first time today.", trail: ["Drifting lower toward range support.", "Still inside Tuesday's range, no acceptance either side."] }
-      ]
-    },
-    { id: "GBPUSD", hue: 175, built: false },
-    { id: "USDJPY", hue: 10, built: false },
-    {
-      id: "XAUUSD", hue: 45, built: true,
-      spark: "M2,22 C13,19 20,12 28,13 C36,14 44,7 52,9 C58,10 61,6 64,4",
-      archiveNote: "A similar stall preceded last week's breakout.",
-      obligation: "Open thesis: continuation above the high, unconfirmed.",
-      moments: [
-        { since: "since the high", current: "Sitting just under yesterday's high, no rejection yet.", trail: ["Pushed into yesterday's high.", "Trending up through the session."] },
-        { since: "since the stall", current: "Stalled below the high for the second hour.", trail: ["Sitting just under yesterday's high, no rejection yet.", "Pushed into yesterday's high."] }
-      ]
-    },
-    { id: "XAGUSD", hue: 205, built: false },
-    {
-      id: "NAS100", hue: 21, built: true,
-      spark: "M2,6 L11,22 L18,10 L24,24 L31,8 L40,20 L48,5 L57,19 L64,10",
-      archiveNote: "Second rejection from this premarket level this month.",
-      obligation: "No open thesis on this range.",
-      moments: [
-        { since: "since the open", current: "Rejected from the premarket high, back inside range.", trail: ["Traded into the premarket high.", "Opened inside Tuesday's range."] },
-        { since: "since the rejection", current: "Testing the range low after the rejection.", trail: ["Rejected from the premarket high, back inside range.", "Traded into the premarket high."] },
-        { since: "since the sweep", current: "Range low swept, reclaim not yet confirmed.", trail: ["Testing the range low after the rejection.", "Rejected from the premarket high, back inside range."] }
-      ]
-    },
-    { id: "US30", hue: 15, built: false },
-    {
-      id: "SPX500", hue: 260, built: true,
-      spark: "M2,10 L12,14 L20,9 L30,16 L38,12 L48,17 L56,13 L64,15",
-      archiveNote: "This narrow-range open has preceded a breakout twice this quarter.",
-      obligation: "No standing thesis recorded.",
-      moments: [
-        { since: "since the open", current: "Chopping inside a narrow range since the open.", trail: ["Opened flat against yesterday's close.", "No clear direction pre-open."] },
-        { since: "since the break", current: "Broke the narrow range to the downside.", trail: ["Chopping inside a narrow range since the open.", "Opened flat against yesterday's close."] }
-      ]
-    },
-    { id: "GER40", hue: 340, built: false },
-    {
-      id: "DXY", hue: 130, built: true,
-      spark: "M2,8 L12,11 L20,7 L30,13 L38,9 L48,15 L56,11 L64,14",
-      archiveNote: "First reversal attempt off this low since last month.",
-      obligation: "Open thesis: dollar strength resuming, unconfirmed.",
-      moments: [
-        { since: "since the reversal", current: "Turned up off the weekly low, not yet confirmed.", trail: ["Traded down into the weekly low.", "Drifting lower through the session."] },
-        { since: "since the push", current: "Pushing into the top of last week's range.", trail: ["Turned up off the weekly low, not yet confirmed.", "Traded down into the weekly low."] }
-      ]
-    }
+  // The edition is set by hand for now; a news feed replaces this array.
+  const EDITION = "Tuesday 29 September 2026. Reporting from 27 and 28 September.";
+  const NEWS = [
+    { h:"Trump turns down Iran's seven-day plan to reopen the Strait of Hormuz", s:"Al Jazeera, The National, 28 Sept",
+      r:"Iran offered to reopen the strait and return to nuclear talks within a week, in return for released funds, lifted sanctions and an end to the US naval blockade of its ports. Trump called the proposal unacceptable but has said further talks are expected this week. Brent rose above 107 dollars a barrel on the news.",
+      o:"Whether talks resume this week. Reporting says Iranian officials doubt a deal before the US midterms in November.", m:["SPX500","NAS100","DXY"] },
+    { h:"The S&P 500 gives back its whole month as yields climb", s:"Bloomberg, 28 Sept",
+      r:"The oil-driven wobble pushed the S&P 500 below where the month began, and the Nasdaq 100 lost 1.1 percent. The 10-year Treasury yield reached close to a two-decade high, money markets added to bets on a Fed rate increase in October, and the dollar rose.",
+      o:"Whether the October hike pricing holds through this week's data.", m:["SPX500","NAS100","DXY"] },
+    { h:"A crowded data week: jobs openings, then the final Q2 GDP estimate", s:"BNN Bloomberg, Yahoo Finance, 28 Sept",
+      r:"The job openings report lands Tuesday and the Commerce Department's third estimate of second-quarter growth on Wednesday. Analysts have raised third-quarter earnings estimates for S&P 500 companies by 1.3 percent since 30 June, according to FactSet.",
+      o:"How the market reads either release given the rate-hike bets.", m:["SPX500","NAS100"] },
+    { h:"Bank stocks lose ground as rates rise", s:"Yahoo Finance, 28 Sept",
+      r:"The KBW Nasdaq Bank Index fell about 1 percent at Monday's open and is down more than 3.5 percent over five days, as investors weighed higher interest rates and new concerns over AI and funding costs for lenders.",
+      o:"Whether the weakness spreads beyond the sector.", m:["SPX500"] }
   ];
 
-  const TAB_CAP = 5;
-  let watching = ["BTC", "NAS100", "EURUSD"];
-  let activeId = watching[0];
-  let momentIndex = 0;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+  const view = $("view");
+  let iv = "15m";
 
-  const tabsEl = document.getElementById("tabs");
-  const universeSearchEl = document.getElementById("universeSearch");
-  const universeListEl = document.getElementById("universeList");
-  const universeNoteEl = document.getElementById("universeNote");
-  const worldEl = document.getElementById("world");
-  const sentenceEl = document.getElementById("sentence");
-  const trailEl = document.getElementById("trail");
-  const sparkEl = document.getElementById("spark");
-  const fragAgeEl = document.getElementById("fragAge");
-  const archiveLineEl = document.getElementById("archiveLine");
-  const obligationLineEl = document.getElementById("obligationLine");
-  const contextStripEl = document.getElementById("contextStrip");
-  const advanceBtn = document.getElementById("advance");
-  const dateTimeEl = document.getElementById("dateTime");
-  const sessionEl = document.getElementById("session");
-  const termPopoverEl = document.getElementById("termPopover");
+  $("uni").innerHTML = UNIVERSE.map(m => '<option value="' + m + '">').join("");
+  $("index").innerHTML = MARKETS.map(m => '<button data-m="' + m + '">' + m + '</button>').join("");
+  const now = new Date(), h = now.getUTCHours();
+  $("date").textContent = now.toLocaleDateString(undefined, { weekday:"long", day:"numeric", month:"long", year:"numeric" }) + ". ";
+  $("sess").textContent = h < 7 ? "Asia session." : h < 13 ? "London session." : h < 21 ? "New York session." : "Late session.";
 
-  function marketById(id) {
-    return universe.find(m => m.id === id);
-  }
-
-  function hidePopover() {
-    termPopoverEl.style.display = "none";
-  }
-
-  document.addEventListener("click", (e) => {
-    const t = e.target.closest(".term");
-    if (!t) { hidePopover(); return; }
-    e.stopPropagation();
-    const def = t.getAttribute("data-def");
-    const rect = t.getBoundingClientRect();
-    termPopoverEl.innerHTML = def;
-    termPopoverEl.style.left = (rect.left + window.scrollX) + "px";
-    termPopoverEl.style.top = (rect.bottom + window.scrollY + 6) + "px";
-    termPopoverEl.style.display = "block";
+  const go = m => { location.hash = m ? "#/" + m : "#/"; };
+  $("mast").onclick = () => go();
+  $("index").onclick = e => { const b = e.target.closest("button"); if (b) go(b.dataset.m); };
+  $("search").addEventListener("change", e => {
+    const v = e.target.value.trim().toUpperCase(); e.target.value = "";
+    if (UNIVERSE.includes(v)) go(v);
   });
+  view.addEventListener("click", e => { const c = e.target.closest("[data-go]"); if (c) go(c.dataset.go); });
 
-  function renderTabs() {
-    tabsEl.innerHTML = "";
-    watching.forEach((id) => {
-      const m = marketById(id);
-      const btn = document.createElement("button");
-      btn.className = "tab" + (id === activeId ? " active" : "");
-      btn.style.setProperty("--hue", m.hue);
-      btn.innerHTML = '<span class="dot"></span>' + m.id;
-      btn.addEventListener("click", () => {
-        if (id === activeId) return;
-        activeId = id;
-        momentIndex = 0;
-        renderTabs();
-        renderWorld(true);
-      });
-      tabsEl.appendChild(btn);
-    });
+  function home() {
+    view.innerHTML = '<p class="edition">' + esc(EDITION) + '</p>' + NEWS.map(n =>
+      '<details><summary><div class="head">' + esc(n.h) + '</div><div class="src">' + esc(n.s) + '</div></summary>' +
+      '<div class="brief"><p><b>Reported</b>' + esc(n.r) + '</p><p class="open"><b>Still open</b>' + esc(n.o) + '</p>' +
+      '<div class="chips">' + n.m.map(m => '<button data-go="' + m + '">' + m + '</button>').join("") + '</div></div></details>'
+    ).join("");
   }
 
-  function renderUniverseList() {
-    universeListEl.innerHTML = universe
-      .map(m => '<option value="' + m.id + '">')
-      .join("");
-    const builtCount = universe.filter(m => m.built).length;
-    universeNoteEl.textContent =
-      universe.length + " markets reachable, " + builtCount + " with recorded state — more added over time.";
+  // ---- chart ----
+  function seeded(id, n) {
+    let s = 0; for (const c of id) s = (s * 31 + c.charCodeAt(0)) >>> 0;
+    const r = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+    let v = 100; return Array.from({ length: n }, (_, i) => [i, v += (r() - 0.5) * 2.2]);
+  }
+  async function load(id) {
+    const sym = FEED[id]; if (!sym) return { pts: seeded(id + iv, 120), live: false, why: "No price feed is connected for " + id + ". Line shape is illustrative." };
+    try {
+      const ctl = new AbortController(); setTimeout(() => ctl.abort(), 5000);
+      const res = await fetch("https://api.binance.com/api/v3/klines?symbol=" + sym + "&interval=" + iv + "&limit=120", { signal: ctl.signal });
+      const d = await res.json();
+      return { pts: d.map(k => [k[0], parseFloat(k[4])]), live: true, why: "Closing prices from Binance" };
+    } catch (e) { return { pts: seeded(id + iv, 120), live: false, why: "Price feed not reachable from here. Line shape is illustrative." }; }
+  }
+  function draw(box, data) {
+    const W = 760, H = 320, P = 6, p = data.pts;
+    const ys = p.map(q => q[1]), lo = Math.min(...ys), hi = Math.max(...ys), sp = (hi - lo) || 1;
+    const x = i => P + i * (W - 2 * P) / (p.length - 1), y = v => H - P - (v - lo) / sp * (H - 2 * P);
+    const path = p.map((q, i) => (i ? "L" : "M") + x(i).toFixed(1) + "," + y(q[1]).toFixed(1)).join("");
+    box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Line chart">' +
+      [0.25, 0.5, 0.75].map(f => '<line x1="0" x2="' + W + '" y1="' + H * f + '" y2="' + H * f + '" stroke="#efefef"/>').join("") +
+      '<path d="' + path + '" fill="none" stroke="#0a0a0a" stroke-width="1.6" stroke-linejoin="round"/>' +
+      '<line id="cx" y1="0" y2="' + H + '" stroke="#0a0a0a" stroke-width="0.6" style="display:none"/>' +
+      '<circle id="cd" r="3.5" fill="#0a0a0a" style="display:none"/></svg><div class="tip" id="tip"></div>';
+    const svg = box.querySelector("svg"), cx = $("cx"), cd = $("cd"), tip = $("tip");
+    const mv = ev => {
+      const r = svg.getBoundingClientRect(), t = (ev.touches ? ev.touches[0] : ev).clientX;
+      const i = Math.max(0, Math.min(p.length - 1, Math.round((t - r.left) / r.width * (p.length - 1))));
+      cx.setAttribute("x1", x(i)); cx.setAttribute("x2", x(i)); cd.setAttribute("cx", x(i)); cd.setAttribute("cy", y(p[i][1]));
+      cx.style.display = cd.style.display = "block"; tip.style.display = "block";
+      const when = data.live ? new Date(p[i][0]).toLocaleString([], { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" }) : "";
+      tip.textContent = data.live ? p[i][1].toLocaleString(undefined, { maximumFractionDigits: 2 }) + "  " + when : "illustrative";
+      tip.style.left = Math.min(Math.max(0, x(i) / W * r.width - 40), r.width - 150) + "px";
+    };
+    svg.onmousemove = mv; svg.ontouchmove = mv;
+    svg.onmouseleave = () => { cx.style.display = cd.style.display = tip.style.display = "none"; };
   }
 
-  universeSearchEl.addEventListener("change", tryAddFromSearch);
-  universeSearchEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") tryAddFromSearch();
-  });
-
-  function tryAddFromSearch() {
-    const raw = universeSearchEl.value.trim().toUpperCase();
-    universeSearchEl.value = "";
-    if (!raw) return;
-    const m = marketById(raw);
-    if (!m) return;
-    if (watching.includes(m.id)) {
-      activeId = m.id;
-      momentIndex = 0;
-      renderTabs();
-      renderWorld(true);
-      return;
-    }
-    if (watching.length >= TAB_CAP) {
-      universeNoteEl.textContent = "At " + TAB_CAP + " open — drop one before adding another.";
-      return;
-    }
-    watching.push(m.id);
-    activeId = m.id;
-    momentIndex = 0;
-    renderTabs();
-    renderWorld(true);
+  // ---- journal ----
+  const jkey = id => "mb_journal_" + id;
+  const readJ = id => { try { return JSON.parse(localStorage.getItem(jkey(id)) || "[]"); } catch (e) { return []; } };
+  const saveJ = (id, a) => { try { localStorage.setItem(jkey(id), JSON.stringify(a)); } catch (e) {} };
+  function shelf(id) {
+    const list = readJ(id);
+    $("entries").innerHTML = list.length ? list.map((e, i) =>
+      '<details class="entry"><summary><span class="d">' + esc(new Date(e.t).toLocaleString([], { day:"numeric", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit" })) +
+      '</span><span class="f">' + esc(e.x.split("\n")[0].slice(0, 90)) + '</span></summary><div class="body">' + esc(e.x) +
+      '<button class="rm" data-rm="' + i + '">Remove entry</button></div></details>').join("")
+      : '<p class="none">Nothing shelved for ' + id + ' yet. What you study here becomes an entry.</p>';
   }
 
-  function renderSpark(market) {
-    if (!market.built) { sparkEl.innerHTML = ""; return; }
-    sparkEl.innerHTML =
-      '<path d="' + market.spark + '" fill="none" stroke="hsl(' + market.hue + ' 60% 42%)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
+  async function market(id) {
+    view.innerHTML = '<p class="back"><button id="bk">Front page</button></p><h1 class="title">' + id + '</h1>' +
+      '<div class="ctl">' + ["1m","15m","1h"].map(v => '<button data-iv="' + v + '" class="' + (v === iv ? "on" : "") + '">' + v + '</button>').join("") + '<span class="state" id="state">Loading</span></div>' +
+      '<div class="chart" id="chart"></div>' +
+      '<section class="shelf"><h2>Journal<button id="add">Write an entry</button></h2>' +
+      '<div class="new" id="new"><textarea id="txt" placeholder="What did you see, and what were you reading it as?"></textarea><button id="save">Shelve entry</button></div>' +
+      '<div id="entries"></div></section>';
+    $("bk").onclick = () => go();
+    view.querySelector(".ctl").onclick = e => { const b = e.target.closest("[data-iv]"); if (b) { iv = b.dataset.iv; market(id); } };
+    $("add").onclick = () => { const n = $("new"); n.style.display = n.style.display === "block" ? "none" : "block"; if (n.style.display === "block") $("txt").focus(); };
+    $("save").onclick = () => { const x = $("txt").value.trim(); if (!x) return; const a = readJ(id); a.unshift({ t: Date.now(), x }); saveJ(id, a); $("txt").value = ""; $("new").style.display = "none"; shelf(id); };
+    $("entries").onclick = e => { const r = e.target.closest("[data-rm]"); if (r) { const a = readJ(id); a.splice(+r.dataset.rm, 1); saveJ(id, a); shelf(id); } };
+    shelf(id);
+    const d = await load(id);
+    if (location.hash !== "#/" + id) return;
+    draw($("chart"), d); $("state").textContent = d.why;
   }
 
-  function renderTrail(lines) {
-    trailEl.innerHTML = "";
-    (lines || []).slice(0, 2).forEach((line, i) => {
-      const p = document.createElement("p");
-      p.className = "trail-line";
-      p.dataset.depth = String(i + 1);
-      p.innerHTML = annotate(line);
-      trailEl.appendChild(p);
-    });
+  function route() {
+    const id = decodeURIComponent(location.hash.replace("#/", "")).toUpperCase();
+    document.querySelectorAll("#index button").forEach(b => b.classList.toggle("on", b.dataset.m === id));
+    window.scrollTo(0, 0);
+    UNIVERSE.includes(id) ? market(id) : home();
   }
-
-  function renderWorld(instant) {
-    hidePopover();
-    const market = marketById(activeId);
-    worldEl.style.setProperty("--hue", market.hue);
-    renderSpark(market);
-
-    if (!market.built) {
-      fragAgeEl.textContent = "newly opened world";
-      contextStripEl.style.display = "none";
-      const apply = () => {
-        sentenceEl.textContent = "No state recorded yet.";
-        renderTrail([]);
-      };
-      if (instant) { apply(); return; }
-      sentenceEl.classList.add("out");
-      setTimeout(() => { apply(); sentenceEl.classList.remove("out"); }, 400);
-      return;
-    }
-
-    contextStripEl.style.display = "";
-    const moment = market.moments[momentIndex % market.moments.length];
-    fragAgeEl.textContent = moment.since;
-    archiveLineEl.innerHTML = annotate(market.archiveNote);
-    obligationLineEl.innerHTML = annotate(market.obligation);
-
-    if (instant) {
-      sentenceEl.innerHTML = annotate(moment.current);
-      renderTrail(moment.trail);
-      return;
-    }
-
-    sentenceEl.classList.add("out");
-    setTimeout(() => {
-      sentenceEl.innerHTML = annotate(moment.current);
-      sentenceEl.classList.remove("out");
-      renderTrail(moment.trail);
-    }, 400);
-  }
-
-  advanceBtn.addEventListener("click", () => {
-    const market = marketById(activeId);
-    if (!market.built) return;
-    momentIndex = (momentIndex + 1) % market.moments.length;
-    renderWorld(false);
-  });
-
-  function sessionLabel(date) {
-    const h = date.getUTCHours();
-    if (h >= 0 && h < 7) return "Asia session";
-    if (h >= 7 && h < 13) return "London session";
-    if (h >= 13 && h < 21) return "New York session";
-    return "Late session";
-  }
-
-  function renderAmbient() {
-    const now = new Date();
-    dateTimeEl.textContent = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) +
-      " · " + now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    sessionEl.textContent = sessionLabel(now);
-  }
-
-  renderAmbient();
-  setInterval(renderAmbient, 30000);
-  renderTabs();
-  renderUniverseList();
-  renderWorld(true);
+  window.addEventListener("hashchange", route);
+  route();
 </script>
 </body>
 </html>
