@@ -1,217 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MarketBrain</title>
 <style>
-  :root {
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    --ink: #0a0a0a; --muted: #6b6b6b; --faint: #a3a3a3; --line: #e7e7e7;
-    color-scheme: light;
-  }
-  * { box-sizing: border-box; }
-  html { background: #fff; }
-  body { margin: 0; background: #fff; color: var(--ink); -webkit-font-smoothing: antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; }
-  .page { max-width: 860px; margin: 0 auto; padding: 1.6rem 1.5rem 4rem; }
-  button { font: inherit; color: inherit; background: none; border: none; padding: 0; cursor: pointer; }
-  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
-
-  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
-  .mast { font-size: clamp(40px, 9vw, 76px); font-weight: 700; letter-spacing: -0.045em; line-height: 0.95; }
-  .side { text-align: right; font-size: 12px; color: var(--muted); padding-top: 0.5rem; }
-  .side input { display: block; margin: 0.6rem 0 0 auto; width: 170px; border: none; border-bottom: 1px solid var(--line);
-    font: inherit; font-size: 13px; padding: 0.3rem 0; text-align: right; outline-offset: 4px; background: none; }
-
-  .index { display: flex; flex-wrap: wrap; gap: 0.3rem 1.3rem; margin-top: 1.6rem; padding: 0.8rem 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
-  .index button { font-size: 13px; font-weight: 500; color: var(--muted); }
-  .index button:hover, .index button.on { color: var(--ink); }
-
-  .edition { margin: 2rem 0 0.4rem; font-size: 12px; color: var(--muted); }
-
-  details { border-bottom: 1px solid var(--line); }
-  summary { list-style: none; cursor: pointer; padding: 1.15rem 0; }
-  summary::-webkit-details-marker { display: none; }
-  .head { font-size: clamp(20px, 3.4vw, 26px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; }
-  .src { margin-top: 0.35rem; font-size: 12px; color: var(--faint); }
-  details[open] .head { color: var(--ink); }
-  .brief { padding: 0 0 1.4rem; max-width: 60ch; font-family: Georgia, "Times New Roman", serif; font-size: 16.5px; line-height: 1.65; }
-  .brief p { margin: 0 0 0.8rem; }
-  .brief .open { color: var(--muted); }
-  .brief b { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0; color: var(--ink); margin-right: 0.4rem; }
-  .chips { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.4rem; }
-  .chips button { font: 500 12px -apple-system, "Helvetica Neue", Arial, sans-serif; border: 1px solid var(--ink); border-radius: 999px; padding: 0.25rem 0.75rem; }
-  .chips button:hover { background: var(--ink); color: #fff; }
-
-  /* market view */
-  .back { font-size: 13px; color: var(--muted); margin: 2rem 0 0; }
-  .title { font-size: clamp(32px, 6vw, 48px); font-weight: 700; letter-spacing: -0.035em; margin: 0.4rem 0 1rem; }
-  .ctl { display: flex; gap: 1rem; font-size: 13px; color: var(--faint); align-items: baseline; }
-  .ctl button.on { color: var(--ink); border-bottom: 1px solid var(--ink); }
-  .ctl .state { margin-left: auto; font-size: 11.5px; }
-  .chart { position: relative; margin-top: 0.6rem; touch-action: pan-y; }
-  svg { display: block; width: 100%; height: auto; overflow: visible; }
-  .tip { position: absolute; top: 0; font-size: 12px; background: var(--ink); color: #fff; padding: 0.2rem 0.5rem; border-radius: 6px; pointer-events: none; display: none; white-space: nowrap; }
-
-  .shelf { margin-top: 3rem; }
-  .shelf h2 { font-size: 13px; font-weight: 600; margin: 0 0 0.3rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--ink); display: flex; justify-content: space-between; align-items: baseline; }
-  .shelf h2 button { font-weight: 400; color: var(--muted); font-size: 12px; }
-  .entry summary { padding: 0.85rem 0; display: flex; gap: 1.2rem; align-items: baseline; }
-  .entry .d { flex: 0 0 8.5rem; font-size: 12px; color: var(--faint); }
-  .entry .f { font-family: Georgia, serif; font-size: 16px; }
-  .entry .body { padding: 0 0 1.2rem 9.7rem; font-family: Georgia, serif; font-size: 16px; line-height: 1.65; white-space: pre-wrap; max-width: 62ch; }
-  .entry .rm { display: block; margin-top: 0.6rem; font: 12px -apple-system, sans-serif; color: var(--faint); }
-  .none { padding: 1rem 0; font-size: 14px; color: var(--muted); font-family: Georgia, serif; }
-  .new { display: none; padding: 1rem 0; border-bottom: 1px solid var(--line); }
-  .new textarea { width: 100%; min-height: 130px; border: 1px solid var(--line); border-radius: 8px; padding: 0.8rem; font: 16px/1.6 Georgia, serif; resize: vertical; }
-  .new button { margin-top: 0.6rem; font-size: 13px; border: 1px solid var(--ink); border-radius: 999px; padding: 0.35rem 1rem; }
-  .new button:hover { background: var(--ink); color: #fff; }
-  @media (max-width: 560px) { .entry .body { padding-left: 0; } .entry summary { flex-direction: column; gap: 0.2rem; } }
+:root{--bg:#fff;--ink:#111827;--mute:#6b7280;--faint:#9ca3af;--line:#e5e7eb;--hue:206,216,238;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1116;--ink:#eef0f4;--mute:#9aa3b2;--faint:#6b7280;--line:#232833}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.glow{position:fixed;left:50%;top:22%;width:110vmin;height:70vmin;transform:translate(-50%,-50%);border-radius:50%;filter:blur(34px);pointer-events:none;opacity:.7;
+background:radial-gradient(closest-side,rgba(var(--hue),.7),rgba(var(--hue),0));transition:background 2.4s ease}
+main{position:relative;max-width:720px;margin:0 auto;padding:22px 22px 60px}
+h1{font-size:28px;font-weight:600;letter-spacing:-.02em;margin:0}
+.away{margin-top:26px;color:var(--mute);font-size:13px}
+.away b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--ink);margin:10px 0 0}
+.lead{font-size:clamp(24px,5vw,36px);line-height:1.2;font-weight:600;letter-spacing:-.025em;margin:34px 0 8px;min-height:88px}
+.sum{color:var(--mute);font-size:16px;line-height:1.5;min-height:74px}
+.fade{animation:in 1.5s ease both}
+@keyframes in{from{opacity:0}to{opacity:1}}
+section{border-top:1px solid var(--line);margin-top:34px;padding-top:16px}
+h2{font-size:15px;font-weight:600;margin:0 0 14px;letter-spacing:-.01em}
+h2 span{color:var(--faint);font-weight:400;margin-left:8px}
+.ev{display:grid;grid-template-columns:52px 1fr;gap:12px;padding:7px 0;font-size:15px;line-height:1.4}
+.ev time{color:var(--faint);font-variant-numeric:tabular-nums;font-size:13px;padding-top:2px}
+.ev small{display:block;color:var(--faint);font-size:12px;margin-top:2px}
+.ev.old{opacity:.38}
+.gap{color:var(--faint);font-size:12px;padding:8px 0 8px 64px}
+.obj{padding:16px 0;border-bottom:1px solid var(--line)}
+.obj:last-child{border-bottom:0}
+.obj h3{margin:0 0 8px;font-size:19px;font-weight:600;letter-spacing:-.02em}
+.obj dl{display:grid;grid-template-columns:110px 1fr;gap:3px 12px;margin:0;font-size:14px}
+.obj dt{color:var(--faint)}.obj dd{margin:0;color:var(--ink)}
+.obj .made{color:var(--faint);font-size:12px;margin-top:8px}
+.none{color:var(--faint);font-size:14px}
+.foot{margin-top:40px;color:var(--faint);font-size:12px;line-height:1.6}
 </style>
 </head>
 <body>
-<div class="page">
-  <header>
-    <button class="mast" id="mast" aria-label="MarketBrain home">MarketBrain</button>
-    <div class="side"><span id="date"></span><span id="sess"></span>
-      <input id="search" list="uni" placeholder="open a market" autocomplete="off" aria-label="Open a market">
-      <datalist id="uni"></datalist>
-    </div>
-  </header>
-  <nav class="index" id="index" aria-label="Markets"></nav>
-  <main id="view"></main>
-</div>
+<div class="glow" id="glow"></div>
+<main>
+  <h1>MarketBrain</h1>
+  <div class="away">You last looked at <b id="lt"></b>. It is 08:30.
+    <input type="range" id="left" min="0" max="630" step="5" value="240" aria-label="when you last looked">
+  </div>
+  <div class="lead" id="lead"></div>
+  <div class="sum" id="sum"></div>
+
+  <section><h2>Timeline <span id="tc"></span></h2><div id="tl"></div></section>
+  <section><h2>Open <span id="oc"></span></h2><div id="open"></div></section>
+  <section><h2>Resolved <span id="rc"></span></h2><div id="res"></div></section>
+
+  <div class="foot">A sample night, events written by hand. No prices, no candles. Everything above is projected from the event log,
+  and every region names the detector that made it. Obligations exist only where you declared them.</div>
+</main>
 
 <script>
-  const MARKETS = ["BTCUSD","SPX500","NAS100","EURUSD","XAUUSD","DXY"];
-  const UNIVERSE = MARKETS.concat(["ETHUSD","SOLUSD","XRPUSD","GBPUSD","USDJPY","XAGUSD","US30","GER40"]);
-  const FEED = { BTCUSD:"BTCUSDT", ETHUSD:"ETHUSDT", SOLUSD:"SOLUSDT", XRPUSD:"XRPUSDT" }; // Binance public klines
+// THE LOG. This is the only data the page reads. Append events, never edit old ones.
+// t = minutes after 22:00. Sample night, hand-written, not market data.
+const REG={
+ low70:{name:'Swing low',lvl:'82,870',by:'SwingExtremum v1 · 1m · n=2'},
+ fvg:{name:'Fair value gap',lvl:'82,920 – 82,940',by:'FairValueGap v1 · 5m'},
+ pool:{name:'Liquidity pool',lvl:'83,100',by:'EqualHighs v1 · 5m · tolerance $3'},
+ low58:{name:'Swing low',lvl:'82,858',by:'SwingExtremum v1 · 1m · n=2'},
+ hi02:{name:'Swing high',lvl:'83,102',by:'SwingExtremum v1 · 1m · n=2'}};
+const E=[
+ {t:48,k:'Detected',r:'low70'},
+ {t:50,k:'Declared',o:'ob1',text:'82,870 holds if it is swept',r:'low70'},
+ {t:95,k:'Detected',r:'fvg'},
+ {t:100,k:'Detected',r:'pool'},
+ {t:252,k:'Touch',r:'low70'},
+ {t:271,k:'Traversal',r:'low70'},
+ {t:274,k:'Return',r:'low70'},
+ {t:285,k:'Acceptance',r:'low70',held:11},
+ {t:285,k:'Confronted',o:'ob1',r:'low70',text:'82,870 holds if it is swept',verdict:'held'},
+ {t:320,k:'Detected',r:'low58',from:'the sweep of 82,870'},
+ {t:369,k:'Traversal',r:'pool'},
+ {t:374,k:'Rejection',r:'pool'},
+ {t:374,k:'Detected',r:'hi02',from:'the rejection at 83,100'},
+ {t:485,k:'Touch',r:'fvg'}];
+const NOW=630;
+const clock=t=>{const m=(22*60+t)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
+const nm=r=>REG[r].name.toLowerCase()+' at '+REG[r].lvl;
+const say=e=>({
+ Detected:`A ${nm(e.r)} was recognised.`,
+ Declared:`You declared: ${e.text}.`,
+ Touch:`Price touched the ${nm(e.r)}.`,
+ Traversal:`Price went through the ${nm(e.r)}.`,
+ Return:`Price came back across the ${nm(e.r)}.`,
+ Acceptance:`The ${nm(e.r)} was accepted, held for ${e.held} minutes.`,
+ Rejection:`Price was turned back at the ${nm(e.r)}.`,
+ Confronted:`Your claim met reality: ${e.text} — it held.`})[e.k];
 
-  // The edition is set by hand for now; a news feed replaces this array.
-  const EDITION = "Tuesday 29 September 2026. Reporting from 27 and 28 September.";
-  const NEWS = [
-    { h:"Trump turns down Iran's seven-day plan to reopen the Strait of Hormuz", s:"Al Jazeera, The National, 28 Sept",
-      r:"Iran offered to reopen the strait and return to nuclear talks within a week, in return for released funds, lifted sanctions and an end to the US naval blockade of its ports. Trump called the proposal unacceptable but has said further talks are expected this week. Brent rose above 107 dollars a barrel on the news.",
-      o:"Whether talks resume this week. Reporting says Iranian officials doubt a deal before the US midterms in November.", m:["SPX500","NAS100","DXY"] },
-    { h:"The S&P 500 gives back its whole month as yields climb", s:"Bloomberg, 28 Sept",
-      r:"The oil-driven wobble pushed the S&P 500 below where the month began, and the Nasdaq 100 lost 1.1 percent. The 10-year Treasury yield reached close to a two-decade high, money markets added to bets on a Fed rate increase in October, and the dollar rose.",
-      o:"Whether the October hike pricing holds through this week's data.", m:["SPX500","NAS100","DXY"] },
-    { h:"A crowded data week: jobs openings, then the final Q2 GDP estimate", s:"BNN Bloomberg, Yahoo Finance, 28 Sept",
-      r:"The job openings report lands Tuesday and the Commerce Department's third estimate of second-quarter growth on Wednesday. Analysts have raised third-quarter earnings estimates for S&P 500 companies by 1.3 percent since 30 June, according to FactSet.",
-      o:"How the market reads either release given the rate-hike bets.", m:["SPX500","NAS100"] },
-    { h:"Bank stocks lose ground as rates rise", s:"Yahoo Finance, 28 Sept",
-      r:"The KBW Nasdaq Bank Index fell about 1 percent at Monday's open and is down more than 3.5 percent over five days, as investors weighed higher interest rates and new concerns over AI and funding costs for lenders.",
-      o:"Whether the weakness spreads beyond the sector.", m:["SPX500"] }
-  ];
+function project(){ // fold the log into state
+ const R={},O={};
+ E.forEach(e=>{
+  if(e.k==='Detected')R[e.r]={id:e.r,born:e.t,status:'open',touched:null,from:e.from};
+  if(e.k==='Touch')R[e.r].touched=e.t;
+  if(e.k==='Acceptance'){Object.assign(R[e.r],{status:'accepted',at:e.t,held:e.held})}
+  if(e.k==='Rejection'){Object.assign(R[e.r],{status:'rejected',at:e.t})}
+  if(e.k==='Declared')O[e.o]={id:e.o,text:e.text,r:e.r,at:e.t,status:'open'};
+  if(e.k==='Confronted')Object.assign(O[e.o],{status:'held',resolved:e.t});
+ });
+ return{R,O};
+}
+function obj(title,rows,made,cls){
+ return `<div class="obj fade"><h3>${title}</h3><dl>${rows.map(r=>`<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('')}</dl><div class="made">${made}</div></div>`}
 
-  const $ = id => document.getElementById(id);
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
-  const view = $("view");
-  let iv = "15m";
+function draw(){
+ const L=+left.value; lt.textContent=clock(L);
+ const {R,O}=project();
+ const away=E.filter(e=>e.t>L);
+ const rr=away.filter(e=>e.k==='Acceptance'||e.k==='Rejection').length;
+ const oo=away.filter(e=>e.k==='Confronted').length;
+ const born=away.filter(e=>e.k==='Detected').length;
+ const openNow=Object.values(R).filter(x=>x.status==='open').length+Object.values(O).filter(x=>x.status==='open').length;
+ // lead + summary (silence is a valid answer)
+ let lead,sum;
+ if(!away.length){lead='Nothing has changed since you last looked.';sum=`${openNow} structure${openNow===1?'':'s'} remain open, as they were. You don\u2019t need to be here right now.`}
+ else{
+  const lastRes=[...away].reverse().find(e=>e.k==='Acceptance'||e.k==='Rejection');
+  lead=lastRes?say(lastRes):say(away[away.length-1]);
+  const p=[];if(rr)p.push(`${rr} region${rr>1?'s':''} resolved`);if(oo)p.push(`${oo} of your claims confronted`);if(born)p.push(`${born} new region${born>1?'s':''} recognised`);
+  sum=`While you were away: ${p.join(', ')||'small movements only'}. ${openNow} still open.`}
+ const set=(el,txt)=>{if(el.dataset.v!==txt){el.dataset.v=txt;el.textContent=txt;el.classList.remove('fade');void el.offsetWidth;el.classList.add('fade')}};
+ set(document.getElementById('lead'),lead);set(document.getElementById('sum'),sum);
+ document.getElementById('glow').style.background=`radial-gradient(closest-side,rgba(${away.length?'238,222,196':'206,216,238'},.75),rgba(238,222,196,0))`;
 
-  $("uni").innerHTML = UNIVERSE.map(m => '<option value="' + m + '">').join("");
-  $("index").innerHTML = MARKETS.map(m => '<button data-m="' + m + '">' + m + '</button>').join("");
-  const now = new Date(), h = now.getUTCHours();
-  $("date").textContent = now.toLocaleDateString(undefined, { weekday:"long", day:"numeric", month:"long", year:"numeric" }) + ". ";
-  $("sess").textContent = h < 7 ? "Asia session." : h < 13 ? "London session." : h < 21 ? "New York session." : "Late session.";
+ // timeline (older than L is dimmed, then a marker)
+ let tl='',marked=false;
+ E.forEach(e=>{
+  if(!marked&&e.t>L){tl+=`<div class="gap">you looked here, ${clock(L)}</div>`;marked=true}
+  tl+=`<div class="ev ${e.t<=L?'old':''}"><time>${clock(e.t)}</time><div>${say(e)}${e.from?`<small>born from ${e.from}</small>`:''}</div></div>`});
+ if(!marked)tl+=`<div class="gap">you looked here, ${clock(L)}</div>`;
+ document.getElementById('tl').innerHTML=tl;
+ document.getElementById('tc').textContent=away.length+' since';
 
-  const go = m => { location.hash = m ? "#/" + m : "#/"; };
-  $("mast").onclick = () => go();
-  $("index").onclick = e => { const b = e.target.closest("button"); if (b) go(b.dataset.m); };
-  $("search").addEventListener("change", e => {
-    const v = e.target.value.trim().toUpperCase(); e.target.value = "";
-    if (UNIVERSE.includes(v)) go(v);
-  });
-  view.addEventListener("click", e => { const c = e.target.closest("[data-go]"); if (c) go(c.dataset.go); });
+ // open
+ let op='';
+ Object.values(O).filter(o=>o.status==='open'&&o.at<=NOW).forEach(o=>op+=obj('Claim by you',[['you said',o.text],['declared',clock(o.at)],['status','open']],'obligation, declared by you'));
+ Object.values(R).filter(x=>x.status==='open').forEach(x=>{
+  const g=REG[x.id];
+  op+=obj(g.name,[['level',g.lvl],['recognised',clock(x.born)],
+   ...(x.touched?[['touched',clock(x.touched)+', not resolved']]:[]),
+   ['status',x.touched?'undetermined':'untested'],
+   ...(x.from?[['born from',x.from]]:[])],'made by '+g.by)});
+ document.getElementById('open').innerHTML=op||'<div class="none">Nothing open.</div>';
+ document.getElementById('oc').textContent=openNow;
 
-  function home() {
-    view.innerHTML = '<p class="edition">' + esc(EDITION) + '</p>' + NEWS.map(n =>
-      '<details><summary><div class="head">' + esc(n.h) + '</div><div class="src">' + esc(n.s) + '</div></summary>' +
-      '<div class="brief"><p><b>Reported</b>' + esc(n.r) + '</p><p class="open"><b>Still open</b>' + esc(n.o) + '</p>' +
-      '<div class="chips">' + n.m.map(m => '<button data-go="' + m + '">' + m + '</button>').join("") + '</div></div></details>'
-    ).join("");
-  }
-
-  // ---- chart ----
-  function seeded(id, n) {
-    let s = 0; for (const c of id) s = (s * 31 + c.charCodeAt(0)) >>> 0;
-    const r = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
-    let v = 100; return Array.from({ length: n }, (_, i) => [i, v += (r() - 0.5) * 2.2]);
-  }
-  async function load(id) {
-    const sym = FEED[id]; if (!sym) return { pts: seeded(id + iv, 120), live: false, why: "No price feed is connected for " + id + ". Line shape is illustrative." };
-    try {
-      const ctl = new AbortController(); setTimeout(() => ctl.abort(), 5000);
-      const res = await fetch("https://api.binance.com/api/v3/klines?symbol=" + sym + "&interval=" + iv + "&limit=120", { signal: ctl.signal });
-      const d = await res.json();
-      return { pts: d.map(k => [k[0], parseFloat(k[4])]), live: true, why: "Closing prices from Binance" };
-    } catch (e) { return { pts: seeded(id + iv, 120), live: false, why: "Price feed not reachable from here. Line shape is illustrative." }; }
-  }
-  function draw(box, data) {
-    const W = 760, H = 320, P = 6, p = data.pts;
-    const ys = p.map(q => q[1]), lo = Math.min(...ys), hi = Math.max(...ys), sp = (hi - lo) || 1;
-    const x = i => P + i * (W - 2 * P) / (p.length - 1), y = v => H - P - (v - lo) / sp * (H - 2 * P);
-    const path = p.map((q, i) => (i ? "L" : "M") + x(i).toFixed(1) + "," + y(q[1]).toFixed(1)).join("");
-    box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Line chart">' +
-      [0.25, 0.5, 0.75].map(f => '<line x1="0" x2="' + W + '" y1="' + H * f + '" y2="' + H * f + '" stroke="#efefef"/>').join("") +
-      '<path d="' + path + '" fill="none" stroke="#0a0a0a" stroke-width="1.6" stroke-linejoin="round"/>' +
-      '<line id="cx" y1="0" y2="' + H + '" stroke="#0a0a0a" stroke-width="0.6" style="display:none"/>' +
-      '<circle id="cd" r="3.5" fill="#0a0a0a" style="display:none"/></svg><div class="tip" id="tip"></div>';
-    const svg = box.querySelector("svg"), cx = $("cx"), cd = $("cd"), tip = $("tip");
-    const mv = ev => {
-      const r = svg.getBoundingClientRect(), t = (ev.touches ? ev.touches[0] : ev).clientX;
-      const i = Math.max(0, Math.min(p.length - 1, Math.round((t - r.left) / r.width * (p.length - 1))));
-      cx.setAttribute("x1", x(i)); cx.setAttribute("x2", x(i)); cd.setAttribute("cx", x(i)); cd.setAttribute("cy", y(p[i][1]));
-      cx.style.display = cd.style.display = "block"; tip.style.display = "block";
-      const when = data.live ? new Date(p[i][0]).toLocaleString([], { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" }) : "";
-      tip.textContent = data.live ? p[i][1].toLocaleString(undefined, { maximumFractionDigits: 2 }) + "  " + when : "illustrative";
-      tip.style.left = Math.min(Math.max(0, x(i) / W * r.width - 40), r.width - 150) + "px";
-    };
-    svg.onmousemove = mv; svg.ontouchmove = mv;
-    svg.onmouseleave = () => { cx.style.display = cd.style.display = tip.style.display = "none"; };
-  }
-
-  // ---- journal ----
-  const jkey = id => "mb_journal_" + id;
-  const readJ = id => { try { return JSON.parse(localStorage.getItem(jkey(id)) || "[]"); } catch (e) { return []; } };
-  const saveJ = (id, a) => { try { localStorage.setItem(jkey(id), JSON.stringify(a)); } catch (e) {} };
-  function shelf(id) {
-    const list = readJ(id);
-    $("entries").innerHTML = list.length ? list.map((e, i) =>
-      '<details class="entry"><summary><span class="d">' + esc(new Date(e.t).toLocaleString([], { day:"numeric", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit" })) +
-      '</span><span class="f">' + esc(e.x.split("\n")[0].slice(0, 90)) + '</span></summary><div class="body">' + esc(e.x) +
-      '<button class="rm" data-rm="' + i + '">Remove entry</button></div></details>').join("")
-      : '<p class="none">Nothing shelved for ' + id + ' yet. What you study here becomes an entry.</p>';
-  }
-
-  async function market(id) {
-    view.innerHTML = '<p class="back"><button id="bk">Front page</button></p><h1 class="title">' + id + '</h1>' +
-      '<div class="ctl">' + ["1m","15m","1h"].map(v => '<button data-iv="' + v + '" class="' + (v === iv ? "on" : "") + '">' + v + '</button>').join("") + '<span class="state" id="state">Loading</span></div>' +
-      '<div class="chart" id="chart"></div>' +
-      '<section class="shelf"><h2>Journal<button id="add">Write an entry</button></h2>' +
-      '<div class="new" id="new"><textarea id="txt" placeholder="What did you see, and what were you reading it as?"></textarea><button id="save">Shelve entry</button></div>' +
-      '<div id="entries"></div></section>';
-    $("bk").onclick = () => go();
-    view.querySelector(".ctl").onclick = e => { const b = e.target.closest("[data-iv]"); if (b) { iv = b.dataset.iv; market(id); } };
-    $("add").onclick = () => { const n = $("new"); n.style.display = n.style.display === "block" ? "none" : "block"; if (n.style.display === "block") $("txt").focus(); };
-    $("save").onclick = () => { const x = $("txt").value.trim(); if (!x) return; const a = readJ(id); a.unshift({ t: Date.now(), x }); saveJ(id, a); $("txt").value = ""; $("new").style.display = "none"; shelf(id); };
-    $("entries").onclick = e => { const r = e.target.closest("[data-rm]"); if (r) { const a = readJ(id); a.splice(+r.dataset.rm, 1); saveJ(id, a); shelf(id); } };
-    shelf(id);
-    const d = await load(id);
-    if (location.hash !== "#/" + id) return;
-    draw($("chart"), d); $("state").textContent = d.why;
-  }
-
-  function route() {
-    const id = decodeURIComponent(location.hash.replace("#/", "")).toUpperCase();
-    document.querySelectorAll("#index button").forEach(b => b.classList.toggle("on", b.dataset.m === id));
-    window.scrollTo(0, 0);
-    UNIVERSE.includes(id) ? market(id) : home();
-  }
-  window.addEventListener("hashchange", route);
-  route();
+ // resolved
+ let rs='';
+ Object.values(R).filter(x=>x.status!=='open').forEach(x=>{
+  const g=REG[x.id],a=x.status==='accepted';
+  rs+=obj(a?'Acceptance':'Rejection',[['region',g.name.toLowerCase()+', '+g.lvl],['confirmed',clock(x.at)],
+   ...(a?[['held',x.held+' minutes']]:[]),['status',x.status==='accepted'?'accepted':'rejected'],['seen',x.at>L?'while you were away':'before you left']],'made by '+g.by)});
+ Object.values(O).filter(o=>o.status==='held').forEach(o=>rs+=obj('Claim confronted',[['you said',o.text],['met reality',clock(o.resolved)],['result','held'],['evidence','acceptance at 82,870']],'resolved by confrontation, not by activity'));
+ document.getElementById('res').innerHTML=rs||'<div class="none">Nothing resolved yet.</div>';
+ document.getElementById('rc').textContent=Object.values(R).filter(x=>x.status!=='open').length+Object.values(O).filter(x=>x.status==='held').length;
+}
+left.addEventListener('input',draw);draw();
 </script>
 </body>
 </html>
