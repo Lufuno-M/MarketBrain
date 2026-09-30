@@ -1,166 +1,153 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MarketBrain</title>
 <style>
-:root{--bg:#fff;--ink:#111827;--mute:#6b7280;--faint:#9ca3af;--line:#e5e7eb;--hue:206,216,238;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1116;--ink:#eef0f4;--mute:#9aa3b2;--faint:#6b7280;--line:#232833}}
+:root{--bg:#fff;--ink:#111827;--mute:#6b7280;--faint:#9ca3af;--hue:#e9effd;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1115;--ink:#eceef2;--mute:#9aa1ad;--faint:#6b7280;--hue:#182033}}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
-.glow{position:fixed;left:50%;top:22%;width:110vmin;height:70vmin;transform:translate(-50%,-50%);border-radius:50%;filter:blur(34px);pointer-events:none;opacity:.7;
-background:radial-gradient(closest-side,rgba(var(--hue),.7),rgba(var(--hue),0));transition:background 2.4s ease}
-main{position:relative;max-width:720px;margin:0 auto;padding:22px 22px 60px}
-h1{font-size:28px;font-weight:600;letter-spacing:-.02em;margin:0}
-.away{margin-top:26px;color:var(--mute);font-size:13px}
-.away b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
-input[type=range]{width:100%;accent-color:var(--ink);margin:10px 0 0}
-.lead{font-size:clamp(24px,5vw,36px);line-height:1.2;font-weight:600;letter-spacing:-.025em;margin:34px 0 8px;min-height:88px}
-.sum{color:var(--mute);font-size:16px;line-height:1.5;min-height:74px}
-.fade{animation:in 1.5s ease both}
-@keyframes in{from{opacity:0}to{opacity:1}}
-section{border-top:1px solid var(--line);margin-top:34px;padding-top:16px}
-h2{font-size:15px;font-weight:600;margin:0 0 14px;letter-spacing:-.01em}
-h2 span{color:var(--faint);font-weight:400;margin-left:8px}
-.ev{display:grid;grid-template-columns:52px 1fr;gap:12px;padding:7px 0;font-size:15px;line-height:1.4}
-.ev time{color:var(--faint);font-variant-numeric:tabular-nums;font-size:13px;padding-top:2px}
-.ev small{display:block;color:var(--faint);font-size:12px;margin-top:2px}
-.ev.old{opacity:.38}
-.gap{color:var(--faint);font-size:12px;padding:8px 0 8px 64px}
-.obj{padding:16px 0;border-bottom:1px solid var(--line)}
-.obj:last-child{border-bottom:0}
-.obj h3{margin:0 0 8px;font-size:19px;font-weight:600;letter-spacing:-.02em}
-.obj dl{display:grid;grid-template-columns:110px 1fr;gap:3px 12px;margin:0;font-size:14px}
-.obj dt{color:var(--faint)}.obj dd{margin:0;color:var(--ink)}
-.obj .made{color:var(--faint);font-size:12px;margin-top:8px}
-.none{color:var(--faint);font-size:14px}
-.foot{margin-top:40px;color:var(--faint);font-size:12px;line-height:1.6}
+html{height:100%}
+body{margin:0;min-height:100%;background:radial-gradient(60rem 30rem at 85% -10%,var(--hue),transparent 70%) var(--bg);color:var(--ink);
+font:1rem/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",sans-serif;
+padding:calc(1.25rem + env(safe-area-inset-top,0px)) 1.5rem calc(3rem + env(safe-area-inset-bottom,0px))}
+h1{margin:0 0 3rem;font-size:clamp(2rem,6vw,3.25rem);font-weight:700;letter-spacing:-.035em;line-height:1}
+main{max-width:38rem}
+p{margin:0}
+.away{color:var(--mute)}
+.away b{color:var(--ink);font-weight:600}
+input[type=range]{width:100%;margin:1rem 0 .25rem;accent-color:var(--ink)}
+.hint{color:var(--faint);font-size:.875rem}
+.sum{font-size:clamp(1.35rem,3.6vw,1.9rem);font-weight:600;letter-spacing:-.02em;line-height:1.3;margin:2.5rem 0 2rem}
+.ev{margin:0 0 1.1rem}
+.ev span{display:block;color:var(--mute)}
+h2{font-size:1rem;font-weight:600;margin:2.5rem 0 .75rem;color:var(--mute)}
+.mark{margin:0 0 1.1rem}
+form,.row{display:flex;gap:.75rem;align-items:baseline}
+input[type=number]{font:inherit;color:inherit;background:transparent;border:0;border-bottom:1px solid var(--faint);width:9rem;padding:.25rem 0}
+button{font:inherit;color:var(--ink);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:.2em}
+button.x{color:var(--faint);font-size:.875rem}
+footer{margin-top:3.5rem;color:var(--faint);font-size:.8125rem;max-width:34rem}
+.err{color:var(--mute)}
+@media(prefers-reduced-motion:no-preference){.sum,.ev{transition:opacity .4s}}
 </style>
 </head>
 <body>
-<div class="glow" id="glow"></div>
+<h1>MarketBrain</h1>
 <main>
-  <h1>MarketBrain</h1>
-  <div class="away">You last looked at <b id="lt"></b>. It is 08:30.
-    <input type="range" id="left" min="0" max="630" step="5" value="240" aria-label="when you last looked">
-  </div>
-  <div class="lead" id="lead"></div>
-  <div class="sum" id="sum"></div>
-
-  <section><h2>Timeline <span id="tc"></span></h2><div id="tl"></div></section>
-  <section><h2>Open <span id="oc"></span></h2><div id="open"></div></section>
-  <section><h2>Resolved <span id="rc"></span></h2><div id="res"></div></section>
-
-  <div class="foot">A sample night, events written by hand. No prices, no candles. Everything above is projected from the event log,
-  and every region names the detector that made it. Obligations exist only where you declared them.</div>
+  <p class="away" id="away"></p>
+  <input type="range" id="slider" aria-label="When you last looked" min="30" max="900" step="5">
+  <p class="hint">Drag to change when you last looked.</p>
+  <p class="sum" id="sum" aria-live="polite">Reading the last 16 hours of candles.</p>
+  <div id="events"></div>
+  <div id="standing"></div>
+  <h2>Levels you marked</h2>
+  <form id="f"><input type="number" id="lvl" step="any" min="0" placeholder="Price" aria-label="Price to mark"><button>Mark</button></form>
+  <div id="marks" style="margin-top:1.25rem"></div>
+  <footer id="prov"></footer>
 </main>
-
 <script>
-// THE LOG. This is the only data the page reads. Append events, never edit old ones.
-// t = minutes after 22:00. Sample night, hand-written, not market data.
-const REG={
- low70:{name:'Swing low',lvl:'82,870',by:'SwingExtremum v1 · 1m · n=2'},
- fvg:{name:'Fair value gap',lvl:'82,920 – 82,940',by:'FairValueGap v1 · 5m'},
- pool:{name:'Liquidity pool',lvl:'83,100',by:'EqualHighs v1 · 5m · tolerance $3'},
- low58:{name:'Swing low',lvl:'82,858',by:'SwingExtremum v1 · 1m · n=2'},
- hi02:{name:'Swing high',lvl:'83,102',by:'SwingExtremum v1 · 1m · n=2'}};
-const E=[
- {t:48,k:'Detected',r:'low70'},
- {t:50,k:'Declared',o:'ob1',text:'82,870 holds if it is swept',r:'low70'},
- {t:95,k:'Detected',r:'fvg'},
- {t:100,k:'Detected',r:'pool'},
- {t:252,k:'Touch',r:'low70'},
- {t:271,k:'Traversal',r:'low70'},
- {t:274,k:'Return',r:'low70'},
- {t:285,k:'Acceptance',r:'low70',held:11},
- {t:285,k:'Confronted',o:'ob1',r:'low70',text:'82,870 holds if it is swept',verdict:'held'},
- {t:320,k:'Detected',r:'low58',from:'the sweep of 82,870'},
- {t:369,k:'Traversal',r:'pool'},
- {t:374,k:'Rejection',r:'pool'},
- {t:374,k:'Detected',r:'hi02',from:'the rejection at 83,100'},
- {t:485,k:'Touch',r:'fvg'}];
-const NOW=630;
-const clock=t=>{const m=(22*60+t)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
-const nm=r=>REG[r].name.toLowerCase()+' at '+REG[r].lvl;
-const say=e=>({
- Detected:`A ${nm(e.r)} was recognised.`,
- Declared:`You declared: ${e.text}.`,
- Touch:`Price touched the ${nm(e.r)}.`,
- Traversal:`Price went through the ${nm(e.r)}.`,
- Return:`Price came back across the ${nm(e.r)}.`,
- Acceptance:`The ${nm(e.r)} was accepted, held for ${e.held} minutes.`,
- Rejection:`Price was turned back at the ${nm(e.r)}.`,
- Confronted:`Your claim met reality: ${e.text} — it held.`})[e.k];
+// Every interpretive choice lives here and is printed in the footer.
+const P={sym:'BTCUSDT',tf:'1m',N:10,A:3,look:15};
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString('en-US',{maximumFractionDigits:2});
+const hm=t=>new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});
+const day=t=>new Date(t).toDateString()===new Date().toDateString()?'':new Date(t).toLocaleDateString([],{weekday:'short'})+' ';
+const at=t=>day(t)+hm(t);
+let C=[],R=[],marks=[],away=390;
+try{marks=JSON.parse(localStorage.getItem('mb-marks')||'[]');away=+localStorage.getItem('mb-away')||390}catch(e){}
+const save=()=>{try{localStorage.setItem('mb-marks',JSON.stringify(marks));localStorage.setItem('mb-away',away)}catch(e){}};
 
-function project(){ // fold the log into state
- const R={},O={};
- E.forEach(e=>{
-  if(e.k==='Detected')R[e.r]={id:e.r,born:e.t,status:'open',touched:null,from:e.from};
-  if(e.k==='Touch')R[e.r].touched=e.t;
-  if(e.k==='Acceptance'){Object.assign(R[e.r],{status:'accepted',at:e.t,held:e.held})}
-  if(e.k==='Rejection'){Object.assign(R[e.r],{status:'rejected',at:e.t})}
-  if(e.k==='Declared')O[e.o]={id:e.o,text:e.text,r:e.r,at:e.t,status:'open'};
-  if(e.k==='Confronted')Object.assign(O[e.o],{status:'held',resolved:e.t});
- });
- return{R,O};
+function mk(i,side){
+  const n=P.N,L=side==='low'?C[i].l:C[i].h,r={side,L,born:C[i].t,det:C[i+n].t};
+  const past=c=>side==='low'?c.c<L:c.c>L;
+  for(let j=i+n+1;j<C.length;j++){
+    const x=C[j];
+    if(side==='low'?x.l<L:x.h>L){
+      const w=C.slice(j,j+P.A);
+      r.trav=x.t;
+      r.ext=side==='low'?Math.min(...w.map(c=>c.l)):Math.max(...w.map(c=>c.h));
+      r.out='Undetermined';
+      for(let k=0;k<w.length;k++){
+        if(!past(w[k])){r.out='Rejected';r.at=w[k].t;break}
+        if(k===P.A-1){r.out='Accepted';r.at=w[k].t}
+      }
+      return r;
+    }
+  }
+  return r;
 }
-function obj(title,rows,made,cls){
- return `<div class="obj fade"><h3>${title}</h3><dl>${rows.map(r=>`<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('')}</dl><div class="made">${made}</div></div>`}
-
-function draw(){
- const L=+left.value; lt.textContent=clock(L);
- const {R,O}=project();
- const away=E.filter(e=>e.t>L);
- const rr=away.filter(e=>e.k==='Acceptance'||e.k==='Rejection').length;
- const oo=away.filter(e=>e.k==='Confronted').length;
- const born=away.filter(e=>e.k==='Detected').length;
- const openNow=Object.values(R).filter(x=>x.status==='open').length+Object.values(O).filter(x=>x.status==='open').length;
- // lead + summary (silence is a valid answer)
- let lead,sum;
- if(!away.length){lead='Nothing has changed since you last looked.';sum=`${openNow} structure${openNow===1?'':'s'} remain open, as they were. You don\u2019t need to be here right now.`}
- else{
-  const lastRes=[...away].reverse().find(e=>e.k==='Acceptance'||e.k==='Rejection');
-  lead=lastRes?say(lastRes):say(away[away.length-1]);
-  const p=[];if(rr)p.push(`${rr} region${rr>1?'s':''} resolved`);if(oo)p.push(`${oo} of your claims confronted`);if(born)p.push(`${born} new region${born>1?'s':''} recognised`);
-  sum=`While you were away: ${p.join(', ')||'small movements only'}. ${openNow} still open.`}
- const set=(el,txt)=>{if(el.dataset.v!==txt){el.dataset.v=txt;el.textContent=txt;el.classList.remove('fade');void el.offsetWidth;el.classList.add('fade')}};
- set(document.getElementById('lead'),lead);set(document.getElementById('sum'),sum);
- document.getElementById('glow').style.background=`radial-gradient(closest-side,rgba(${away.length?'238,222,196':'206,216,238'},.75),rgba(238,222,196,0))`;
-
- // timeline (older than L is dimmed, then a marker)
- let tl='',marked=false;
- E.forEach(e=>{
-  if(!marked&&e.t>L){tl+=`<div class="gap">you looked here, ${clock(L)}</div>`;marked=true}
-  tl+=`<div class="ev ${e.t<=L?'old':''}"><time>${clock(e.t)}</time><div>${say(e)}${e.from?`<small>born from ${e.from}</small>`:''}</div></div>`});
- if(!marked)tl+=`<div class="gap">you looked here, ${clock(L)}</div>`;
- document.getElementById('tl').innerHTML=tl;
- document.getElementById('tc').textContent=away.length+' since';
-
- // open
- let op='';
- Object.values(O).filter(o=>o.status==='open'&&o.at<=NOW).forEach(o=>op+=obj('Claim by you',[['you said',o.text],['declared',clock(o.at)],['status','open']],'obligation, declared by you'));
- Object.values(R).filter(x=>x.status==='open').forEach(x=>{
-  const g=REG[x.id];
-  op+=obj(g.name,[['level',g.lvl],['recognised',clock(x.born)],
-   ...(x.touched?[['touched',clock(x.touched)+', not resolved']]:[]),
-   ['status',x.touched?'undetermined':'untested'],
-   ...(x.from?[['born from',x.from]]:[])],'made by '+g.by)});
- document.getElementById('open').innerHTML=op||'<div class="none">Nothing open.</div>';
- document.getElementById('oc').textContent=openNow;
-
- // resolved
- let rs='';
- Object.values(R).filter(x=>x.status!=='open').forEach(x=>{
-  const g=REG[x.id],a=x.status==='accepted';
-  rs+=obj(a?'Acceptance':'Rejection',[['region',g.name.toLowerCase()+', '+g.lvl],['confirmed',clock(x.at)],
-   ...(a?[['held',x.held+' minutes']]:[]),['status',x.status==='accepted'?'accepted':'rejected'],['seen',x.at>L?'while you were away':'before you left']],'made by '+g.by)});
- Object.values(O).filter(o=>o.status==='held').forEach(o=>rs+=obj('Claim confronted',[['you said',o.text],['met reality',clock(o.resolved)],['result','held'],['evidence','acceptance at 82,870']],'resolved by confrontation, not by activity'));
- document.getElementById('res').innerHTML=rs||'<div class="none">Nothing resolved yet.</div>';
- document.getElementById('rc').textContent=Object.values(R).filter(x=>x.status!=='open').length+Object.values(O).filter(x=>x.status==='held').length;
+function regions(){
+  const n=P.N,out=[];
+  for(let i=n;i<C.length-n;i++){
+    let lo=true,hi=true;
+    for(let k=1;k<=n&&(lo||hi);k++){
+      if(C[i].l>=C[i-k].l||C[i].l>=C[i+k].l)lo=false;
+      if(C[i].h<=C[i-k].h||C[i].h<=C[i+k].h)hi=false;
+    }
+    if(lo)out.push(mk(i,'low'));
+    if(hi)out.push(mk(i,'high'));
+  }
+  return out;
 }
-left.addEventListener('input',draw);draw();
+const T0=()=>C[C.length-1].t+60000-away*60000;
+
+function outcome(r){
+  const dir=r.side==='low'?['above','below']:['below','above'];
+  if(r.out==='Rejected')return `Rejected: a candle closed back ${dir[0]} at ${hm(r.at)}.`;
+  if(r.out==='Accepted')return `Accepted: ${P.A} closes ${dir[1]} by ${hm(r.at+60000)}.`;
+  return `Undetermined: fewer than ${P.A} candles have closed since.`;
+}
+function render(){
+  if(!C.length)return;
+  const T=T0(),now=C[C.length-1].t+60000,price=C[C.length-1].c;
+  $('away').innerHTML=`Away since <b>${at(T)}</b>. It is <b>${hm(now)}</b>.`;
+  $('slider').value=away;
+  const ev=R.filter(r=>r.trav&&r.trav>T&&r.det<=now);
+  const open=R.filter(r=>!r.trav);
+  const cnt=o=>ev.filter(r=>r.out===o).length;
+  $('sum').textContent=ev.length
+    ?`Since ${hm(T)}, ${ev.length} ${ev.length===1?'region was':'regions were'} traversed: ${cnt('Rejected')} rejected, ${cnt('Accepted')} accepted, ${cnt('Undetermined')} undetermined. ${open.length} still untraversed.`
+    :`Since ${hm(T)}, no region was traversed. ${open.length} still untraversed.`;
+  $('events').innerHTML=ev.slice(-40).map(r=>
+    `<p class="ev">The ${fmt(r.L)} ${r.side}, formed ${at(r.born)}${r.det>T?' while you were away':''}, was traversed at ${hm(r.trav)} (to ${fmt(r.ext)}).<span>${outcome(r)}</span></p>`).join('');
+  const below=open.filter(r=>r.side==='low'&&r.L<price).sort((a,b)=>b.L-a.L)[0];
+  const above=open.filter(r=>r.side==='high'&&r.L>price).sort((a,b)=>a.L-b.L)[0];
+  const line=(r,w)=>r?`<p class="ev">Nearest untraversed ${r.side} ${w} price: ${fmt(r.L)}, formed ${at(r.born)}.</p>`:'';
+  $('standing').innerHTML=line(above,'above')+line(below,'below');
+  $('marks').innerHTML=marks.map((L,i)=>`<div class="mark"><div class="row"><b>${fmt(L)}</b><button class="x" data-i="${i}">remove</button></div><p class="away">${study(L,T,price)}</p></div>`).join('');
+}
+function study(L,T,price){
+  const j=C.findIndex(c=>c.t>=T&&c.l<=L&&L<=c.h);
+  const d=price-L,where=d>=0?'above':'below';
+  if(j<0)return `Price has not reached ${fmt(L)} since ${hm(T)}. It is ${fmt(Math.abs(d))} ${where} now.`;
+  const from=j>0&&C[j-1].c>L?'from above':'from below',w=C.slice(j,j+P.look);
+  const hi=Math.max(...w.map(c=>c.h)),lo=Math.min(...w.map(c=>c.l));
+  const up=w.filter(c=>c.c>L).length,dn=w.filter(c=>c.c<L).length;
+  return `Reached ${from} at ${hm(C[j].t)}. Over the next ${w.length} minutes it traded from ${fmt(lo)} to ${fmt(hi)} (${fmt(Math.max(0,L-lo))} below the level, ${fmt(Math.max(0,hi-L))} above), with ${up} closes above and ${dn} below. Now ${fmt(Math.abs(d))} ${where}.`;
+}
+async function load(){
+  try{
+    const r=await fetch(`https://data-api.binance.vision/api/v3/klines?symbol=${P.sym}&interval=${P.tf}&limit=1000`);
+    if(!r.ok)throw new Error(r.status);
+    const a=await r.json();
+    C=a.map(k=>({t:k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4]}));
+    C.pop(); // the open candle has not closed, so it is not evidence yet
+    R=regions();
+    $('slider').max=Math.min(900,C.length-P.N*3);
+    away=Math.min(away,+$('slider').max);
+    render();
+  }catch(e){
+    $('sum').className='sum err';
+    $('sum').textContent="Couldn't reach the candle source, so there is nothing honest to show. Reload to try again.";
+  }
+}
+$('slider').addEventListener('input',e=>{away=+e.target.value;save();render()});
+$('f').addEventListener('submit',e=>{e.preventDefault();const v=parseFloat($('lvl').value);if(v>0){marks.push(v);$('lvl').value='';save();render()}});
+$('marks').addEventListener('click',e=>{const i=e.target.dataset.i;if(i!==undefined){marks.splice(+i,1);save();render()}});
+$('prov').textContent=`Regions are swing extrema: the lowest low or highest high among ${P.N} ${P.tf} candles either side, known only ${P.N} candles later. A region is traversed when a wick passes its exact level, with no tolerance. Acceptance is ${P.A} closes beyond it; a close back inside first is rejection. Candles: ${P.sym} spot from Binance, closed candles only, so levels can differ by a few dollars from another venue.`;
+load();
 </script>
 </body>
 </html>
