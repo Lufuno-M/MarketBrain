@@ -1,56 +1,73 @@
+
 # MarketBrain
 
-MarketBrain restores context to people who trade or follow markets. It answers three questions when you return to a market after any absence: what changed, what did not, and what you believed before you left.
+MarketBrain restores context. It does not predict, signal, or trade.
 
-It is not a signal service, a trading bot, a watchlist or a dashboard. It never predicts, and it never tells you what to do.
+You look away, the market keeps existing, and you come back missing a chapter. This page is a memory viewer for that chapter: what was recognised, what was confronted, what was accepted or rejected, what is still unresolved, and what changed while you were gone. There are no prices, candles, or indicators on it.
 
-## Why the purpose was re-examined
+Open `index.html` in a browser. There is no build step and no dependencies.
 
-The first design was sentence-first: one ever-changing line per market, with charts deliberately withheld so the sentence would do the synthesis. Working through it exposed three problems.
+## What you are looking at
 
-1. **A market you cannot see is a market you are not drawn to.** Withholding the chart removed the pull to enter the market, which is part of why anyone opens a market tool at all. The chart stays, but as a door, not as the product.
-2. **Studying and watching are different acts and were sharing one surface.** Interpreting what the 1-minute chart did overnight is reflective work. It belongs in a diary, read and written deliberately, not in a live view competing with the price.
-3. **The home page was a market page.** A person returning after hours or days usually wants to know what the world did first. That is a front page, not a ticker.
+Drag "you last looked at" and the page re-answers one question: what changed since then? If nothing did, it says so plainly. Silence is a correct output.
 
-The core idea survives unchanged: context, memory and perspective over prediction and speed.
+Three sections, and only three:
 
-## Principles
+- **Timeline.** The event log, in words. Events from before you looked are dimmed.
+- **Open.** Regions and claims that have not been confronted yet.
+- **Resolved.** Regions that were accepted or rejected, and claims that met reality.
 
-1. **Front page, not dashboard.** Home is an edition of dated reporting, headlines only. Nothing expands until you choose it.
-2. **The chart is a door.** Opening a market shows one plain line chart, nothing decorative, so the market can attract you in.
-3. **The journal is the memory.** Interpretation is shelved as dated entries beneath the chart, collapsed by default, treated as diary and not as a live feed.
-4. **Known, inferred, uncertain stay separate.** Every briefing says what was reported (with its source) and what is still open. MarketBrain records what is reported or asserted and does not state its own inferences as fact.
-5. **No timeframe is declared noise.** The chart offers 1m, 15m and 1h with equal standing. Fifteen minutes is fifteen minutes; a 1-minute sweep does not stop being real because it is small on a 5-minute chart. Liquidity pools and runs are treated as real structure, and no bias about which scale matters is built in.
-6. **Absence is a first-class case.** Returning after sleep, work or a weekend is the central use. The system should be able to say what happened while you were away.
-7. **Nothing happened is a valid entry.** Telling you that you do not need to be here is a success state.
-8. **Describe structure, never advice.** Nothing in the product reads as a trade call.
-9. **Calm over urgency.** White page, black text, one masthead. No colour signalling gain or loss, no jitter, no manufactured drama.
+## How it works
 
-## What exists now
+The page reads one array of events (`E` in `index.html`). Everything else is a projection of that log, folded from the top. Nothing is stored as state.
 
-| Part | Status |
+```
+Raw observations -> Primitives -> Regions -> Confrontations -> Narrative
+```
+
+Event kinds in this sketch:
+
+| Event | Meaning |
 |---|---|
-| Front page with expandable briefings | Working. The edition is set by hand in `NEWS`; a feed must replace it. |
-| Market view with 1m/15m/1h line chart | Working for crypto through Binance public klines. Other markets, and any failed fetch, show a clearly labelled illustrative line. |
-| Journal per market | Working, stored in the browser (`localStorage`). Private to that browser; not synced. |
-| Market universe and search | Working. Fourteen symbols, hash routing so back and forward work. |
-| State engine | Not built. This is the next real piece. |
+| `Detected` | A detector recognised a region. Regions may carry `from`, the cause that spawned them. |
+| `Touch` | Price came within tolerance of a region without going through it. |
+| `Traversal` | Price went through a region. |
+| `Return` | Price came back across it. |
+| `Acceptance` | It held long enough to count. Carries `held` in minutes. |
+| `Rejection` | Price was turned back. |
+| `Declared` | You stated a claim about a region. |
+| `Confronted` | Reality met that claim. |
 
-## What is not yet solved
+To change the night, append events to `E`. Do not edit old ones. The log is append-only.
 
-- **Prices for non-crypto markets** (SPX500, NAS100, EURUSD, XAUUSD, DXY) need a licensed or self-hosted source.
-- **News** needs a feed and a rule for which items earn a place. The rule should be about relevance to markets you follow, not volume.
-- **The State engine** should write journal entries automatically in a clearly different voice from yours: State before, Event, State after. Events (sweeps, reclaims, breaks of structure) update State, and only a change of dominant State produces an entry. It should also produce the "while you were away" entry, computed from the gap since you last looked.
-- **Linked markets on a headline** are currently a judgment made by hand. Whether they should be stated by you, computed, or both is open. The earlier rule that MarketBrain records assertions and does not infer correlations still applies.
-- **Beginner vocabulary.** Terms like sweep and reclaim need a quiet definition-on-demand so a structural description is never mistaken for a signal.
+## Rules this page keeps
 
-## Suggested order of work
+- The system records what you assert, never what it infers.
+- Regions are not obligations. A region is the output of a declared detector. An obligation exists only where you declared a claim about it.
+- Every region names its detector, version, timeframe, and parameters. Interpretation is allowed. Hidden interpretation is not.
+- Resolution comes from confrontation with reality, not from activity or from changing your mind.
+- Outcomes can spawn new regions, so the model is a cycle. The `from` field keeps the provenance.
+- The sentence describes the resulting state, never the triggering event.
+- No aggregate scores, averages, or diagnoses.
 
-1. Connect real prices and a news source.
-2. Build the State engine and stress-test its entries against real sessions until they earn trust.
-3. Add the away entry.
-4. Sync the journal beyond one browser.
+## What is real and what is sample
 
-## Running it
+All events are written by hand. The night is invented and the levels are illustrative.
 
-Open `index.html`. It is a single file with no dependencies. Live crypto prices need network access to `api.binance.com`, which works when the file is served or opened from your own machine.
+Only swing extremum, touch, traversal, return, and acceptance have drafted definitions. `FairValueGap` and `EqualHighs` appear in the sample as placeholders. They are not specified yet.
+
+## Visual direction
+
+White canvas, black text, size and weight for hierarchy. Sentence case, never all-caps. Hue as ambient light behind the page, not as chrome. Everything dissolves, nothing snaps. Objects are labelled like specimens, with hairlines instead of boxes.
+
+## Open questions
+
+- Should time held ever appear in a sentence, or stay in the label?
+- Declaring a claim is the hardest interaction to make light. If it takes effort, most regions will carry no obligation. Is that acceptable?
+- Do Touch, Traversal, Return, Acceptance, and Rejection belong under one Confrontation family with a subtype?
+- What is the deterministic surface order when regions overlap?
+- How does a beginner read a structural sentence without mistaking it for a signal?
+
+## Publishing
+
+To host on GitHub Pages: push to a repo, then Settings, Pages, deploy from the `main` branch root. The page is one self-contained file.
