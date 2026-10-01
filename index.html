@@ -26,6 +26,7 @@ h2{font-size:1rem;font-weight:600;margin:2.5rem 0 .75rem;color:var(--mute)}
 .mark{margin:0 0 1.1rem}
 form,.row{display:flex;gap:.75rem;align-items:baseline}
 input[type=number]{font:inherit;color:inherit;background:transparent;border:0;border-bottom:1px solid var(--faint);width:9rem;padding:.25rem 0}
+select,input[type=datetime-local]{font:inherit;color:inherit;background:transparent;border:0;border-bottom:1px solid var(--faint);padding:.25rem 0}
 button{font:inherit;color:var(--ink);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:.2em}
 button.x{color:var(--faint);font-size:.875rem}
 footer{margin-top:3.5rem;color:var(--faint);font-size:.8125rem;max-width:34rem}
@@ -37,32 +38,37 @@ footer{margin-top:3.5rem;color:var(--faint);font-size:.8125rem;max-width:34rem}
 <h1>MarketBrain</h1>
 <main>
   <p class="away" id="away"></p>
-  <input type="range" id="slider" aria-label="When you last looked" min="30" max="900" step="5">
+  <input type="range" id="slider" aria-label="When you last looked" min="30" max="2970" step="5">
   <p class="hint">Drag to change when you last looked.</p>
-  <p class="sum" id="sum" aria-live="polite">Reading the last 16 hours of candles.</p>
+  <p class="sum" id="sum" aria-live="polite">Reading the last two days of candles.</p>
   <div id="events"></div>
   <div id="standing"></div>
   <h2>Levels you marked</h2>
-  <form id="f"><input type="number" id="lvl" step="any" min="0" placeholder="Price" aria-label="Price to mark"><button>Mark</button></form>
+  <form id="f" style="flex-wrap:wrap"><input type="number" id="lo" step="any" min="0" placeholder="From price" aria-label="Lower price"><input type="number" id="hi" step="any" min="0" placeholder="To price (optional)" aria-label="Upper price" style="width:11rem"><select id="sd" aria-label="Expecting"><option value="">No expectation</option><option value="buy">Expecting buys</option><option value="sell">Expecting sells</option></select><input type="datetime-local" id="at" aria-label="Marked at, New York time"><button>Mark</button></form>
+  <p class="hint" style="margin-top:.5rem">Time is New York. Leave it empty to mark as of now.</p>
   <div id="marks" style="margin-top:1.25rem"></div>
   <footer id="prov"></footer>
 </main>
 <script>
 // Every interpretive choice lives here and is printed in the footer.
-const P={sym:'BTCUSDT',tf:'1m',N:10,A:3,look:15};
+const P={sym:'BTCUSDT',tf:'1m',N:10,A:3,look:15,pages:3};
 const $=id=>document.getElementById(id);
 const fmt=n=>n.toLocaleString('en-US',{maximumFractionDigits:2});
-const hm=t=>new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});
-const day=t=>new Date(t).toDateString()===new Date().toDateString()?'':new Date(t).toLocaleDateString([],{weekday:'short'})+' ';
+const Z='America/New_York';
+const hm=t=>new Date(t).toLocaleTimeString('en-GB',{timeZone:Z,hour:'2-digit',minute:'2-digit',hour12:false});
+const dk=t=>new Date(t).toLocaleDateString('en-CA',{timeZone:Z});
+const day=t=>dk(t)===dk(Date.now())?'':new Date(t).toLocaleDateString('en-GB',{timeZone:Z,day:'numeric',month:'short'})+' ';
+const nyOff=t=>{const p=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:Z,hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',second:'numeric'}).formatToParts(new Date(t)).map(x=>[x.type,x.value]));return Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-Math.floor(t/1000)*1000};
+const nyToUtc=v=>{const g=Date.parse(v+':00Z');return g-nyOff(g)};
 const at=t=>day(t)+hm(t);
 let C=[],R=[],marks=[],away=390;
+const nm=m=>typeof m==='number'?{lo:m,hi:m,side:'',at:0}:m;
 try{marks=JSON.parse(localStorage.getItem('mb-marks')||'[]');away=+localStorage.getItem('mb-away')||390}catch(e){}
 const save=()=>{try{localStorage.setItem('mb-marks',JSON.stringify(marks));localStorage.setItem('mb-away',away)}catch(e){}};
 
-function mk(i,side){
-  const n=P.N,L=side==='low'?C[i].l:C[i].h,r={side,L,born:C[i].t,det:C[i+n].t};
-  const past=c=>side==='low'?c.c<L:c.c>L;
-  for(let j=i+n+1;j<C.length;j++){
+function conf(L,side,j0){
+  const r={},past=c=>side==='low'?c.c<L:c.c>L;
+  for(let j=j0;j<C.length;j++){
     const x=C[j];
     if(side==='low'?x.l<L:x.h>L){
       const w=C.slice(j,j+P.A);
@@ -78,6 +84,7 @@ function mk(i,side){
   }
   return r;
 }
+function mk(i,side){const L=side==='low'?C[i].l:C[i].h;return Object.assign({side,L,born:C[i].t,det:C[i+P.N].t},conf(L,side,i+P.N+1))}
 function regions(){
   const n=P.N,out=[];
   for(let i=n;i<C.length-n;i++){
@@ -116,26 +123,37 @@ function render(){
   const above=open.filter(r=>r.side==='high'&&r.L>price).sort((a,b)=>a.L-b.L)[0];
   const line=(r,w)=>r?`<p class="ev">Nearest untraversed ${r.side} ${w} price: ${fmt(r.L)}, formed ${at(r.born)}.</p>`:'';
   $('standing').innerHTML=line(above,'above')+line(below,'below');
-  $('marks').innerHTML=marks.map((L,i)=>`<div class="mark"><div class="row"><b>${fmt(L)}</b><button class="x" data-i="${i}">remove</button></div><p class="away">${study(L,T,price)}</p></div>`).join('');
+  $('marks').innerHTML=marks.map(nm).map((m,i)=>`<div class="mark"><div class="row"><b>${fmt(m.lo)}${m.hi>m.lo?' to '+fmt(m.hi):''}</b><button class="x" data-i="${i}">remove</button></div><p class="away">${m.at?`Marked ${at(m.at)}${m.side?', expecting '+m.side+'s':''}. `:''}${study(m,T,price)}</p></div>`).join('');
 }
-function study(L,T,price){
-  const j=C.findIndex(c=>c.t>=T&&c.l<=L&&L<=c.h);
-  const d=price-L,where=d>=0?'above':'below';
-  if(j<0)return `Price has not reached ${fmt(L)} since ${hm(T)}. It is ${fmt(Math.abs(d))} ${where} now.`;
-  const from=j>0&&C[j-1].c>L?'from above':'from below',w=C.slice(j,j+P.look);
-  const hi=Math.max(...w.map(c=>c.h)),lo=Math.min(...w.map(c=>c.l));
-  const up=w.filter(c=>c.c>L).length,dn=w.filter(c=>c.c<L).length;
-  return `Reached ${from} at ${hm(C[j].t)}. Over the next ${w.length} minutes it traded from ${fmt(lo)} to ${fmt(hi)} (${fmt(Math.max(0,L-lo))} below the level, ${fmt(Math.max(0,hi-L))} above), with ${up} closes above and ${dn} below. Now ${fmt(Math.abs(d))} ${where}.`;
+function study(m,T,price){
+  // Claim clock: history runs from the mark's own time. T (attention clock) only labels what happened while away.
+  const f=Math.max(m.at,C[0].t),aw=t=>t>=T?', while you were away':'';
+  const j=C.findIndex(c=>c.t>=f&&c.l<=m.hi&&c.h>=m.lo);
+  const now=price>m.hi?`Now ${fmt(price-m.hi)} above it.`:price<m.lo?`Now ${fmt(m.lo-price)} below it.`:'Price is inside it now.';
+  const cut=m.at&&m.at<C[0].t?`Candles are loaded only from ${at(C[0].t)}, so earlier history is unknown. `:'';
+  if(j<0)return `${cut}Price has not reached it since ${at(f)}. ${now}`;
+  const above=j>0&&C[j-1].c>m.hi;
+  const side=m.side==='sell'?'high':m.side==='buy'?'low':(above?'low':'high');
+  const k=conf(side==='low'?m.lo:m.hi,side,j),w=C.slice(j,j+P.look);
+  const edge=side==='low'?'lower':'upper';
+  let s=`${cut}Reached ${above?'from above':'from below'} at ${at(C[j].t)}${aw(C[j].t)}. `;
+  s+=k.trav?`Its ${edge} edge was traversed at ${at(k.trav)}${aw(k.trav)} (to ${fmt(k.ext)}). ${outcome({side,out:k.out,at:k.at})} `:`Its ${edge} edge was not traversed. `;
+  return s+`In the ${w.length} minutes after reaching it, price traded from ${fmt(Math.min(...w.map(c=>c.l)))} to ${fmt(Math.max(...w.map(c=>c.h)))}. ${now}`;
 }
 async function load(){
   try{
-    const r=await fetch(`https://data-api.binance.vision/api/v3/klines?symbol=${P.sym}&interval=${P.tf}&limit=1000`);
-    if(!r.ok)throw new Error(r.status);
-    const a=await r.json();
+    let a=[],end='';
+    for(let p=0;p<P.pages;p++){
+      const r=await fetch(`https://data-api.binance.vision/api/v3/klines?symbol=${P.sym}&interval=${P.tf}&limit=1000${end}`);
+      if(!r.ok)throw new Error(r.status);
+      const b=await r.json();
+      if(!b.length)break;
+      a=b.concat(a);end=`&endTime=${b[0][0]-1}`;
+    }
     C=a.map(k=>({t:k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4]}));
     C.pop(); // the open candle has not closed, so it is not evidence yet
     R=regions();
-    $('slider').max=Math.min(900,C.length-P.N*3);
+    $('slider').max=Math.min(P.pages*1000-P.N*3,C.length-P.N*3);
     away=Math.min(away,+$('slider').max);
     render();
   }catch(e){
@@ -144,9 +162,13 @@ async function load(){
   }
 }
 $('slider').addEventListener('input',e=>{away=+e.target.value;save();render()});
-$('f').addEventListener('submit',e=>{e.preventDefault();const v=parseFloat($('lvl').value);if(v>0){marks.push(v);$('lvl').value='';save();render()}});
+$('f').addEventListener('submit',e=>{e.preventDefault();
+  const lo=parseFloat($('lo').value),hi=parseFloat($('hi').value);if(!(lo>0))return;
+  const v=$('at').value;
+  marks.push({lo:Math.min(lo,hi||lo),hi:Math.max(lo,hi||lo),side:$('sd').value,at:v?nyToUtc(v):Date.now()});
+  ['lo','hi','at'].forEach(k=>$(k).value='');save();render()});
 $('marks').addEventListener('click',e=>{const i=e.target.dataset.i;if(i!==undefined){marks.splice(+i,1);save();render()}});
-$('prov').textContent=`Regions are swing extrema: the lowest low or highest high among ${P.N} ${P.tf} candles either side, known only ${P.N} candles later. A region is traversed when a wick passes its exact level, with no tolerance. Acceptance is ${P.A} closes beyond it; a close back inside first is rejection. Candles: ${P.sym} spot from Binance, closed candles only, so levels can differ by a few dollars from another venue.`;
+$('prov').textContent=`Regions are swing extrema: the lowest low or highest high among ${P.N} ${P.tf} candles either side, known only ${P.N} candles later. A region is traversed when a wick passes its exact level, with no tolerance. Acceptance is ${P.A} closes beyond it; a close back inside first is rejection. All times are New York. Candles: ${P.sym} spot from Binance, closed candles only, so levels can differ by a few dollars from another venue.`;
 load();
 </script>
 </body>
