@@ -8,33 +8,45 @@
 html{background:#fff7fb;-webkit-text-size-adjust:100%}
 body{margin:0;background:transparent;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 .sky{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
-.b{position:absolute;border-radius:50%;filter:blur(90px);opacity:.62;animation:drift 26s ease-in-out infinite alternate}
-.b1{width:60vmax;height:60vmax;left:-18vmax;top:-16vmax;background:#ff7ab8}
-.b2{width:55vmax;height:55vmax;right:-16vmax;top:-10vmax;background:#ffd23f;animation-duration:31s}
-.b3{width:50vmax;height:50vmax;left:22vw;bottom:-26vmax;background:#c7a6ff;animation-duration:36s}
-.b4{width:34vmax;height:34vmax;right:4vw;bottom:-8vmax;background:#ffb08a;opacity:.5;animation-duration:29s}
+.sky::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,#ffffff5c,#ffffff3d);backdrop-filter:blur(36px) saturate(1.25);-webkit-backdrop-filter:blur(36px) saturate(1.25)}
+.b{position:absolute;border-radius:50%;filter:blur(80px);opacity:.8;animation:drift 26s ease-in-out infinite alternate;transition:background-color 8s ease}
+.b1{width:62vmax;height:62vmax;left:-18vmax;top:-16vmax;background:#ff7ab8}
+.b2{width:56vmax;height:56vmax;right:-16vmax;top:-10vmax;background:#ffd23f;animation-duration:31s}
+.b3{width:52vmax;height:52vmax;left:22vw;bottom:-26vmax;background:#ffffff;animation-duration:36s}
+.b4{width:36vmax;height:36vmax;right:4vw;bottom:-8vmax;background:#ffb08a;opacity:.65;animation-duration:29s}
 @keyframes drift{to{transform:translate(6vmax,5vmax) scale(1.12)}}
-#lamp{position:fixed;width:520px;height:520px;margin:-260px 0 0 -260px;left:var(--x,50vw);top:var(--y,30vh);border-radius:50%;background:radial-gradient(circle,#fff8c9cc,#ffb3d966 45%,transparent 70%);z-index:-1;pointer-events:none;transition:left .5s ease-out,top .5s ease-out}
+#lamp{position:fixed;width:520px;height:520px;margin:-260px 0 0 -260px;left:var(--x,50vw);top:var(--y,30vh);border-radius:50%;background:radial-gradient(circle,#fff8c980,#ffb3d94d 45%,transparent 70%);z-index:-1;pointer-events:none;transition:left .5s ease-out,top .5s ease-out}
 header{max-width:980px;margin:0 auto;padding:56px 28px 20px}
 h1{font-size:clamp(46px,9vw,92px);font-weight:700;letter-spacing:-.045em;margin:0;line-height:1}
 header p{font-size:clamp(19px,2.6vw,26px);color:#4b3f57;margin:16px 0 24px;max-width:30em;line-height:1.35}
 .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-.chip,.tv,.go{font:inherit;font-size:15px;color:var(--ink);text-decoration:none;border:1px solid #ffffffd0;background:#ffffff99;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:99px;padding:9px 17px;cursor:pointer;transition:transform .25s,box-shadow .25s,background .25s}
+.chip,.tv,.go{font:inherit;font-size:15px;color:var(--ink);text-decoration:none;border:1px solid #ffffffc0;background:#ffffff70;box-shadow:inset 0 1px 0 #fff;backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-radius:99px;padding:9px 17px;cursor:pointer;transition:transform .25s,box-shadow .25s,background .25s}
 .chip:hover,.tv:hover,.go:hover,.chip:focus-visible,.go:focus-visible,.tv:focus-visible{transform:translateY(-2px);box-shadow:0 8px 22px #ff5fa840;outline:none}
 .chip.on{background:linear-gradient(90deg,var(--pink),var(--yel));border-color:transparent;font-weight:600}
 .go{font-weight:600;background:linear-gradient(90deg,#ffd7ea,#fff0a8)}
 #note{font-size:15px;color:var(--mute);margin:12px 0 0;min-height:1.4em}
 main{max-width:980px;margin:0 auto;padding:0 28px 96px}
 h2{font-size:15px;font-weight:600;color:var(--mute);margin:44px 0 8px}
-.m{border-radius:22px;margin:0 -16px;padding:0 16px;transition:background .5s,box-shadow .5s,transform .3s}
-.m:hover{background:#ffffff66}
-.m.open{background:#ffffffa6;box-shadow:0 18px 50px #ff5fa826;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.m{border-radius:26px;margin:0 -16px;padding:0 16px;background:#ffffff40;border:1px solid #ffffffa8;box-shadow:inset 0 1px 0 #fffffff0,inset 0 -1px 0 #ffffff55,0 8px 30px #3b1d5a12;backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);transition:background .8s,box-shadow .8s,transform .3s}
+.m:hover{background:#ffffff5c}
+.m.open{background:#ffffff78;box-shadow:inset 0 1px 0 #fff,0 18px 50px #ff5fa81c}
+/* movement: quiet markets stay plain, moving markets glow and get heavier */
+.m.up{background:linear-gradient(120deg,#ff5fa826,#ffcf3330),#ffffff50;box-shadow:inset 0 1px 0 #fff,0 14px 44px #ff5fa830}
+.m.dn{background:linear-gradient(120deg,#8b6bff22,#6fb4ff22),#ffffff50;box-shadow:inset 0 1px 0 #fff,0 14px 44px #8b6bff28}
+.m.up.strong{background:linear-gradient(120deg,#ff5fa84d,#ffcf3366),#ffffff48;box-shadow:inset 0 1px 0 #fff,0 20px 64px #ff5fa860}
+.m.dn.strong{background:linear-gradient(120deg,#8b6bff44,#6fb4ff44),#ffffff48;box-shadow:inset 0 1px 0 #fff,0 20px 64px #8b6bff52}
 .m>button{all:unset;display:grid;grid-template-columns:1fr auto;gap:8px 16px;width:100%;cursor:pointer;padding:24px 0}
 .m>button:focus-visible{outline:2px solid var(--ink);outline-offset:4px;border-radius:14px}
 .n{font-size:15px;font-weight:600;color:var(--mute);display:flex;align-items:center;gap:9px}
 .dot{width:11px;height:11px;border-radius:50%;background:var(--c);box-shadow:0 0 14px 3px var(--c)}
-.s{grid-column:1;font-size:clamp(26px,4.4vw,44px);font-weight:600;letter-spacing:-.025em;line-height:1.14;transition:opacity .6s}
+.m.up .dot,.m.dn .dot{animation:pulse 2.2s ease-in-out infinite}
+.m.strong .dot{animation-duration:1.1s}
+@keyframes pulse{50%{transform:scale(1.7)}}
+.s{grid-column:1;font-size:clamp(26px,4.4vw,44px);font-weight:600;letter-spacing:-.025em;line-height:1.14;transition:opacity .6s,font-size .6s,color .6s}
 .s.w{color:var(--faint)}
+.s.calm{font-size:clamp(21px,3.4vw,32px);font-weight:500;color:var(--mute)}
+.m.up .s,.m.dn .s{font-weight:700;color:var(--ink)}
+.m.strong .s{font-weight:800;font-size:clamp(30px,5.2vw,52px)}
 .x{grid-row:1/3;grid-column:2;align-self:center;width:42px;height:42px;border-radius:50%;background:#ffffffb0;display:grid;place-items:center;font-size:24px;color:var(--ink);transition:transform .4s,background .3s}
 .m:hover .x{background:linear-gradient(135deg,var(--pink),var(--yel))}
 .m.open .x{transform:rotate(45deg)}
@@ -74,10 +86,21 @@ const MARKETS=[
 ];
 const TFS=[['1m',1,'1m','1min'],['5m',5,'5m','5min'],['15m',15,'15m','15min'],['1h',60,'1h','1h']];
 const HUES=['#ff5fa8','#ffcf33','#ff9a6b','#b98cff','#ff7ec9','#ffb800','#e86bd6'];
+// How much a market must travel (over the last 12 candles, measured in average candle sizes)
+// before the page calls it "moving" or "moving fast". Tune these two numbers to taste.
+const MOVING=3,STRONG=5,LOOK=12;
 const fmt=p=>p.toFixed(p<10?5:p<1000?3:2);
 const ny=t=>new Date(t).toLocaleString('en-US',{timeZone:'America/New_York',weekday:'short',hour:'numeric',minute:'2-digit'})+' New York time';
 const span=m=>m>=120?Math.round(m/60)+' hours':m+' minutes';
+const buzz=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 
+function motion(c,tfm){
+ if(c.length<LOOK+20)return{k:'still'};
+ const a=c[c.length-1].c,b=c[c.length-1-LOOK].c,net=a-b;
+ const rng=c.slice(-60).reduce((s,x)=>s+(x.h-x.l),0)/Math.min(60,c.length);
+ const r=Math.abs(net)/(rng||1);
+ return{k:r>=STRONG?'strong':r>=MOVING?'moving':'still',up:net>0,pct:Math.abs(net)/b*100,span:LOOK*tfm};
+}
 function read(c,tfm){
  const last=c[c.length-1],gaps=[];
  for(let i=2;i<c.length;i++){const a=c[i-2],b=c[i];
@@ -85,6 +108,7 @@ function read(c,tfm){
  const open=gaps.filter(g=>{for(let j=g.i+1;j<c.length;j++){const k=c[j];if(g.up?k.l<=g.lo:k.h>=g.hi)return false}return true});
  const mid=g=>(g.lo+g.hi)/2;
  const near=open.sort((a,b)=>Math.abs(mid(a)-last.c)-Math.abs(mid(b)-last.c))[0];
+ if(near){near.entered=false;for(let j=near.i+1;j<c.length;j++){const k=c[j];if(k.l<near.hi&&k.h>near.lo){near.entered=true;break}}}
  let run=0;if(near)for(let j=c.length-1;j>near.i&&c[j].c>=near.lo&&c[j].c<=near.hi;j--)run++;
  let sh=null,sl=null;
  for(let i=c.length-4;i>=3&&(!sh||!sl);i--){const w=c.slice(i-3,i+4);
@@ -94,20 +118,29 @@ function read(c,tfm){
  if(sh&&sl){const down=sl.i>sh.i,range=sh.p-sl.p,end=down?sl.p:sh.p;
   fib={down,from:down?sh.p:sl.p,to:end,back:Math.abs(last.c-end)/range,lvl:r=>down?sl.p+r*range:sh.p-r*range};}
  const inside=!!near&&run>0;
- return{last,near,run,fib,tfm,inside,dist:near?Math.abs(mid(near)-last.c)/last.c:9};
+ return{last,near,run,fib,tfm,inside,mo:motion(c,tfm),dist:near?Math.abs(mid(near)-last.c)/last.c:9};
 }
 function sentence(r){
- const{last,near,run,tfm}=r;
- if(!near)return'No open gaps nearby. Nothing here needs your attention.';
+ const{last,near,run,tfm,mo}=r;
+ let pre='';
+ if(mo.k==='still')pre='Quiet. ';
+ else pre=`Moving ${mo.up?'up':'down'}${mo.k==='strong'?' fast':''}: ${mo.pct.toFixed(2)}% in the last ${span(mo.span)}. `;
+ if(!near)return pre+'No open gaps nearby.';
  const side=near.up?'buying':'selling';
- if(r.inside)return`Price is sitting inside a ${side} gap and has stayed there for ${span(run*tfm)}.`;
- return`The closest open ${side} gap is ${near.lo>last.c?'above':'below'} price, and price hasn't come back to it yet.`;
+ if(r.inside)return pre+`Price is sitting inside a ${side} gap and has stayed there for ${span(run*tfm)}.`;
+ const where=near.lo>last.c?'above':'below';
+ if(near.entered)return pre+`The closest open ${side} gap is ${where} price. Price has dipped into it before, but never all the way through.`;
+ return pre+`The closest open ${side} gap is ${where} price, and price hasn't come back to it yet.`;
 }
-function why(r){
+function why(r,m){
  const{near,fib,last}=r,L=[];
  L.push('A gap is a spot where three candles in a row moved so fast that the middle one left a space the first and third never touched. Markets often come back to check these.');
- if(near)L.push(`The closest open one sits between ${fmt(near.lo)} and ${fmt(near.hi)}. It is "open" because nothing has traded fully through it since. Price is now ${fmt(last.c)}.`);
+ if(near)L.push(`The closest open one sits between ${fmt(near.lo)} and ${fmt(near.hi)}. It is "open" because nothing has traded fully through it since. ${near.entered?'Price has been inside it at some point since, without filling it.':'Price has not touched it since it formed.'} Price is now ${fmt(last.c)}.`);
  if(fib)L.push(`The latest swing ran ${fib.down?'down':'up'} from ${fmt(fib.from)} to ${fmt(fib.to)}. Price has since pulled back ${Math.round(fib.back*100)}% of that move. The 50% level is ${fmt(fib.lvl(.5))} and the 70.5% level is ${fmt(fib.lvl(.705))}.`);
+ if(m){const tl=TFS.find(t=>t[1]===m.tf)[0];
+  L.push(`What this rests on: ${m.src==='b'?'Binance':'Twelve Data'} prices for ${m.sym}, the last ${m.c.length} ${tl} candles (about ${span(m.c.length*m.tf)}). Anything older is not seen.`);
+  L.push('"Closest" means the gap whose middle is nearest the latest price. It does not weigh how big or how important a gap is.');
+  L.push('What this page does not know: liquidity pools, how many swing lows have broken, or anything you have drawn or set alerts on in TradingView.');}
  L.push('This describes what the chart shows. It is not a prediction or advice.');
  return L.map(x=>`<li>${x}</li>`).join('');
 }
@@ -118,6 +151,7 @@ async function getCandles(m,tf){
   const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${m.sym}&interval=${T[2]}&limit=300`);
   if(!r.ok)throw'feed';return(await r.json()).map(k=>({t:k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4]}));
  }
+ // Twelve Data: each market and timeframe is saved for 15 minutes, so refreshing the page inside that window costs no credits.
  const ck='mb_'+m.k+tf;
  try{const c=JSON.parse(localStorage.getItem(ck));if(c&&Date.now()-c.at<9e5)return c.d}catch(e){}
  if(!TWELVE_KEY)throw'nokey';
@@ -139,7 +173,7 @@ for(const m of live){
  <ul class="why"></ul>
  <div class="tf"><button class="chip on" data-t="gap">Show the gap</button><button class="chip on" data-t="fib">Show the fib levels</button></div>
  <div class="ch"></div>
- <div class="f"><a class="tv" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" target="_blank" rel="noopener">See it on TradingView</a><span>Latest candle: <span class="at"></span></span></div></div></div>`;
+ <div class="f"><a class="tv" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" target="_blank" rel="noopener">See it on TradingView</a><span>Latest candle: <span class="at"></span></span><span class="fd"></span></div></div></div>`;
  app.appendChild(el);
  m.s=el.querySelector('.s');
 }
@@ -151,18 +185,22 @@ function draw(m){
  if(m.show.fib&&m.res.fib){pl(m.res.fib.lvl(.5),'50%','#e0408f');pl(m.res.fib.lvl(.705),'70.5%','#e0408f');}
 }
 function paint(m){
- const el=m.el;
+ const el=m.el,mo=m.res.mo,mv=mo.k!=='still';
  m.s.textContent=sentence(m.res);m.s.classList.remove('w');
- el.querySelector('.why').innerHTML=why(m.res);
+ m.s.classList.toggle('calm',!mv);
+ el.classList.toggle('up',mv&&mo.up);el.classList.toggle('dn',mv&&!mo.up);el.classList.toggle('strong',mo.k==='strong');
+ el.querySelector('.why').innerHTML=why(m.res,m);
  el.querySelector('.at').textContent=ny(m.c[m.c.length-1].t);
+ el.querySelector('.fd').textContent='Feed: '+(m.src==='b'?'Binance ':'Twelve Data ')+m.sym+', last '+m.c.length+' candles ('+span(m.c.length*m.tf)+')';
  if(m.chart){m.sr.setData(m.c.slice(-200).map(x=>({time:x.t/1000,open:x.o,high:x.h,low:x.l,close:x.c})));draw(m);m.chart.timeScale().fitContent();}
 }
 async function load(m){
  try{m.c=await getCandles(m,m.tf);m.res=read(m.c,m.tf);paint(m);}
- catch(e){m.s.textContent=e==='nokey'?'Add your Twelve Data key at the top of index.html to turn this on.':m.src==='t'?'No data came back for this market. Check the key and the market name.':'Couldn\'t reach the price feed. Try again in a moment.';}
+ catch(e){m.s.classList.remove('w');m.s.classList.add('calm');m.s.textContent=e==='nokey'?'Add your Twelve Data key at the top of index.html to turn this on.':m.src==='t'?'No data came back for this market. Check the key, or this market may need a paid Twelve Data plan.':'Couldn\'t reach the price feed. Try again in a moment.';}
 }
 function toggle(m,force){
  const o=m.el.classList.toggle('open',force);m.el.querySelector('button').setAttribute('aria-expanded',o);
+ if(o&&m.res){const k=m.res.mo.k;if(k==='strong')buzz([40,70,40]);else if(k==='moving')buzz(25);}
  if(o&&m.res&&!m.chart){
   m.chart=LightweightCharts.createChart(m.el.querySelector('.ch'),{layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479'},grid:{vertLines:{color:'#ffffff80'},horzLines:{color:'#ffffff80'}},rightPriceScale:{borderVisible:false},timeScale:{timeVisible:true,borderVisible:false}});
   m.sr=m.chart.addCandlestickSeries({upColor:'#ff5fa8',downColor:'#ffc400',borderVisible:false,wickUpColor:'#ff5fa8',wickDownColor:'#e0a800'});
@@ -177,20 +215,36 @@ for(const m of live){
 }
 // filters + "where should I look"
 const groups=[...new Set(live.map(m=>m.g))];
-bar.insertAdjacentHTML('afterbegin',['All',...groups].map((g,i)=>`<button class="chip${i?'':' on'}" data-f="${g}">${g}</button>`).join('')+'<button class="go" id="go">Show me what\'s in a gap</button>');
+bar.insertAdjacentHTML('afterbegin',['All',...groups].map((g,i)=>`<button class="chip${i?'':' on'}" data-f="${g}">${g}</button>`).join('')+'<button class="go" id="go">Show me what\'s moving</button>');
 bar.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{
  bar.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x===b));
  document.querySelectorAll('[data-g]').forEach(e=>e.style.display=(b.dataset.f==='All'||e.dataset.g===b.dataset.f)?'':'none');
 });
 document.getElementById('go').onclick=()=>{
- const ready=live.filter(m=>m.res&&m.res.near);
- const ins=ready.filter(m=>m.res.inside).sort((a,b)=>b.res.run*b.res.tfm-a.res.run*a.res.tfm)[0];
- const pick=ins||ready.sort((a,b)=>a.res.dist-b.res.dist)[0];
- if(!pick){note.textContent='Still reading the markets. Give it a second.';return;}
- note.textContent=ins?`${pick.k} has been sitting in a gap the longest.`:`Nothing is inside a gap right now. ${pick.k} is the closest to one.`;
+ const ready=live.filter(m=>m.res);
+ if(!ready.length){note.textContent='Still reading the markets. Give it a second.';return;}
+ const movers=ready.filter(m=>m.res.mo.k!=='still').sort((a,b)=>(b.res.mo.k==='strong')-(a.res.mo.k==='strong')||b.res.mo.pct-a.res.mo.pct);
+ let pick=movers[0];
+ if(pick)note.textContent=`${pick.k} is ${pick.res.mo.k==='strong'?'moving fast':'moving'} ${pick.res.mo.up?'up':'down'}.`;
+ else{
+  const g=ready.filter(m=>m.res.near);
+  const ins=g.filter(m=>m.res.inside).sort((a,b)=>b.res.run*b.res.tfm-a.res.run*a.res.tfm)[0];
+  pick=ins||g.sort((a,b)=>a.res.dist-b.res.dist)[0];
+  if(!pick){note.textContent='Everything is quiet right now.';return;}
+  note.textContent=ins?`Everything is quiet. ${pick.k} has been sitting in a gap the longest.`:`Everything is quiet. ${pick.k} is the closest to a gap.`;
+ }
  document.querySelectorAll('[data-f]')[0].click();
  toggle(pick,true);pick.el.scrollIntoView({behavior:'smooth',block:'center'});
 };
 // the light follows your finger or cursor
 addEventListener('pointermove',e=>{const l=document.getElementById('lamp').style;l.setProperty('--x',e.clientX+'px');l.setProperty('--y',e.clientY+'px');});
+// the sky: pink, yellow and white take turns; after about a minute a soft grass green settles in at the bottom
+const SKY=[['#ff7ab8','#ffd23f','#ffffff','#ffb08a'],['#ffd23f','#ff7ab8','#ffe3f1','#ffffff'],['#ffffff','#ffcf33','#ff7ab8','#ffd7a8']];
+let tick=0;
+function sky(){
+ tick++;const p=SKY[tick%SKY.length],bs=document.querySelectorAll('.b');
+ bs.forEach((b,i)=>b.style.backgroundColor=p[i]);
+ if(tick>=5)bs[2].style.backgroundColor='#9ee37d';
+}
+setInterval(sky,12000);
 </script></body></html>
