@@ -59,6 +59,21 @@ h2{font-size:15px;font-weight:600;color:var(--mute);margin:44px 0 8px}
 .ch{height:340px;margin:6px 0 12px;border-radius:18px;overflow:hidden}
 .f{padding-bottom:26px;font-size:14px;color:var(--mute);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.dl{font-size:15px;font-weight:600;color:var(--mute);margin:22px 0 8px}
+.dch{height:300px;margin:0 0 8px;border-radius:18px;overflow:hidden}
+.rd{font-size:14px;color:var(--mute);min-height:1.5em;margin:0 0 6px}
+.jr{padding:4px}
+.jr textarea{width:100%;min-height:120px;font:inherit;font-size:17px;line-height:1.5;color:var(--ink);background:#ffffff80;border:1px solid #ffffffc0;border-radius:18px;padding:14px 16px;resize:vertical;box-shadow:inset 0 1px 0 #fff}
+.jr textarea:focus{outline:2px solid var(--pink);outline-offset:1px}
+.jr .tf{margin:10px 0 0;align-items:center}
+.jr input[type=date]{font:inherit;font-size:15px;border:1px solid #ffffffc0;background:#ffffff70;border-radius:99px;padding:8px 14px;color:var(--ink)}
+.en{margin:16px 0 0;padding:14px 16px;border-radius:18px;background:#ffffff66;border:1px solid #ffffffa8}
+.en.sel{box-shadow:0 0 0 2px #ff5fa8}
+.en .d{font-size:13px;color:var(--mute);margin:0 0 6px}
+.en .t{font-size:17px;line-height:1.5;white-space:pre-wrap;margin:0 0 10px}
+.en .tf{margin:0}
+.ai{margin:12px 0 0;padding:12px 14px;border-radius:14px;background:linear-gradient(120deg,#ff5fa81a,#ffcf331f);font-size:16px;line-height:1.5;white-space:pre-wrap}
+.ai small{display:block;color:var(--mute);font-size:12px;margin-bottom:6px}
 </style></head><body>
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div>
 <header>
@@ -162,6 +177,82 @@ async function getCandles(m,tf){
  return d;
 }
 
+/* ---- daily chart + journal + reader ---- */
+const AI_MODEL='claude-sonnet-5-5';
+const GH_MODEL='openai/gpt-4.1'; // used when you paste a GitHub token (Microsoft's GitHub Models). Any id from the GitHub Models catalog works.
+const store={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let J=store.get('mb_journal',[]);
+const saveJ=()=>store.set('mb_journal',J);
+const day=t=>new Date(t*1000).toISOString().slice(0,10);
+const nice=d=>new Date(d+'T12:00:00Z').toLocaleDateString('en-US',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+async function getDaily(m){
+ const ck='mb_d_'+m.k,c=store.get(ck,null),today=new Date().toISOString().slice(0,10);
+ // Twelve Data costs one credit per market, once per day. Binance is free, so it refreshes every 30 minutes.
+ if(c&&(m.src==='t'?c.day===today:Date.now()-c.at<18e5))return c.d;
+ try{
+  let d;
+  if(m.src==='b'){const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${m.sym}&interval=1d&limit=365`);if(!r.ok)throw 0;d=(await r.json()).map(k=>({time:k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4]}));}
+  else{if(!TWELVE_KEY)throw 'nokey';const j=await(await fetch(`https://api.twelvedata.com/time_series?interval=1day&outputsize=365&timezone=UTC&symbol=${encodeURIComponent(m.sym)}&apikey=${TWELVE_KEY}`)).json();if(!j.values)throw 0;
+   d=j.values.map(x=>({time:Date.parse(x.datetime.slice(0,10)+'T00:00:00Z')/1000,open:+x.open,high:+x.high,low:+x.low,close:+x.close})).reverse();}
+  store.set(ck,{day:today,at:Date.now(),d});return d;
+ }catch(e){if(c)return c.d;throw e}
+}
+function dailyHTML(m){return `<div class="dl">Daily</div><div class="dch"></div><p class="rd">Loading daily candles…</p>
+<div class="jr"><div class="dl">Journal</div><textarea placeholder="Write what you're seeing, or what you expect. No format."></textarea>
+<div class="tf"><input type="date"><button class="chip on" data-j="save">Save entry</button><button class="chip" data-j="cancel" hidden>Cancel</button><button class="chip" data-j="key">AI key</button></div><div class="el"></div></div>`}
+function jrender(m){
+ const L=m.el.querySelector('.el'),es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)||b.at-a.at);
+ L.innerHTML=es.map(e=>`<div class="en${e.date===m.sel?' sel':''}" data-id="${e.id}"><p class="d">${nice(e.date)}${m.dates&&!m.dates.has(e.date)?' · no candle this day':''}${e.edited?' · edited':''}</p><p class="t">${esc(e.text)}</p><div class="tf"><button class="chip" data-a="edit">Edit</button><button class="chip" data-a="del">Delete</button><button class="chip" data-a="ask">${e.ai?'Ask the reader again':'Ask the reader'}</button></div>${e.ai?`<div class="ai"><small>The reader's response. A reading of this entry, not a fact about you.</small>${esc(e.ai.text)}</div>`:''}</div>`).join('');
+ if(m.dsr&&m.dates)m.dsr.setMarkers(es.filter(e=>m.dates.has(e.date)).map(e=>({time:Date.parse(e.date+'T00:00:00Z')/1000,position:'belowBar',color:'#ff5fa8',shape:'circle'})).sort((a,b)=>a.time-b.time).filter((x,i,a)=>!i||x.time!==a[i-1].time));
+}
+async function openDaily(m){
+ if(!m.el.classList.contains('open')||m.dch)return;
+ const rd=m.el.querySelector('.rd');
+ m.dch=LightweightCharts.createChart(m.el.querySelector('.dch'),{autoSize:true,layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479'},grid:{vertLines:{color:'#ffffff80'},horzLines:{color:'#ffffff80'}},rightPriceScale:{borderVisible:false},timeScale:{borderVisible:false}});
+ m.dsr=m.dch.addCandlestickSeries({upColor:'#ff5fa8',downColor:'#ffc400',borderVisible:false,wickUpColor:'#ff5fa8',wickDownColor:'#e0a800'});
+ const show=b=>{rd.textContent=b?`${nice(day(b.time))} · open ${fmt(b.open)} · high ${fmt(b.high)} · low ${fmt(b.low)} · close ${fmt(b.close)}`:''};
+ try{m.daily=await getDaily(m);}catch(e){m.dch.remove();m.dch=null;rd.textContent=e==='nokey'?'Add your Twelve Data key at the top of index.html to turn this on.':'Couldn\'t load daily candles. Try again in a moment.';return}
+ m.dsr.setData(m.daily);m.dates=new Set(m.daily.map(b=>day(b.time)));m.dch.timeScale().fitContent();
+ const last=m.daily[m.daily.length-1];show(last);
+ m.dch.subscribeCrosshairMove(p=>{const b=p.time&&p.seriesData.get(m.dsr);show(b||last)});
+ m.dch.subscribeClick(p=>{if(!p.time)return;m.sel=day(p.time);m.el.querySelector('input[type=date]').value=m.sel;jrender(m)});
+ jrender(m);
+}
+async function askReader(m,e){
+ const key=localStorage.getItem('mb_ai_key');if(!key)throw 'nokey';
+ const cs=m.daily||[],ix=cs.findIndex(b=>day(b.time)>=e.date),at=ix<0?cs.length:ix;
+ const rows=cs.slice(Math.max(0,at-10),at+8).map(b=>`${day(b.time)} O${fmt(b.open)} H${fmt(b.high)} L${fmt(b.low)} C${fmt(b.close)}`).join('\n');
+ const past=J.filter(x=>x.k===m.k&&x.id!==e.id).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6).map(x=>`[${x.date}] ${x.text.slice(0,500)}`).join('\n');
+ const sys=`You are the reader inside MarketBrain, a tool that restores context for a trader. You respond to one journal entry. Write in plain, friendly language. Output four short sections headed exactly: Recorded, Interpretation, Uncertain, Questions.
+Recorded: only what the entry says (quote briefly, with its date) and what the daily candles show. Nothing else belongs here.
+Interpretation: your reading, each line starting "One reading:". Make clear these are readings, not facts.
+Uncertain: what the entry and candles cannot tell, including that daily candles hide what happened inside each day.
+Questions: two or three questions that help the writer examine their reasoning, or compare what they expected with what happened if candles after the entry date exist.
+Rules: never predict price, give trade calls or advice. Never describe the writer's personality, assign scores, or state traits. If earlier entries seem to repeat a theme, do not say the writer "tends to" anything: name the dated entries, say it is only what those entries show, and ask whether they would state it as a belief. Use only the data given. Under 220 words, no markdown.`;
+ const um=`Market: ${m.k} (${m.name}). Today: ${new Date().toISOString().slice(0,10)}.\n\nENTRY dated ${e.date}:\n${e.text}\n\nEARLIER ENTRIES on ${m.k}:\n${past||'none'}\n\nDAILY CANDLES around the entry date (UTC):\n${rows||'not loaded'}`;
+ const gh=/^(github_pat_|ghp_)/.test(key);
+const r=gh?await fetch('https://models.github.ai/inference/chat/completions',{method:'POST',headers:{'content-type':'application/json','accept':'application/vnd.github+json','authorization':'Bearer '+key},body:JSON.stringify({model:GH_MODEL,max_tokens:700,messages:[{role:'system',content:sys},{role:'user',content:um}]})}):await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:AI_MODEL,max_tokens:700,system:sys,messages:[{role:'user',content:um}]})});
+ const j=await r.json();if(!r.ok)throw (j.error&&(j.error.message||j.error))||r.status;
+ return gh?(j.choices[0].message.content||''):j.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+}
+function initJ(m){
+ const el=m.el,ta=el.querySelector('textarea'),dt=el.querySelector('input[type=date]'),sv=el.querySelector('[data-j=save]'),cn=el.querySelector('[data-j=cancel]');
+ m.sel=dt.value=new Date().toISOString().slice(0,10);
+ const reset=()=>{m.editing=null;ta.value='';sv.textContent='Save entry';cn.hidden=true};
+ sv.onclick=()=>{const text=ta.value.trim();if(!text||!dt.value)return;
+  if(m.editing){const e=J.find(x=>x.id===m.editing);if(e){e.text=text;e.date=dt.value;e.edited=true}}
+  else J.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),k:m.k,date:dt.value,text,at:Date.now(),ai:null});
+  saveJ();m.sel=dt.value;reset();jrender(m)};
+ cn.onclick=reset;
+ dt.onchange=()=>{m.sel=dt.value;jrender(m)};
+ el.querySelector('[data-j=key]').onclick=()=>{const k=prompt('Paste an AI key: a GitHub token with models: read (starts github_pat_), or an Anthropic key. It stays in this browser only. Leave empty to remove it.',localStorage.getItem('mb_ai_key')||'');if(k!==null){try{k.trim()?localStorage.setItem('mb_ai_key',k.trim()):localStorage.removeItem('mb_ai_key')}catch(e){}}};
+ el.querySelector('.el').onclick=async ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const e=J.find(x=>x.id===b.closest('.en').dataset.id);if(!e)return;
+  if(b.dataset.a==='edit'){m.editing=e.id;ta.value=e.text;dt.value=e.date;m.sel=e.date;sv.textContent='Save changes';cn.hidden=false;ta.focus();jrender(m)}
+  if(b.dataset.a==='del'&&confirm('Delete this entry?')){J=J.filter(x=>x!==e);saveJ();jrender(m)}
+  if(b.dataset.a==='ask'){b.disabled=true;b.textContent='Reading…';try{e.ai={text:await askReader(m,e),at:Date.now()};saveJ()}catch(x){alert(x==='nokey'?'Add an AI key first, with the AI key button.':(x instanceof TypeError?'The browser blocked or couldn\'t reach the AI service. ':'The reader couldn\'t answer: ')+(x.message||x))}jrender(m)}};
+ jrender(m);
+}
 const app=document.getElementById('app'),note=document.getElementById('note'),bar=document.getElementById('bar');
 const live=MARKETS.filter(m=>m.on!==false);let group='',n=0;
 for(const m of live){
@@ -172,7 +263,7 @@ for(const m of live){
  <div class="tf">${TFS.map(t=>`<button class="chip${t[1]===15?' on':''}" data-tf="${t[1]}">${t[0]}</button>`).join('')}</div>
  <ul class="why"></ul>
  <div class="tf"><button class="chip on" data-t="gap">Show the gap</button><button class="chip on" data-t="fib">Show the fib levels</button></div>
- <div class="ch"></div>
+ <div class="ch"></div>${dailyHTML(m)}
  <div class="f"><a class="tv" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" target="_blank" rel="noopener">See it on TradingView</a><span>Latest candle: <span class="at"></span></span><span class="fd"></span></div></div></div>`;
  app.appendChild(el);
  m.s=el.querySelector('.s');
@@ -208,7 +299,7 @@ function toggle(m,force){
  }
 }
 for(const m of live){
- m.el.querySelector(':scope>button').onclick=()=>toggle(m);
+ m.el.querySelector(':scope>button').onclick=()=>{toggle(m);setTimeout(()=>openDaily(m),0)};initJ(m);
  m.el.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{m.tf=+b.dataset.tf;m.el.querySelectorAll('[data-tf]').forEach(x=>x.classList.toggle('on',x===b));m.s.classList.add('w');load(m);});
  m.el.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{m.show[b.dataset.t]=b.classList.toggle('on');draw(m);});
  load(m);
@@ -234,7 +325,7 @@ document.getElementById('go').onclick=()=>{
   note.textContent=ins?`Everything is quiet. ${pick.k} has been sitting in a gap the longest.`:`Everything is quiet. ${pick.k} is the closest to a gap.`;
  }
  document.querySelectorAll('[data-f]')[0].click();
- toggle(pick,true);pick.el.scrollIntoView({behavior:'smooth',block:'center'});
+ toggle(pick,true);openDaily(pick);pick.el.scrollIntoView({behavior:'smooth',block:'center'});
 };
 // the light follows your finger or cursor
 addEventListener('pointermove',e=>{const l=document.getElementById('lamp').style;l.setProperty('--x',e.clientX+'px');l.setProperty('--y',e.clientY+'px');});
