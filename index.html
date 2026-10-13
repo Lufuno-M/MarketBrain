@@ -74,18 +74,22 @@ h2{font-size:15px;font-weight:600;color:var(--mute);margin:44px 0 8px}
 .en .tf{margin:0}
 .ai{margin:12px 0 0;padding:12px 14px;border-radius:14px;background:linear-gradient(120deg,#ff5fa81a,#ffcf331f);font-size:16px;line-height:1.5;white-space:pre-wrap}
 .ai small{display:block;color:var(--mute);font-size:12px;margin-bottom:6px}
+.jshot{display:block;max-width:100%;max-height:360px;object-fit:contain;border-radius:14px;margin:10px 0;border:1px solid #ffffffb0}
+.jpreview{display:none;max-width:100%;max-height:220px;object-fit:contain;border-radius:14px;margin:12px 0 0}
+.jhint{font-size:13px;color:var(--mute);margin:8px 0 0}
+input[type=file][data-j=file]{max-width:100%;font:inherit;font-size:13px}
 </style></head><body>
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div>
 <header>
 <h1>MarketBrain</h1>
 <p>What the market did while you weren't looking, in plain words. Tap a market to see why.</p>
-<div class="bar" id="bar"><a class="tv" href="https://www.tradingview.com/" target="_blank" rel="noopener">Open TradingView</a></div>
+<div class="bar" id="bar"><a class="tv" href="https://www.tradingview.com/" target="_blank" rel="noopener">Open TradingView</a><button class="tv" id="tdkey">Data key</button></div>
 <p id="note"></p>
 </header>
 <main id="app"></main>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
-const TWELVE_KEY='5da6354c27dd4bfc85981af54bb3d224';
+const TWELVE_KEY=localStorage.getItem('mb_td_key')||'';
 // Add or remove markets here. on:false hides one until you switch it on.
 const MARKETS=[
  {g:'Crypto',k:'BTC',name:'Bitcoin',src:'b',sym:'BTCUSDT',tv:'BINANCE:BTCUSDT'},
@@ -199,12 +203,21 @@ async function getDaily(m){
   store.set(ck,{day:today,at:Date.now(),d});return d;
  }catch(e){if(c)return c.d;throw e}
 }
+// Screenshots live in IndexedDB (not localStorage) so journal text storage stays small.
+const SHOT_DB='marketbrain-shots',SHOT_STORE='images';
+function shotDB(){return new Promise((resolve,reject)=>{const q=indexedDB.open(SHOT_DB,1);q.onupgradeneeded=()=>q.result.createObjectStore(SHOT_STORE);q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)})}
+async function putShot(id,blob){const db=await shotDB();return new Promise((resolve,reject)=>{const tx=db.transaction(SHOT_STORE,'readwrite');tx.objectStore(SHOT_STORE).put(blob,id);tx.oncomplete=()=>{db.close();resolve(id)};tx.onerror=()=>{db.close();reject(tx.error)}})}
+async function getShot(id){if(!id)return null;const db=await shotDB();return new Promise((resolve,reject)=>{const q=db.transaction(SHOT_STORE,'readonly').objectStore(SHOT_STORE).get(id);q.onsuccess=()=>{db.close();resolve(q.result||null)};q.onerror=()=>{db.close();reject(q.error)}})}
+async function delShot(id){if(!id)return;const db=await shotDB();return new Promise((resolve,reject)=>{const tx=db.transaction(SHOT_STORE,'readwrite');tx.objectStore(SHOT_STORE).delete(id);tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
+function compressShot(file){return new Promise((resolve,reject)=>{if(!file||!file.type.startsWith('image/'))return reject(new Error('Choose an image file.'));const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{try{const scale=Math.min(1,1280/img.width,1280/img.height),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);canvas.toBlob(b=>{URL.revokeObjectURL(url);b?resolve(b):reject(new Error('Could not resize this image.'))},'image/jpeg',.78)}catch(e){URL.revokeObjectURL(url);reject(e)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Could not read this image.'))};img.src=url})}
+function blobBase64(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]);r.onerror=()=>reject(r.error);r.readAsDataURL(blob)})}
 function dailyHTML(m){return `<div class="dl">Daily</div><div class="dch"></div><p class="rd">Loading daily candles…</p>
 <div class="jr"><div class="dl">Journal</div><textarea placeholder="Write what you're seeing, or what you expect. No format."></textarea>
-<div class="tf"><input type="date"><button class="chip on" data-j="save">Save entry</button><button class="chip" data-j="cancel" hidden>Cancel</button><button class="chip" data-j="key">AI key</button></div><div class="el"></div></div>`}
+<div class="tf"><input type="date"><button class="chip" data-j="attach">Attach screenshot</button><button class="chip on" data-j="save">Save entry</button><button class="chip" data-j="cancel" hidden>Cancel</button><button class="chip" data-j="key">AI key</button><input type="file" data-j="file" accept="image/*" hidden></div><img class="jpreview" alt="Screenshot preview"><p class="jhint" data-j="hint">Optional: attach a chart screenshot. It is resized and saved in this browser.</p><div class="el"></div></div>`}
 function jrender(m){
  const L=m.el.querySelector('.el'),es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)||b.at-a.at);
- L.innerHTML=es.map(e=>`<div class="en${e.date===m.sel?' sel':''}" data-id="${e.id}"><p class="d">${nice(e.date)}${m.dates&&!m.dates.has(e.date)?' · no candle this day':''}${e.edited?' · edited':''}</p><p class="t">${esc(e.text)}</p><div class="tf"><button class="chip" data-a="edit">Edit</button><button class="chip" data-a="del">Delete</button><button class="chip" data-a="ask">${e.ai?'Ask the reader again':'Ask the reader'}</button></div>${e.ai?`<div class="ai"><small>The reader's response. A reading of this entry, not a fact about you.</small>${esc(e.ai.text)}</div>`:''}</div>`).join('');
+ L.innerHTML=es.map(e=>`<div class="en${e.date===m.sel?' sel':''}" data-id="${e.id}"><p class="d">${nice(e.date)}${m.dates&&!m.dates.has(e.date)?' · no candle this day':''}${e.edited?' · edited':''}</p><p class="t">${esc(e.text)}</p>${e.shotId?`<img class="jshot" data-shot="${e.id}" alt="Journal screenshot">`:''}<div class="tf"><button class="chip" data-a="edit">Edit</button><button class="chip" data-a="del">Delete</button><button class="chip" data-a="ask">${e.ai?'Ask the reader again':'Ask the reader'}</button></div>${e.ai?`<div class="ai"><small>The reader's response. A reading of this entry, not a fact about you.</small>${esc(e.ai.text)}</div>`:''}</div>`).join('');
+ L.querySelectorAll('img[data-shot]').forEach(async img=>{const entry=es.find(e=>e.id===img.closest('.en').dataset.id);try{const blob=await getShot(entry?.shotId);if(blob&&img.isConnected)img.src=URL.createObjectURL(blob)}catch(err){img.alt='Saved screenshot could not be loaded'}});
  if(m.dsr&&m.dates)m.dsr.setMarkers(es.filter(e=>m.dates.has(e.date)).map(e=>({time:Date.parse(e.date+'T00:00:00Z')/1000,position:'belowBar',color:'#ff5fa8',shape:'circle'})).sort((a,b)=>a.time-b.time).filter((x,i,a)=>!i||x.time!==a[i-1].time));
 }
 async function openDaily(m){
@@ -213,7 +226,7 @@ async function openDaily(m){
  m.dch=LightweightCharts.createChart(m.el.querySelector('.dch'),{autoSize:true,layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479'},grid:{vertLines:{color:'#ffffff80'},horzLines:{color:'#ffffff80'}},rightPriceScale:{borderVisible:false},timeScale:{borderVisible:false}});
  m.dsr=m.dch.addCandlestickSeries({upColor:'#ff5fa8',downColor:'#ffc400',borderVisible:false,wickUpColor:'#ff5fa8',wickDownColor:'#e0a800'});
  const show=b=>{rd.textContent=b?`${nice(day(b.time))} · open ${fmt(b.open)} · high ${fmt(b.high)} · low ${fmt(b.low)} · close ${fmt(b.close)}`:''};
- try{m.daily=await getDaily(m);}catch(e){m.dch.remove();m.dch=null;rd.textContent=e==='nokey'?'Add your Twelve Data key at the top of index.html to turn this on.':'Couldn\'t load daily candles. Try again in a moment.';return}
+ try{m.daily=await getDaily(m);}catch(e){m.dch.remove();m.dch=null;rd.textContent=e==='nokey'?'Add your Twelve Data key using the Data key button in the header.':'Couldn\'t load daily candles. Try again in a moment.';return}
  m.dsr.setData(m.daily);m.dates=new Set(m.daily.map(b=>day(b.time)));m.dch.timeScale().fitContent();
  const last=m.daily[m.daily.length-1];show(last);
  m.dch.subscribeCrosshairMove(p=>{const b=p.time&&p.seriesData.get(m.dsr);show(b||last)});
@@ -223,52 +236,58 @@ async function openDaily(m){
 async function askReader(m,e){
  const key=localStorage.getItem('mb_ai_key');if(!key)throw 'nokey';
  const cs=m.daily||[],ix=cs.findIndex(b=>day(b.time)>=e.date),at=ix<0?cs.length:ix;
- const rows=cs.slice(Math.max(0,at-10),at+8).map(b=>`${day(b.time)} O${fmt(b.open)} H${fmt(b.high)} L${fmt(b.low)} C${fmt(b.close)}`).join('\n');
- const past=J.filter(x=>x.k===m.k&&x.id!==e.id).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6).map(x=>`[${x.date}] ${x.text.slice(0,500)}`).join('\n');
+ const rows=cs.slice(Math.max(0,at-10),at+8).map(b=>`${day(b.time)} O${fmt(b.open)} H${fmt(b.high)} L${fmt(b.low)} C${fmt(b.close)}`).join('\\n');
+ const past=J.filter(x=>x.k===m.k&&x.id!==e.id).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6).map(x=>`[${x.date}] ${x.text.slice(0,500)}`).join('\\n');
  const sys=`You are the reader inside MarketBrain, a tool that restores context for a trader. You respond to one journal entry. Write in plain, friendly language. Output four short sections headed exactly: Recorded, Interpretation, Uncertain, Questions.
-Recorded: only what the entry says (quote briefly, with its date) and what the daily candles show. Nothing else belongs here.
+Recorded: only what the entry says (quote briefly, with its date), what the daily candles show, and what is visibly legible in the screenshot. Describe visible chart elements conservatively.
 Interpretation: your reading, each line starting "One reading:". Make clear these are readings, not facts.
-Uncertain: what the entry and candles cannot tell, including that daily candles hide what happened inside each day.
+Uncertain: what the entry, candles, and screenshot cannot establish. The screenshot is evidence, not a claim. Do not invent or assume chart levels, gaps, swing points, entry price, outcome, instrument, timeframe, or events after the screenshot. If text or labels are unreadable, say so. Daily candles hide what happened inside each day.
 Questions: two or three questions that help the writer examine their reasoning, or compare what they expected with what happened if candles after the entry date exist.
 Rules: never predict price, give trade calls or advice. Never describe the writer's personality, assign scores, or state traits. If earlier entries seem to repeat a theme, do not say the writer "tends to" anything: name the dated entries, say it is only what those entries show, and ask whether they would state it as a belief. Use only the data given. Under 220 words, no markdown.`;
- const um=`Market: ${m.k} (${m.name}). Today: ${new Date().toISOString().slice(0,10)}.\n\nENTRY dated ${e.date}:\n${e.text}\n\nEARLIER ENTRIES on ${m.k}:\n${past||'none'}\n\nDAILY CANDLES around the entry date (UTC):\n${rows||'not loaded'}`;
- const gh=/^(github_pat_|ghp_)/.test(key);
- const gemini=/^AIza/.test(key);
+ const um=`Market: ${m.k} (${m.name}). Today: ${new Date().toISOString().slice(0,10)}.\\n\\nENTRY dated ${e.date}:\\n${e.text}\\n\\nEARLIER ENTRIES on ${m.k}:\\n${past||'none'}\\n\\nDAILY CANDLES around the entry date (UTC):\\n${rows||'not loaded'}`;
+ const gh=/^(github_pat_|ghp_)/.test(key),gemini=/^AIza/.test(key);
+ let imagePart=null;
+ if(e.shotId){const blob=await getShot(e.shotId);if(blob)imagePart={mime:blob.type||'image/jpeg',data:await blobBase64(blob)}}
  let r;
  if(gh){
-  r=await fetch('https://models.github.ai/inference/chat/completions',{method:'POST',headers:{'content-type':'application/json','accept':'application/vnd.github+json','authorization':'Bearer '+key},body:JSON.stringify({model:GH_MODEL,max_tokens:700,messages:[{role:'system',content:sys},{role:'user',content:um}]})});
+  const content=[{type:'text',text:um}];if(imagePart)content.push({type:'image_url',image_url:{url:`data:${imagePart.mime};base64,${imagePart.data}`}});
+  r=await fetch('https://models.github.ai/inference/chat/completions',{method:'POST',headers:{'content-type':'application/json','accept':'application/vnd.github+json','authorization':'Bearer '+key},body:JSON.stringify({model:GH_MODEL,max_tokens:700,messages:[{role:'system',content:sys},{role:'user',content}]})});
  }else if(gemini){
-  r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':key},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:'user',parts:[{text:um}]}],generationConfig:{maxOutputTokens:700,temperature:0.2}})});
+  const parts=[{text:um}];if(imagePart)parts.push({inlineData:{mimeType:imagePart.mime,data:imagePart.data}});
+  r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':key},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:'user',parts}],generationConfig:{maxOutputTokens:700,temperature:0.2}})});
  }else{
-  r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:AI_MODEL,max_tokens:700,system:sys,messages:[{role:'user',content:um}]})});
+  const content=[{type:'text',text:um}];if(imagePart)content.push({type:'image',source:{type:'base64',media_type:imagePart.mime,data:imagePart.data}});
+  r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:AI_MODEL,max_tokens:700,system:sys,messages:[{role:'user',content}]})});
  }
  const j=await r.json();
  if(!r.ok)throw (j.error&&(j.error.message||j.error))||`Request failed (${r.status})`;
- if(gemini){
-  const text=(j.candidates?.[0]?.content?.parts||[]).filter(b=>typeof b.text==='string').map(b=>b.text).join('\n');
-  if(!text)throw 'Gemini returned no text. Check the key, model access, and API limits.';
-  return text;
- }
- return gh?(j.choices?.[0]?.message?.content||''):(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+ if(gemini){const text=(j.candidates?.[0]?.content?.parts||[]).filter(b=>typeof b.text==='string').map(b=>b.text).join('\\n');if(!text)throw 'Gemini returned no text. Check the key, model access, and API limits.';return text}
+ return gh?(j.choices?.[0]?.message?.content||''):(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\\n');
 }
 function initJ(m){
- const el=m.el,ta=el.querySelector('textarea'),dt=el.querySelector('input[type=date]'),sv=el.querySelector('[data-j=save]'),cn=el.querySelector('[data-j=cancel]');
- m.sel=dt.value=new Date().toISOString().slice(0,10);
- const reset=()=>{m.editing=null;ta.value='';sv.textContent='Save entry';cn.hidden=true};
- sv.onclick=()=>{const text=ta.value.trim();if(!text||!dt.value)return;
-  if(m.editing){const e=J.find(x=>x.id===m.editing);if(e){e.text=text;e.date=dt.value;e.edited=true}}
-  else J.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),k:m.k,date:dt.value,text,at:Date.now(),ai:null});
-  saveJ();m.sel=dt.value;reset();jrender(m)};
+ const el=m.el,ta=el.querySelector('textarea'),dt=el.querySelector('input[type=date]'),sv=el.querySelector('[data-j=save]'),cn=el.querySelector('[data-j=cancel]'),file=el.querySelector('[data-j=file]'),preview=el.querySelector('.jpreview'),hint=el.querySelector('[data-j=hint]');
+ m.pendingShot=null;m.removeShot=false;
+ const showPending=blob=>{if(m.pendingUrl)URL.revokeObjectURL(m.pendingUrl);m.pendingUrl=blob?URL.createObjectURL(blob):'';preview.src=m.pendingUrl||'';preview.style.display=blob?'block':'none';};
+ const reset=()=>{m.editing=null;m.pendingShot=null;m.removeShot=false;ta.value='';sv.textContent='Save entry';cn.hidden=true;file.value='';showPending(null);hint.textContent='Optional: attach a chart screenshot. It is resized and saved in this browser.';const rb=el.querySelector('[data-j=remove-shot]');if(rb)rb.remove()};
+ el.querySelector('[data-j=attach]').onclick=()=>file.click();
+ file.onchange=async()=>{const f=file.files&&file.files[0];if(!f)return;try{if(f.size>15*1024*1024)throw new Error('Choose an image under 15 MB.');m.pendingShot=await compressShot(f);m.removeShot=false;showPending(m.pendingShot);hint.textContent='Screenshot ready (resized JPEG). Save the entry to keep it.'}catch(e){alert(e.message||'Could not process this image.')}};
+ sv.onclick=async()=>{const text=ta.value.trim();if(!text&&!m.pendingShot&&!m.editing)return;if(!dt.value)return;sv.disabled=true;const oldLabel=sv.textContent;sv.textContent='Saving…';try{
+  let e;
+  if(m.editing){e=J.find(x=>x.id===m.editing);if(e){e.text=text;e.date=dt.value;e.edited=true;if(m.pendingShot){const id=e.shotId||('shot_'+e.id);await putShot(id,m.pendingShot);e.shotId=id}if(m.removeShot&&e.shotId){await delShot(e.shotId);delete e.shotId}}}
+  else{e={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),k:m.k,date:dt.value,text,at:Date.now(),ai:null};if(m.pendingShot){e.shotId='shot_'+e.id;await putShot(e.shotId,m.pendingShot)}J.push(e)}
+  saveJ();m.sel=dt.value;reset();jrender(m);
+ }catch(err){alert('Could not save the journal entry: '+(err.message||err))}finally{sv.disabled=false;if(sv.textContent==='Saving…')sv.textContent=oldLabel}};
  cn.onclick=reset;
  dt.onchange=()=>{m.sel=dt.value;jrender(m)};
  el.querySelector('[data-j=key]').onclick=()=>{const k=prompt('Paste an AI key: Google Gemini (usually starts AIza), GitHub Models (github_pat_ / ghp_), or Anthropic (sk-ant-). The key is saved in this browser local storage. Leave empty to remove it.',localStorage.getItem('mb_ai_key')||'');if(k!==null){try{k.trim()?localStorage.setItem('mb_ai_key',k.trim()):localStorage.removeItem('mb_ai_key')}catch(e){}}};
  el.querySelector('.el').onclick=async ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const e=J.find(x=>x.id===b.closest('.en').dataset.id);if(!e)return;
-  if(b.dataset.a==='edit'){m.editing=e.id;ta.value=e.text;dt.value=e.date;m.sel=e.date;sv.textContent='Save changes';cn.hidden=false;ta.focus();jrender(m)}
-  if(b.dataset.a==='del'&&confirm('Delete this entry?')){J=J.filter(x=>x!==e);saveJ();jrender(m)}
+  if(b.dataset.a==='edit'){m.editing=e.id;ta.value=e.text;dt.value=e.date;m.sel=e.date;sv.textContent='Save changes';cn.hidden=false;m.pendingShot=null;m.removeShot=false;file.value='';const rb=el.querySelector('[data-j=remove-shot]');if(rb)rb.remove();if(e.shotId){try{const blob=await getShot(e.shotId);showPending(blob);hint.textContent='Current screenshot shown. Choose another image to replace it.';el.querySelector('.tf').insertAdjacentHTML('beforeend','<button class="chip" data-j="remove-shot">Remove screenshot</button>');el.querySelector('[data-j=remove-shot]').onclick=()=>{m.removeShot=true;m.pendingShot=null;showPending(null);hint.textContent='Screenshot will be removed when you save changes.'}}catch(err){}}else showPending(null);jrender(m);ta.focus()}
+  if(b.dataset.a==='del'&&confirm('Delete this entry?')){if(e.shotId)await delShot(e.shotId).catch(()=>{});J=J.filter(x=>x!==e);saveJ();jrender(m)}
   if(b.dataset.a==='ask'){b.disabled=true;b.textContent='Reading…';try{e.ai={text:await askReader(m,e),at:Date.now()};saveJ()}catch(x){alert(x==='nokey'?'Add a Google Gemini, GitHub Models, or Anthropic API key with the AI key button.':(x instanceof TypeError?'The browser blocked or couldn\'t reach the AI service. ':'The reader couldn\'t answer: ')+(x.message||x))}jrender(m)}};
  jrender(m);
 }
 const app=document.getElementById('app'),note=document.getElementById('note'),bar=document.getElementById('bar');
+document.getElementById('tdkey').onclick=()=>{const k=prompt('Paste your Twelve Data API key. It will be stored only in this browser, not in the HTML source. Leave empty to remove it.',localStorage.getItem('mb_td_key')||'');if(k!==null){try{k.trim()?localStorage.setItem('mb_td_key',k.trim()):localStorage.removeItem('mb_td_key');location.reload()}catch(e){alert('Could not save the key in this browser.')}}};
 const live=MARKETS.filter(m=>m.on!==false);let group='',n=0;
 for(const m of live){
  if(m.g!==group){group=m.g;app.insertAdjacentHTML('beforeend',`<h2 data-g="${group}">${group}</h2>`);}
@@ -302,7 +321,7 @@ function paint(m){
 }
 async function load(m){
  try{m.c=await getCandles(m,m.tf);m.res=read(m.c,m.tf);paint(m);}
- catch(e){m.s.classList.remove('w');m.s.classList.add('calm');m.s.textContent=e==='nokey'?'Add your Twelve Data key at the top of index.html to turn this on.':m.src==='t'?'No data came back for this market. Check the key, or this market may need a paid Twelve Data plan.':'Couldn\'t reach the price feed. Try again in a moment.';}
+ catch(e){m.s.classList.remove('w');m.s.classList.add('calm');m.s.textContent=e==='nokey'?'Add your Twelve Data key using the Data key button in the header.':m.src==='t'?'No data came back for this market. Check the key, or this market may need a paid Twelve Data plan.':'Couldn\'t reach the price feed. Try again in a moment.';}
 }
 function toggle(m,force){
  const o=m.el.classList.toggle('open',force);m.el.querySelector('button').setAttribute('aria-expanded',o);
