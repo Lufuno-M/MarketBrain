@@ -236,15 +236,15 @@ async function openDaily(m){
 async function askReader(m,e){
  const key=localStorage.getItem('mb_ai_key');if(!key)throw 'nokey';
  const cs=m.daily||[],ix=cs.findIndex(b=>day(b.time)>=e.date),at=ix<0?cs.length:ix;
- const rows=cs.slice(Math.max(0,at-10),at+8).map(b=>`${day(b.time)} O${fmt(b.open)} H${fmt(b.high)} L${fmt(b.low)} C${fmt(b.close)}`).join('\\n');
- const past=J.filter(x=>x.k===m.k&&x.id!==e.id).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6).map(x=>`[${x.date}] ${x.text.slice(0,500)}`).join('\\n');
+ const rows=cs.slice(Math.max(0,at-10),at+8).map(b=>`${day(b.time)} O${fmt(b.open)} H${fmt(b.high)} L${fmt(b.low)} C${fmt(b.close)}`).join('\n');
+ const past=J.filter(x=>x.k===m.k&&x.id!==e.id).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6).map(x=>`[${x.date}] ${x.text.slice(0,500)}`).join('\n');
  const sys=`You are the reader inside MarketBrain, a tool that restores context for a trader. You respond to one journal entry. Write in plain, friendly language. Output four short sections headed exactly: Recorded, Interpretation, Uncertain, Questions.
 Recorded: only what the entry says (quote briefly, with its date), what the daily candles show, and what is visibly legible in the screenshot. Describe visible chart elements conservatively.
 Interpretation: your reading, each line starting "One reading:". Make clear these are readings, not facts.
 Uncertain: what the entry, candles, and screenshot cannot establish. The screenshot is evidence, not a claim. Do not invent or assume chart levels, gaps, swing points, entry price, outcome, instrument, timeframe, or events after the screenshot. If text or labels are unreadable, say so. Daily candles hide what happened inside each day.
 Questions: two or three questions that help the writer examine their reasoning, or compare what they expected with what happened if candles after the entry date exist.
 Rules: never predict price, give trade calls or advice. Never describe the writer's personality, assign scores, or state traits. If earlier entries seem to repeat a theme, do not say the writer "tends to" anything: name the dated entries, say it is only what those entries show, and ask whether they would state it as a belief. Use only the data given. Under 220 words, no markdown.`;
- const um=`Market: ${m.k} (${m.name}). Today: ${new Date().toISOString().slice(0,10)}.\\n\\nENTRY dated ${e.date}:\\n${e.text}\\n\\nEARLIER ENTRIES on ${m.k}:\\n${past||'none'}\\n\\nDAILY CANDLES around the entry date (UTC):\\n${rows||'not loaded'}`;
+ const um=`Market: ${m.k} (${m.name}). Today: ${new Date().toISOString().slice(0,10)}.\n\nENTRY dated ${e.date}:\n${e.text}\n\nEARLIER ENTRIES on ${m.k}:\n${past||'none'}\n\nDAILY CANDLES around the entry date (UTC):\n${rows||'not loaded'}`;
  const gh=/^(github_pat_|ghp_)/.test(key),gemini=/^AIza/.test(key);
  let imagePart=null;
  if(e.shotId){const blob=await getShot(e.shotId);if(blob)imagePart={mime:blob.type||'image/jpeg',data:await blobBase64(blob)}}
@@ -261,8 +261,8 @@ Rules: never predict price, give trade calls or advice. Never describe the write
  }
  const j=await r.json();
  if(!r.ok)throw (j.error&&(j.error.message||j.error))||`Request failed (${r.status})`;
- if(gemini){const text=(j.candidates?.[0]?.content?.parts||[]).filter(b=>typeof b.text==='string').map(b=>b.text).join('\\n');if(!text)throw 'Gemini returned no text. Check the key, model access, and API limits.';return text}
- return gh?(j.choices?.[0]?.message?.content||''):(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\\n');
+ if(gemini){const text=(j.candidates?.[0]?.content?.parts||[]).filter(b=>typeof b.text==='string').map(b=>b.text).join('\n');if(!text)throw 'Gemini returned no text. Check the key, model access, and API limits.';return text}
+ return gh?(j.choices?.[0]?.message?.content||''):(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
 }
 function initJ(m){
  const el=m.el,ta=el.querySelector('textarea'),dt=el.querySelector('input[type=date]'),sv=el.querySelector('[data-j=save]'),cn=el.querySelector('[data-j=cancel]'),file=el.querySelector('[data-j=file]'),preview=el.querySelector('.jpreview'),hint=el.querySelector('[data-j=hint]');
