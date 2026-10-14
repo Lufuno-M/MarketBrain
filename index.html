@@ -103,14 +103,15 @@ const MARKETS=[
  {g:'Indices',k:'US30',name:'Dow Jones',src:'t',sym:'DJI',tv:'OANDA:US30USD',on:false},
  {g:'Indices',k:'NAS100',name:'Nasdaq 100',src:'t',sym:'IXIC',tv:'OANDA:NAS100USD',on:false}
 ];
-const TFS=[['1m',1,'1m','1min'],['5m',5,'5m','5min'],['15m',15,'15m','15min'],['1h',60,'1h','1h']];
+// label, minutes, Binance interval, Twelve Data interval. 1d reuses the daily feed below.
+const TFS=[['1m',1,'1m','1min'],['5m',5,'5m','5min'],['15m',15,'15m','15min'],['30m',30,'30m','30min'],['1h',60,'1h','1h'],['1d',1440,'1d','1day']];
 const HUES=['#ff5fa8','#ffcf33','#ff9a6b','#b98cff','#ff7ec9','#ffb800','#e86bd6'];
 // How much a market must travel (over the last 12 candles, measured in average candle sizes)
 // before the page calls it "moving" or "moving fast". Tune these two numbers to taste.
 const MOVING=3,STRONG=5,LOOK=12;
 const fmt=p=>p.toFixed(p<10?5:p<1000?3:2);
 const ny=t=>new Date(t).toLocaleString('en-US',{timeZone:'America/New_York',weekday:'short',hour:'numeric',minute:'2-digit'})+' New York time';
-const span=m=>m>=120?Math.round(m/60)+' hours':m+' minutes';
+const span=m=>{if(m>=1440){const d=Math.round(m/1440);return d+(d===1?' day':' days')}return m>=120?Math.round(m/60)+' hours':m+' minutes'};
 const buzz=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 
 function motion(c,tfm){
@@ -165,6 +166,8 @@ function why(r,m){
 }
 
 async function getCandles(m,tf){
+ // 1d reuses the daily feed, so it costs no extra Twelve Data credits.
+ if(tf===1440){const d=await getDaily(m);return d.map(b=>({t:b.time*1000,o:b.open,h:b.high,l:b.low,c:b.close}))}
  const T=TFS.find(t=>t[1]===tf);
  if(m.src==='b'){
   const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${m.sym}&interval=${T[2]}&limit=300`);
@@ -315,9 +318,10 @@ function paint(m){
  m.s.classList.toggle('calm',!mv);
  el.classList.toggle('up',mv&&mo.up);el.classList.toggle('dn',mv&&!mo.up);el.classList.toggle('strong',mo.k==='strong');
  el.querySelector('.why').innerHTML=why(m.res,m);
- el.querySelector('.at').textContent=ny(m.c[m.c.length-1].t);
+ const lt=m.c[m.c.length-1].t;
+ el.querySelector('.at').textContent=m.tf===1440?new Date(lt).toISOString().slice(0,10)+' (daily, UTC)':ny(lt);
  el.querySelector('.fd').textContent='Feed: '+(m.src==='b'?'Binance ':'Twelve Data ')+m.sym+', last '+m.c.length+' candles ('+span(m.c.length*m.tf)+')';
- if(m.chart){m.sr.setData(m.c.slice(-200).map(x=>({time:x.t/1000,open:x.o,high:x.h,low:x.l,close:x.c})));draw(m);m.chart.timeScale().fitContent();}
+ if(m.chart){m.chart.applyOptions({timeScale:{timeVisible:m.tf<1440}});m.sr.setData(m.c.slice(-200).map(x=>({time:x.t/1000,open:x.o,high:x.h,low:x.l,close:x.c})));draw(m);m.chart.timeScale().fitContent();}
 }
 async function load(m){
  try{m.c=await getCandles(m,m.tf);m.res=read(m.c,m.tf);paint(m);}
@@ -327,7 +331,7 @@ function toggle(m,force){
  const o=m.el.classList.toggle('open',force);m.el.querySelector('button').setAttribute('aria-expanded',o);
  if(o&&m.res){const k=m.res.mo.k;if(k==='strong')buzz([40,70,40]);else if(k==='moving')buzz(25);}
  if(o&&m.res&&!m.chart){
-  m.chart=LightweightCharts.createChart(m.el.querySelector('.ch'),{layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479'},grid:{vertLines:{color:'#ffffff80'},horzLines:{color:'#ffffff80'}},rightPriceScale:{borderVisible:false},timeScale:{timeVisible:true,borderVisible:false}});
+  m.chart=LightweightCharts.createChart(m.el.querySelector('.ch'),{layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479'},grid:{vertLines:{color:'#ffffff80'},horzLines:{color:'#ffffff80'}},rightPriceScale:{borderVisible:false},timeScale:{timeVisible:m.tf<1440,borderVisible:false}});
   m.sr=m.chart.addCandlestickSeries({upColor:'#ff5fa8',downColor:'#ffc400',borderVisible:false,wickUpColor:'#ff5fa8',wickDownColor:'#e0a800'});
   paint(m);
  }
