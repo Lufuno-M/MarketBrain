@@ -12,7 +12,7 @@ body{margin:0;background:transparent;color:var(--ink);font-family:-apple-system,
 .b{position:absolute;border-radius:50%;filter:blur(80px);opacity:.8;animation:drift 26s ease-in-out infinite alternate;transition:background-color 8s ease}
 .b1{width:62vmax;height:62vmax;left:-18vmax;top:-16vmax;background:#ff7ab8}
 .b2{width:56vmax;height:56vmax;right:-16vmax;top:-10vmax;background:#ffd23f;animation-duration:31s}
-.b3{width:52vmax;height:52vmax;left:22vw;bottom:-26vmax;background:#ffffff;animation-duration:36s}
+.b3{width:52vmax;height:52vmax;left:22vw;bottom:-26vmax;background:#fff;animation-duration:36s}
 .b4{width:36vmax;height:36vmax;right:4vw;bottom:-8vmax;background:#ffb08a;opacity:.65;animation-duration:29s}
 @keyframes drift{to{transform:translate(6vmax,5vmax) scale(1.12)}}
 #lamp{position:fixed;width:520px;height:520px;margin:-260px 0 0 -260px;left:var(--x,50vw);top:var(--y,30vh);border-radius:50%;background:radial-gradient(circle,#fff8c980,#ffb3d94d 45%,transparent 70%);z-index:-1;pointer-events:none;transition:left .5s ease-out,top .5s ease-out}
@@ -27,10 +27,9 @@ header p{font-size:clamp(19px,2.6vw,26px);color:#4b3f57;margin:16px 0 24px;max-w
 #note{font-size:15px;color:var(--mute);margin:12px 0 0;min-height:1.4em}
 main{max-width:980px;margin:0 auto;padding:0 28px 96px}
 h2{font-size:15px;font-weight:600;color:var(--mute);margin:44px 0 8px}
-.m{border-radius:26px;margin:0 -16px;padding:0 16px;background:#ffffff40;border:1px solid #ffffffa8;box-shadow:inset 0 1px 0 #fffffff0,inset 0 -1px 0 #ffffff55,0 8px 30px #3b1d5a12;backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);transition:background .8s,box-shadow .8s,transform .3s}
+.m{border-radius:26px;margin:0 -16px;padding:0 16px;background:#ffffff40;border:1px solid #ffffffa8;box-shadow:inset 0 1px 0 #fffffff0,inset 0 -1px 0 #ffffff55,0 8px 30px #3b1d5a12;backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);transition:background .8s,box-shadow .8s}
 .m:hover{background:#ffffff5c}
 .m.open{background:#ffffff78;box-shadow:inset 0 1px 0 #fff,0 18px 50px #ff5fa81c}
-/* movement: quiet markets stay plain, moving markets glow and get heavier */
 .m.up{background:linear-gradient(120deg,#ff5fa826,#ffcf3330),#ffffff50;box-shadow:inset 0 1px 0 #fff,0 14px 44px #ff5fa830}
 .m.dn{background:linear-gradient(120deg,#8b6bff22,#6fb4ff22),#ffffff50;box-shadow:inset 0 1px 0 #fff,0 14px 44px #8b6bff28}
 .m.up.strong{background:linear-gradient(120deg,#ff5fa84d,#ffcf3366),#ffffff48;box-shadow:inset 0 1px 0 #fff,0 20px 64px #ff5fa860}
@@ -53,43 +52,39 @@ h2{font-size:15px;font-weight:600;color:var(--mute);margin:44px 0 8px}
 .p{display:grid;grid-template-rows:0fr;transition:grid-template-rows .5s ease,opacity .5s;opacity:0}
 .m.open .p{grid-template-rows:1fr;opacity:1}
 .p>div{overflow:hidden}
-.tf{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
-.why{font-size:18px;line-height:1.5;color:#3b3046;max-width:38em;margin:0 0 18px;padding:0;list-style:none}
-.why li{margin:0 0 10px}
-.ch{height:340px;margin:6px 0 12px;border-radius:18px;overflow:hidden}
-.f{padding-bottom:26px;font-size:14px;color:var(--mute);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.tf{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;align-items:center}
+.ch{height:380px;margin:6px 0 8px;border-radius:18px;overflow:hidden}
+.rd{font-size:14px;color:var(--mute);min-height:1.5em;margin:0 0 10px}
 .dl{font-size:15px;font-weight:600;color:var(--mute);margin:22px 0 8px}
-.dch{height:300px;margin:0 0 8px;border-radius:18px;overflow:hidden}
-.rd{font-size:14px;color:var(--mute);min-height:1.5em;margin:0 0 6px}
-.jr{padding:4px}
-.jr textarea{width:100%;min-height:120px;font:inherit;font-size:17px;line-height:1.5;color:var(--ink);background:#ffffff80;border:1px solid #ffffffc0;border-radius:18px;padding:14px 16px;resize:vertical;box-shadow:inset 0 1px 0 #fff}
-.jr textarea:focus{outline:2px solid var(--pink);outline-offset:1px}
-.jr .tf{margin:10px 0 0;align-items:center}
-.jr input[type=date]{font:inherit;font-size:15px;border:1px solid #ffffffc0;background:#ffffff70;border-radius:99px;padding:8px 14px;color:var(--ink)}
-.en{margin:16px 0 0;padding:14px 16px;border-radius:18px;background:#ffffff66;border:1px solid #ffffffa8}
+.th{display:flex;flex-direction:column;gap:10px;margin:0 0 12px}
+.msg{max-width:38em;padding:12px 15px;border-radius:18px;font-size:17px;line-height:1.5;white-space:pre-wrap}
+.msg.u{align-self:flex-end;background:linear-gradient(90deg,#ffd7ea,#fff0a8)}
+.msg.a{align-self:flex-start;background:#ffffff80;border:1px solid #ffffffc0}
+.ar{display:flex;gap:8px;margin:0 0 6px}
+.ar input,.jr input[type=date]{font:inherit;font-size:16px;color:var(--ink);background:#ffffff80;border:1px solid #ffffffc0;border-radius:99px;padding:10px 16px;box-shadow:inset 0 1px 0 #fff}
+.ar input{flex:1;min-width:0}
+.ar input:focus,.jr textarea:focus{outline:2px solid var(--pink);outline-offset:1px}
+.jr textarea{width:100%;min-height:110px;font:inherit;font-size:17px;line-height:1.5;color:var(--ink);background:#ffffff80;border:1px solid #ffffffc0;border-radius:18px;padding:14px 16px;resize:vertical}
+.en{margin:14px 0 0;padding:14px 16px;border-radius:18px;background:#ffffff66;border:1px solid #ffffffa8}
 .en.sel{box-shadow:0 0 0 2px #ff5fa8}
 .en .d{font-size:13px;color:var(--mute);margin:0 0 6px}
 .en .t{font-size:17px;line-height:1.5;white-space:pre-wrap;margin:0 0 10px}
 .en .tf{margin:0}
-.ai{margin:12px 0 0;padding:12px 14px;border-radius:14px;background:linear-gradient(120deg,#ff5fa81a,#ffcf331f);font-size:16px;line-height:1.5;white-space:pre-wrap}
-.ai small{display:block;color:var(--mute);font-size:12px;margin-bottom:6px}
-.jshot{display:block;max-width:100%;max-height:360px;object-fit:contain;border-radius:14px;margin:10px 0;border:1px solid #ffffffb0}
-.jpreview{display:none;max-width:100%;max-height:220px;object-fit:contain;border-radius:14px;margin:12px 0 0}
-.jhint{font-size:13px;color:var(--mute);margin:8px 0 0}
-input[type=file][data-j=file]{max-width:100%;font:inherit;font-size:13px}
+.f{padding:22px 0 26px;font-size:14px;color:var(--mute);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body>
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div>
 <header>
 <h1>MarketBrain</h1>
-<p>What the market did while you weren't looking, in plain words. Tap a market to see why.</p>
-<div class="bar" id="bar"><a class="tv" href="https://www.tradingview.com/" target="_blank" rel="noopener">Open TradingView</a><button class="tv" id="tdkey">Data key</button></div>
+<p>What the market did while you weren't looking, in plain words. Tap a market to open it, then ask it a question.</p>
+<div class="bar" id="bar"><a class="tv" href="https://www.tradingview.com/" target="_blank" rel="noopener">Open TradingView</a><button class="tv" id="tdkey">Data key</button><button class="tv" id="aikey">AI key</button></div>
 <p id="note"></p>
 </header>
 <main id="app"></main>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 const TWELVE_KEY=localStorage.getItem('mb_td_key')||'';
+const AI_MODEL='claude-sonnet-5-5',GH_MODEL='openai/gpt-4.1',GEMINI_MODEL='gemini-3.6-flash';
 // Add or remove markets here. on:false hides one until you switch it on.
 const MARKETS=[
  {g:'Crypto',k:'BTC',name:'Bitcoin',src:'b',sym:'BTCUSDT',tv:'BINANCE:BTCUSDT'},
@@ -103,16 +98,20 @@ const MARKETS=[
  {g:'Indices',k:'US30',name:'Dow Jones',src:'t',sym:'DJI',tv:'OANDA:US30USD',on:false},
  {g:'Indices',k:'NAS100',name:'Nasdaq 100',src:'t',sym:'IXIC',tv:'OANDA:NAS100USD',on:false}
 ];
-// label, minutes, Binance interval, Twelve Data interval. 1d reuses the daily feed below.
+// label, minutes, Binance interval, Twelve Data interval. 1d is the daily feed, cached for the day.
 const TFS=[['1m',1,'1m','1min'],['5m',5,'5m','5min'],['15m',15,'15m','15min'],['30m',30,'30m','30min'],['1h',60,'1h','1h'],['1d',1440,'1d','1day']];
 const HUES=['#ff5fa8','#ffcf33','#ff9a6b','#b98cff','#ff7ec9','#ffb800','#e86bd6'];
-// How much a market must travel (over the last 12 candles, measured in average candle sizes)
-// before the page calls it "moving" or "moving fast". Tune these two numbers to taste.
+// How far a market must travel over the last LOOK candles (in average candle sizes) to count as moving / moving fast.
 const MOVING=3,STRONG=5,LOOK=12;
 const fmt=p=>p.toFixed(p<10?5:p<1000?3:2);
 const ny=t=>new Date(t).toLocaleString('en-US',{timeZone:'America/New_York',weekday:'short',hour:'numeric',minute:'2-digit'})+' New York time';
 const span=m=>{if(m>=1440){const d=Math.round(m/1440);return d+(d===1?' day':' days')}return m>=120?Math.round(m/60)+' hours':m+' minutes'};
 const buzz=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
+const tfl=t=>TFS.find(x=>x[1]===t)[0];
+const store={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const day=t=>new Date(t*1000).toISOString().slice(0,10);
+const nice=d=>new Date(d+'T12:00:00Z').toLocaleDateString('en-US',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+let J=store.get('mb_journal',[]);const saveJ=()=>store.set('mb_journal',J);
 
 function motion(c,tfm){
  if(c.length<LOOK+20)return{k:'still'};
@@ -142,9 +141,7 @@ function read(c,tfm){
 }
 function sentence(r){
  const{last,near,run,tfm,mo}=r;
- let pre='';
- if(mo.k==='still')pre='Quiet. ';
- else pre=`Moving ${mo.up?'up':'down'}${mo.k==='strong'?' fast':''}: ${mo.pct.toFixed(2)}% in the last ${span(mo.span)}. `;
+ let pre=mo.k==='still'?'Quiet. ':`Moving ${mo.up?'up':'down'}${mo.k==='strong'?' fast':''}: ${mo.pct.toFixed(2)}% in the last ${span(mo.span)}. `;
  if(!near)return pre+'No open gaps nearby.';
  const side=near.up?'buying':'selling';
  if(r.inside)return pre+`Price is sitting inside a ${side} gap and has stayed there for ${span(run*tfm)}.`;
@@ -152,29 +149,69 @@ function sentence(r){
  if(near.entered)return pre+`The closest open ${side} gap is ${where} price. Price has dipped into it before, but never all the way through.`;
  return pre+`The closest open ${side} gap is ${where} price, and price hasn't come back to it yet.`;
 }
-function why(r,m){
- const{near,fib,last}=r,L=[];
- L.push('A gap is a spot where three candles in a row moved so fast that the middle one left a space the first and third never touched. Markets often come back to check these.');
- if(near)L.push(`The closest open one sits between ${fmt(near.lo)} and ${fmt(near.hi)}. It is "open" because nothing has traded fully through it since. ${near.entered?'Price has been inside it at some point since, without filling it.':'Price has not touched it since it formed.'} Price is now ${fmt(last.c)}.`);
- if(fib)L.push(`The latest swing ran ${fib.down?'down':'up'} from ${fmt(fib.from)} to ${fmt(fib.to)}. Price has since pulled back ${Math.round(fib.back*100)}% of that move. The 50% level is ${fmt(fib.lvl(.5))} and the 70.5% level is ${fmt(fib.lvl(.705))}.`);
- if(m){const tl=TFS.find(t=>t[1]===m.tf)[0];
-  L.push(`What this rests on: ${m.src==='b'?'Binance':'Twelve Data'} prices for ${m.sym}, the last ${m.c.length} ${tl} candles (about ${span(m.c.length*m.tf)}). Anything older is not seen.`);
-  L.push('"Closest" means the gap whose middle is nearest the latest price. It does not weigh how big or how important a gap is.');
-  L.push('What this page does not know: liquidity pools, how many swing lows have broken, or anything you have drawn or set alerts on in TradingView.');}
- L.push('This describes what the chart shows. It is not a prediction or advice.');
- return L.map(x=>`<li>${x}</li>`).join('');
+
+/* ---- the logic, written once: the assistant reads it, and the quick questions answer from it ---- */
+const LOGIC=`How this page reads a chart (this is all it does):
+Gap: three candles where the first high is below the third low (buying gap), or the first low is above the third high (selling gap). The space between is the gap. Open = no later candle has traded fully back through it. Entered = a later candle overlapped it without filling it. Closest = the open gap whose middle is nearest the latest price; size and importance are not weighed.
+Swing: a candle whose high (or low) is the highest (lowest) of the 3 candles on each side. The latest swing high and low make the swing. Fib levels (50%, 70.5%) are measured on it; pullback is how much of the swing price has retraced.
+Motion: net change over the last ${LOOK} candles divided by the average candle size over the last 60. ${MOVING} or more = moving, ${STRONG} or more = moving fast, otherwise quiet.
+Blind spots: no liquidity pools, no count of broken swing lows, nothing drawn or set as alerts in TradingView, nothing older than the loaded candles, no news.`;
+const LOCAL={
+ gap:m=>{const n=m.res.near;return 'A gap is a spot where three candles in a row moved so fast that the middle one left a space the first and third never touched. Markets often come back to check these.'+(n?` The closest open one here sits between ${fmt(n.lo)} and ${fmt(n.hi)}. ${n.entered?'Price has been inside it since, without filling it.':'Price has not touched it since it formed.'} Price is now ${fmt(m.res.last.c)}.`:' No open gap is nearby right now.')},
+ closest:()=>'"Open" means nothing has traded fully back through the gap since it formed. "Closest" means the open gap whose middle is nearest the latest price. It does not weigh how big or how important a gap is.',
+ fib:m=>{const f=m.res.fib;return f?`The latest swing ran ${f.down?'down':'up'} from ${fmt(f.from)} to ${fmt(f.to)}. Price has pulled back ${Math.round(f.back*100)}% of it. The 50% level is ${fmt(f.lvl(.5))} and the 70.5% level is ${fmt(f.lvl(.705))}. A swing is a candle that is the highest or lowest of the three on each side.`:'No swing is clear enough in these candles yet.'},
+ moving:()=>`"Moving" compares how far price travelled over the last ${LOOK} candles with the usual candle size on this chart. ${MOVING} times that is moving, ${STRONG} times is moving fast. Anything less says quiet.`,
+ blind:m=>`This rests on ${m.src==='b'?'Binance':'Twelve Data'} prices for ${m.sym}: the last ${m.c.length} ${tfl(m.tf)} candles, about ${span(m.c.length*m.tf)}. It does not know liquidity pools, how many swing lows have broken, or anything you drew in TradingView. It describes the chart. It is not a prediction or advice.`
+};
+const LQ=[['What is this gap?','gap'],['How is "closest" chosen?','closest'],['What are the fib levels?','fib'],['What counts as moving?','moving'],['What can\'t it see?','blind']];
+
+function sysFor(m){
+ const r=m.res,n=r.near,f=r.fib;
+ const es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(e=>`[${e.date}] ${e.text.slice(0,400)}`).join('\n')||'none';
+ const rows=m.c.slice(-30).map(b=>`${new Date(b.t).toISOString().slice(5,16)} ${fmt(b.o)} ${fmt(b.h)} ${fmt(b.l)} ${fmt(b.c)}`).join('\n');
+ return `You are the assistant inside MarketBrain, which restores context for a trader. Answer the user's question about the chart they are looking at, in plain friendly language, under 160 words, no markdown. Keep apart what the data shows, what you infer, and what is uncertain whenever it matters. Never predict price, give trade calls or advice, or describe the user's personality. Use only the information below; if asked about something the page cannot see, say so.
+
+${LOGIC}
+
+NOW: ${m.k} (${m.name}), ${tfl(m.tf)} chart. ${sentence(r)}
+Closest open gap: ${n?`${n.up?'buying':'selling'}, ${fmt(n.lo)} to ${fmt(n.hi)}, ${n.entered?'price has entered it since':'untouched since it formed'}`:'none nearby'}
+Swing: ${f?`${f.down?'down':'up'} from ${fmt(f.from)} to ${fmt(f.to)}, pulled back ${Math.round(f.back*100)}%, 50% at ${fmt(f.lvl(.5))}, 70.5% at ${fmt(f.lvl(.705))}`:'none clear'}
+Feed: ${m.src==='b'?'Binance':'Twelve Data'} ${m.sym}, ${m.c.length} candles.
+LAST 30 CANDLES (UTC month-day hour:minute, open high low close), newest last:
+${rows}
+THE USER'S JOURNAL NOTES on ${m.k} (their words, not facts):
+${es}`;
+}
+async function callAI(key,sys,msgs){
+ const gh=/^(github_pat_|ghp_)/.test(key),gm=/^AIza/.test(key),H={'content-type':'application/json'};let r;
+ if(gh)r=await fetch('https://models.github.ai/inference/chat/completions',{method:'POST',headers:{...H,accept:'application/vnd.github+json',authorization:'Bearer '+key},body:JSON.stringify({model:GH_MODEL,max_tokens:600,messages:[{role:'system',content:sys},...msgs.map(x=>({role:x.role,content:x.text}))]})});
+ else if(gm)r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,{method:'POST',headers:{...H,'x-goog-api-key':key},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:msgs.map(x=>({role:x.role==='user'?'user':'model',parts:[{text:x.text}]})),generationConfig:{maxOutputTokens:600,temperature:.2}})});
+ else r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{...H,'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:AI_MODEL,max_tokens:600,system:sys,messages:msgs.map(x=>({role:x.role,content:x.text}))})});
+ const j=await r.json();
+ if(!r.ok)throw(j.error&&(j.error.message||j.error))||'Request failed ('+r.status+')';
+ const t=gm?(j.candidates?.[0]?.content?.parts||[]).map(b=>b.text||'').join('\n'):gh?(j.choices?.[0]?.message?.content||''):(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+ if(!t)throw 'The AI service returned no text. Check the key, model access, and limits.';return t;
 }
 
+async function getDaily(m){
+ const ck='mb_d_'+m.k,c=store.get(ck,null),today=new Date().toISOString().slice(0,10);
+ if(c&&(m.src==='t'?c.day===today:Date.now()-c.at<18e5))return c.d;
+ try{
+  let d;
+  if(m.src==='b'){const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${m.sym}&interval=1d&limit=365`);if(!r.ok)throw 0;d=(await r.json()).map(k=>({t:k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4]}));}
+  else{if(!TWELVE_KEY)throw 'nokey';const j=await(await fetch(`https://api.twelvedata.com/time_series?interval=1day&outputsize=365&timezone=UTC&symbol=${encodeURIComponent(m.sym)}&apikey=${TWELVE_KEY}`)).json();if(!j.values)throw 0;
+   d=j.values.map(x=>({t:Date.parse(x.datetime.slice(0,10)+'T00:00:00Z'),o:+x.open,h:+x.high,l:+x.low,c:+x.close})).reverse();}
+  store.set(ck,{day:today,at:Date.now(),d});return d;
+ }catch(e){if(c)return c.d;throw e}
+}
 async function getCandles(m,tf){
- // 1d reuses the daily feed, so it costs no extra Twelve Data credits.
- if(tf===1440){const d=await getDaily(m);return d.map(b=>({t:b.time*1000,o:b.open,h:b.high,l:b.low,c:b.close}))}
+ if(tf===1440)return getDaily(m);
  const T=TFS.find(t=>t[1]===tf);
  if(m.src==='b'){
   const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${m.sym}&interval=${T[2]}&limit=300`);
   if(!r.ok)throw'feed';return(await r.json()).map(k=>({t:k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4]}));
  }
- // Twelve Data: each market and timeframe is saved for 15 minutes, so refreshing the page inside that window costs no credits.
- const ck='mb_'+m.k+tf;
+ const ck='mb_'+m.k+tf; // Twelve Data: each market and timeframe is kept 15 minutes, so refreshing costs no credits.
  try{const c=JSON.parse(localStorage.getItem(ck));if(c&&Date.now()-c.at<9e5)return c.d}catch(e){}
  if(!TWELVE_KEY)throw'nokey';
  const j=await(await fetch(`https://api.twelvedata.com/time_series?interval=${T[3]}&outputsize=300&timezone=UTC&symbol=${encodeURIComponent(m.sym)}&apikey=${TWELVE_KEY}`)).json();
@@ -184,144 +221,60 @@ async function getCandles(m,tf){
  return d;
 }
 
-/* ---- daily chart + journal + reader ---- */
-const AI_MODEL='claude-sonnet-5-5';
-const GH_MODEL='openai/gpt-4.1'; // GitHub Models provider
-const GEMINI_MODEL='gemini-3.6-flash'; // Google Gemini reader model
-const store={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let J=store.get('mb_journal',[]);
-const saveJ=()=>store.set('mb_journal',J);
-const day=t=>new Date(t*1000).toISOString().slice(0,10);
-const nice=d=>new Date(d+'T12:00:00Z').toLocaleDateString('en-US',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
-const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-async function getDaily(m){
- const ck='mb_d_'+m.k,c=store.get(ck,null),today=new Date().toISOString().slice(0,10);
- // Twelve Data costs one credit per market, once per day. Binance is free, so it refreshes every 30 minutes.
- if(c&&(m.src==='t'?c.day===today:Date.now()-c.at<18e5))return c.d;
- try{
-  let d;
-  if(m.src==='b'){const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${m.sym}&interval=1d&limit=365`);if(!r.ok)throw 0;d=(await r.json()).map(k=>({time:k[0]/1000,open:+k[1],high:+k[2],low:+k[3],close:+k[4]}));}
-  else{if(!TWELVE_KEY)throw 'nokey';const j=await(await fetch(`https://api.twelvedata.com/time_series?interval=1day&outputsize=365&timezone=UTC&symbol=${encodeURIComponent(m.sym)}&apikey=${TWELVE_KEY}`)).json();if(!j.values)throw 0;
-   d=j.values.map(x=>({time:Date.parse(x.datetime.slice(0,10)+'T00:00:00Z')/1000,open:+x.open,high:+x.high,low:+x.low,close:+x.close})).reverse();}
-  store.set(ck,{day:today,at:Date.now(),d});return d;
- }catch(e){if(c)return c.d;throw e}
-}
-// Screenshots live in IndexedDB (not localStorage) so journal text storage stays small.
-const SHOT_DB='marketbrain-shots',SHOT_STORE='images';
-function shotDB(){return new Promise((resolve,reject)=>{const q=indexedDB.open(SHOT_DB,1);q.onupgradeneeded=()=>q.result.createObjectStore(SHOT_STORE);q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)})}
-async function putShot(id,blob){const db=await shotDB();return new Promise((resolve,reject)=>{const tx=db.transaction(SHOT_STORE,'readwrite');tx.objectStore(SHOT_STORE).put(blob,id);tx.oncomplete=()=>{db.close();resolve(id)};tx.onerror=()=>{db.close();reject(tx.error)}})}
-async function getShot(id){if(!id)return null;const db=await shotDB();return new Promise((resolve,reject)=>{const q=db.transaction(SHOT_STORE,'readonly').objectStore(SHOT_STORE).get(id);q.onsuccess=()=>{db.close();resolve(q.result||null)};q.onerror=()=>{db.close();reject(q.error)}})}
-async function delShot(id){if(!id)return;const db=await shotDB();return new Promise((resolve,reject)=>{const tx=db.transaction(SHOT_STORE,'readwrite');tx.objectStore(SHOT_STORE).delete(id);tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
-function compressShot(file){return new Promise((resolve,reject)=>{if(!file||!file.type.startsWith('image/'))return reject(new Error('Choose an image file.'));const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{try{const scale=Math.min(1,1280/img.width,1280/img.height),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);canvas.toBlob(b=>{URL.revokeObjectURL(url);b?resolve(b):reject(new Error('Could not resize this image.'))},'image/jpeg',.78)}catch(e){URL.revokeObjectURL(url);reject(e)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Could not read this image.'))};img.src=url})}
-function blobBase64(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]);r.onerror=()=>reject(r.error);r.readAsDataURL(blob)})}
-function dailyHTML(m){return `<div class="dl">Daily</div><div class="dch"></div><p class="rd">Loading daily candles…</p>
-<div class="jr"><div class="dl">Journal</div><textarea placeholder="Write what you're seeing, or what you expect. No format."></textarea>
-<div class="tf"><input type="date"><button class="chip" data-j="attach">Attach screenshot</button><button class="chip on" data-j="save">Save entry</button><button class="chip" data-j="cancel" hidden>Cancel</button><button class="chip" data-j="key">AI key</button><input type="file" data-j="file" accept="image/*" hidden></div><img class="jpreview" alt="Screenshot preview"><p class="jhint" data-j="hint">Optional: attach a chart screenshot. It is resized and saved in this browser.</p><div class="el"></div></div>`}
-function jrender(m){
- const L=m.el.querySelector('.el'),es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)||b.at-a.at);
- L.innerHTML=es.map(e=>`<div class="en${e.date===m.sel?' sel':''}" data-id="${e.id}"><p class="d">${nice(e.date)}${m.dates&&!m.dates.has(e.date)?' · no candle this day':''}${e.edited?' · edited':''}</p><p class="t">${esc(e.text)}</p>${e.shotId?`<img class="jshot" data-shot="${e.id}" alt="Journal screenshot">`:''}<div class="tf"><button class="chip" data-a="edit">Edit</button><button class="chip" data-a="del">Delete</button><button class="chip" data-a="ask">${e.ai?'Ask the reader again':'Ask the reader'}</button></div>${e.ai?`<div class="ai"><small>The reader's response. A reading of this entry, not a fact about you.</small>${esc(e.ai.text)}</div>`:''}</div>`).join('');
- L.querySelectorAll('img[data-shot]').forEach(async img=>{const entry=es.find(e=>e.id===img.closest('.en').dataset.id);try{const blob=await getShot(entry?.shotId);if(blob&&img.isConnected)img.src=URL.createObjectURL(blob)}catch(err){img.alt='Saved screenshot could not be loaded'}});
- if(m.dsr&&m.dates)m.dsr.setMarkers(es.filter(e=>m.dates.has(e.date)).map(e=>({time:Date.parse(e.date+'T00:00:00Z')/1000,position:'belowBar',color:'#ff5fa8',shape:'circle'})).sort((a,b)=>a.time-b.time).filter((x,i,a)=>!i||x.time!==a[i-1].time));
-}
-async function openDaily(m){
- if(!m.el.classList.contains('open')||m.dch)return;
- const rd=m.el.querySelector('.rd');
- m.dch=LightweightCharts.createChart(m.el.querySelector('.dch'),{autoSize:true,layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479'},grid:{vertLines:{color:'#ffffff80'},horzLines:{color:'#ffffff80'}},rightPriceScale:{borderVisible:false},timeScale:{borderVisible:false}});
- m.dsr=m.dch.addCandlestickSeries({upColor:'#ff5fa8',downColor:'#ffc400',borderVisible:false,wickUpColor:'#ff5fa8',wickDownColor:'#e0a800'});
- const show=b=>{rd.textContent=b?`${nice(day(b.time))} · open ${fmt(b.open)} · high ${fmt(b.high)} · low ${fmt(b.low)} · close ${fmt(b.close)}`:''};
- try{m.daily=await getDaily(m);}catch(e){m.dch.remove();m.dch=null;rd.textContent=e==='nokey'?'Add your Twelve Data key using the Data key button in the header.':'Couldn\'t load daily candles. Try again in a moment.';return}
- m.dsr.setData(m.daily);m.dates=new Set(m.daily.map(b=>day(b.time)));m.dch.timeScale().fitContent();
- const last=m.daily[m.daily.length-1];show(last);
- m.dch.subscribeCrosshairMove(p=>{const b=p.time&&p.seriesData.get(m.dsr);show(b||last)});
- m.dch.subscribeClick(p=>{if(!p.time)return;m.sel=day(p.time);m.el.querySelector('input[type=date]').value=m.sel;jrender(m)});
- jrender(m);
-}
-async function askReader(m,e){
- const key=localStorage.getItem('mb_ai_key');if(!key)throw 'nokey';
- const cs=m.daily||[],ix=cs.findIndex(b=>day(b.time)>=e.date),at=ix<0?cs.length:ix;
- const rows=cs.slice(Math.max(0,at-10),at+8).map(b=>`${day(b.time)} O${fmt(b.open)} H${fmt(b.high)} L${fmt(b.low)} C${fmt(b.close)}`).join('\n');
- const past=J.filter(x=>x.k===m.k&&x.id!==e.id).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6).map(x=>`[${x.date}] ${x.text.slice(0,500)}`).join('\n');
- const sys=`You are the reader inside MarketBrain, a tool that restores context for a trader. You respond to one journal entry. Write in plain, friendly language. Output four short sections headed exactly: Recorded, Interpretation, Uncertain, Questions.
-Recorded: only what the entry says (quote briefly, with its date), what the daily candles show, and what is visibly legible in the screenshot. Describe visible chart elements conservatively.
-Interpretation: your reading, each line starting "One reading:". Make clear these are readings, not facts.
-Uncertain: what the entry, candles, and screenshot cannot establish. The screenshot is evidence, not a claim. Do not invent or assume chart levels, gaps, swing points, entry price, outcome, instrument, timeframe, or events after the screenshot. If text or labels are unreadable, say so. Daily candles hide what happened inside each day.
-Questions: two or three questions that help the writer examine their reasoning, or compare what they expected with what happened if candles after the entry date exist.
-Rules: never predict price, give trade calls or advice. Never describe the writer's personality, assign scores, or state traits. If earlier entries seem to repeat a theme, do not say the writer "tends to" anything: name the dated entries, say it is only what those entries show, and ask whether they would state it as a belief. Use only the data given. Under 220 words, no markdown.`;
- const um=`Market: ${m.k} (${m.name}). Today: ${new Date().toISOString().slice(0,10)}.\n\nENTRY dated ${e.date}:\n${e.text}\n\nEARLIER ENTRIES on ${m.k}:\n${past||'none'}\n\nDAILY CANDLES around the entry date (UTC):\n${rows||'not loaded'}`;
- const gh=/^(github_pat_|ghp_)/.test(key),gemini=/^AIza/.test(key);
- let imagePart=null;
- if(e.shotId){const blob=await getShot(e.shotId);if(blob)imagePart={mime:blob.type||'image/jpeg',data:await blobBase64(blob)}}
- let r;
- if(gh){
-  const content=[{type:'text',text:um}];if(imagePart)content.push({type:'image_url',image_url:{url:`data:${imagePart.mime};base64,${imagePart.data}`}});
-  r=await fetch('https://models.github.ai/inference/chat/completions',{method:'POST',headers:{'content-type':'application/json','accept':'application/vnd.github+json','authorization':'Bearer '+key},body:JSON.stringify({model:GH_MODEL,max_tokens:700,messages:[{role:'system',content:sys},{role:'user',content}]})});
- }else if(gemini){
-  const parts=[{text:um}];if(imagePart)parts.push({inlineData:{mimeType:imagePart.mime,data:imagePart.data}});
-  r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':key},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:'user',parts}],generationConfig:{maxOutputTokens:700,temperature:0.2}})});
- }else{
-  const content=[{type:'text',text:um}];if(imagePart)content.push({type:'image',source:{type:'base64',media_type:imagePart.mime,data:imagePart.data}});
-  r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:AI_MODEL,max_tokens:700,system:sys,messages:[{role:'user',content}]})});
- }
- const j=await r.json();
- if(!r.ok)throw (j.error&&(j.error.message||j.error))||`Request failed (${r.status})`;
- if(gemini){const text=(j.candidates?.[0]?.content?.parts||[]).filter(b=>typeof b.text==='string').map(b=>b.text).join('\n');if(!text)throw 'Gemini returned no text. Check the key, model access, and API limits.';return text}
- return gh?(j.choices?.[0]?.message?.content||''):(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
-}
-function initJ(m){
- const el=m.el,ta=el.querySelector('textarea'),dt=el.querySelector('input[type=date]'),sv=el.querySelector('[data-j=save]'),cn=el.querySelector('[data-j=cancel]'),file=el.querySelector('[data-j=file]'),preview=el.querySelector('.jpreview'),hint=el.querySelector('[data-j=hint]');
- m.pendingShot=null;m.removeShot=false;
- const showPending=blob=>{if(m.pendingUrl)URL.revokeObjectURL(m.pendingUrl);m.pendingUrl=blob?URL.createObjectURL(blob):'';preview.src=m.pendingUrl||'';preview.style.display=blob?'block':'none';};
- const reset=()=>{m.editing=null;m.pendingShot=null;m.removeShot=false;ta.value='';sv.textContent='Save entry';cn.hidden=true;file.value='';showPending(null);hint.textContent='Optional: attach a chart screenshot. It is resized and saved in this browser.';const rb=el.querySelector('[data-j=remove-shot]');if(rb)rb.remove()};
- el.querySelector('[data-j=attach]').onclick=()=>file.click();
- file.onchange=async()=>{const f=file.files&&file.files[0];if(!f)return;try{if(f.size>15*1024*1024)throw new Error('Choose an image under 15 MB.');m.pendingShot=await compressShot(f);m.removeShot=false;showPending(m.pendingShot);hint.textContent='Screenshot ready (resized JPEG). Save the entry to keep it.'}catch(e){alert(e.message||'Could not process this image.')}};
- sv.onclick=async()=>{const text=ta.value.trim();if(!text&&!m.pendingShot&&!m.editing)return;if(!dt.value)return;sv.disabled=true;const oldLabel=sv.textContent;sv.textContent='Saving…';try{
-  let e;
-  if(m.editing){e=J.find(x=>x.id===m.editing);if(e){e.text=text;e.date=dt.value;e.edited=true;if(m.pendingShot){const id=e.shotId||('shot_'+e.id);await putShot(id,m.pendingShot);e.shotId=id}if(m.removeShot&&e.shotId){await delShot(e.shotId);delete e.shotId}}}
-  else{e={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),k:m.k,date:dt.value,text,at:Date.now(),ai:null};if(m.pendingShot){e.shotId='shot_'+e.id;await putShot(e.shotId,m.pendingShot)}J.push(e)}
-  saveJ();m.sel=dt.value;reset();jrender(m);
- }catch(err){alert('Could not save the journal entry: '+(err.message||err))}finally{sv.disabled=false;if(sv.textContent==='Saving…')sv.textContent=oldLabel}};
- cn.onclick=reset;
- dt.onchange=()=>{m.sel=dt.value;jrender(m)};
- el.querySelector('[data-j=key]').onclick=()=>{const k=prompt('Paste an AI key: Google Gemini (usually starts AIza), GitHub Models (github_pat_ / ghp_), or Anthropic (sk-ant-). The key is saved in this browser local storage. Leave empty to remove it.',localStorage.getItem('mb_ai_key')||'');if(k!==null){try{k.trim()?localStorage.setItem('mb_ai_key',k.trim()):localStorage.removeItem('mb_ai_key')}catch(e){}}};
- el.querySelector('.el').onclick=async ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const e=J.find(x=>x.id===b.closest('.en').dataset.id);if(!e)return;
-  if(b.dataset.a==='edit'){m.editing=e.id;ta.value=e.text;dt.value=e.date;m.sel=e.date;sv.textContent='Save changes';cn.hidden=false;m.pendingShot=null;m.removeShot=false;file.value='';const rb=el.querySelector('[data-j=remove-shot]');if(rb)rb.remove();if(e.shotId){try{const blob=await getShot(e.shotId);showPending(blob);hint.textContent='Current screenshot shown. Choose another image to replace it.';el.querySelector('.tf').insertAdjacentHTML('beforeend','<button class="chip" data-j="remove-shot">Remove screenshot</button>');el.querySelector('[data-j=remove-shot]').onclick=()=>{m.removeShot=true;m.pendingShot=null;showPending(null);hint.textContent='Screenshot will be removed when you save changes.'}}catch(err){}}else showPending(null);jrender(m);ta.focus()}
-  if(b.dataset.a==='del'&&confirm('Delete this entry?')){if(e.shotId)await delShot(e.shotId).catch(()=>{});J=J.filter(x=>x!==e);saveJ();jrender(m)}
-  if(b.dataset.a==='ask'){b.disabled=true;b.textContent='Reading…';try{e.ai={text:await askReader(m,e),at:Date.now()};saveJ()}catch(x){alert(x==='nokey'?'Add a Google Gemini, GitHub Models, or Anthropic API key with the AI key button.':(x instanceof TypeError?'The browser blocked or couldn\'t reach the AI service. ':'The reader couldn\'t answer: ')+(x.message||x))}jrender(m)}};
- jrender(m);
-}
+/* ---- cards ---- */
 const app=document.getElementById('app'),note=document.getElementById('note'),bar=document.getElementById('bar');
-document.getElementById('tdkey').onclick=()=>{const k=prompt('Paste your Twelve Data API key. It will be stored only in this browser, not in the HTML source. Leave empty to remove it.',localStorage.getItem('mb_td_key')||'');if(k!==null){try{k.trim()?localStorage.setItem('mb_td_key',k.trim()):localStorage.removeItem('mb_td_key');location.reload()}catch(e){alert('Could not save the key in this browser.')}}};
+const keyBtn=(id,msg,k,reload)=>document.getElementById(id).onclick=()=>{const v=prompt(msg,localStorage.getItem(k)||'');if(v!==null){try{v.trim()?localStorage.setItem(k,v.trim()):localStorage.removeItem(k);if(reload)location.reload()}catch(e){alert('Could not save the key in this browser.')}}};
+keyBtn('tdkey','Paste your Twelve Data API key. It is stored only in this browser. Leave empty to remove it.','mb_td_key',true);
+keyBtn('aikey','Paste an AI key for the assistant: Google Gemini (starts AIza), GitHub Models (github_pat_ or ghp_), or Anthropic (sk-ant-). Stored only in this browser. Leave empty to remove it.','mb_ai_key',false);
 const live=MARKETS.filter(m=>m.on!==false);let group='',n=0;
 for(const m of live){
  if(m.g!==group){group=m.g;app.insertAdjacentHTML('beforeend',`<h2 data-g="${group}">${group}</h2>`);}
- m.tf=15;m.show={gap:true,fib:true};m.lines=[];
+ m.tf=15;m.show={gap:true,fib:true};m.lines=[];m.hist=[];
  const el=m.el=document.createElement('section');el.className='m';el.dataset.g=m.g;el.style.setProperty('--c',HUES[n++%HUES.length]);
  el.innerHTML=`<button aria-expanded="false"><div class="n"><i class="dot"></i>${m.k} · ${m.name}</div><div class="s w">Reading the last few hours…</div><span class="x">+</span></button><div class="p"><div>
  <div class="tf">${TFS.map(t=>`<button class="chip${t[1]===15?' on':''}" data-tf="${t[1]}">${t[0]}</button>`).join('')}</div>
- <ul class="why"></ul>
+ <div class="ch"></div><p class="rd"></p>
  <div class="tf"><button class="chip on" data-t="gap">Show the gap</button><button class="chip on" data-t="fib">Show the fib levels</button></div>
- <div class="ch"></div>${dailyHTML(m)}
+ <div class="dl">Ask</div><div class="th"></div>
+ <div class="tf">${LQ.map((q,i)=>`<button class="chip" data-q="${i}">${q[0]}</button>`).join('')}</div>
+ <div class="ar"><input data-ask type="text" placeholder="Ask about this chart…" aria-label="Ask about this chart"><button class="chip on" data-send>Ask</button></div>
+ <div class="jr"><div class="dl">Journal</div><textarea placeholder="Write what you're seeing, or what you expect. No format."></textarea>
+ <div class="tf" style="margin-top:10px"><input type="date"><button class="chip on" data-j="save">Save entry</button><button class="chip" data-j="cancel" hidden>Cancel</button></div><div class="el"></div></div>
  <div class="f"><a class="tv" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" target="_blank" rel="noopener">See it on TradingView</a><span>Latest candle: <span class="at"></span></span><span class="fd"></span></div></div></div>`;
- app.appendChild(el);
- m.s=el.querySelector('.s');
+ app.appendChild(el);m.s=el.querySelector('.s');
+}
+function say(m,who,text){const d=document.createElement('div');d.className='msg '+who;d.textContent=text;const th=m.el.querySelector('.th');th.appendChild(d);d.scrollIntoView({block:'nearest',behavior:'smooth'});return d}
+async function ask(m,q){
+ q=q.trim();if(!q||!m.res)return;
+ say(m,'u',q);
+ const key=localStorage.getItem('mb_ai_key');
+ if(!key){say(m,'a','Typed questions need an AI key. Add one with the AI key button at the top. The quick questions work without it.');return}
+ m.hist.push({role:'user',text:q});const w=say(m,'a','Reading…');
+ try{const t=await callAI(key,sysFor(m),m.hist.slice(-7));m.hist.push({role:'assistant',text:t});w.textContent=t}
+ catch(e){m.hist.pop();w.textContent=(e instanceof TypeError?"The browser couldn't reach the AI service. ":"The assistant couldn't answer: ")+(e.message||e)}
 }
 function draw(m){
- if(!m.chart||!m.res)return;
+ if(!m.sr||!m.res)return;
  m.lines.forEach(l=>m.sr.removePriceLine(l));m.lines=[];
  const pl=(price,title,color)=>m.lines.push(m.sr.createPriceLine({price,title,color,lineWidth:2,lineStyle:2}));
  if(m.show.gap&&m.res.near){pl(m.res.near.hi,'gap','#8b5cf6');pl(m.res.near.lo,'gap','#8b5cf6');}
  if(m.show.fib&&m.res.fib){pl(m.res.fib.lvl(.5),'50%','#e0408f');pl(m.res.fib.lvl(.705),'70.5%','#e0408f');}
 }
+function jrender(m){
+ const L=m.el.querySelector('.el'),es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)||b.at-a.at);
+ const tx=s=>{const d=document.createElement('div');d.textContent=s;return d.innerHTML};
+ L.innerHTML=es.map(e=>`<div class="en${e.date===m.sel?' sel':''}" data-id="${e.id}"><p class="d">${nice(e.date)}${m.days&&!m.days.has(e.date)?' · outside this chart':''}${e.edited?' · edited':''}</p><p class="t">${tx(e.text)}</p><div class="tf"><button class="chip" data-a="edit">Edit</button><button class="chip" data-a="del">Delete</button></div></div>`).join('');
+ if(m.sr&&m.days)m.sr.setMarkers(es.filter(e=>m.days.has(e.date)).map(e=>({time:m.days.get(e.date),position:'belowBar',color:'#ff5fa8',shape:'circle'})).sort((a,b)=>a.time-b.time).filter((x,i,a)=>!i||x.time!==a[i-1].time));
+}
 function paint(m){
  const el=m.el,mo=m.res.mo,mv=mo.k!=='still';
- m.s.textContent=sentence(m.res);m.s.classList.remove('w');
- m.s.classList.toggle('calm',!mv);
+ m.s.textContent=sentence(m.res);m.s.classList.remove('w');m.s.classList.toggle('calm',!mv);
  el.classList.toggle('up',mv&&mo.up);el.classList.toggle('dn',mv&&!mo.up);el.classList.toggle('strong',mo.k==='strong');
- el.querySelector('.why').innerHTML=why(m.res,m);
  const lt=m.c[m.c.length-1].t;
  el.querySelector('.at').textContent=m.tf===1440?new Date(lt).toISOString().slice(0,10)+' (daily, UTC)':ny(lt);
  el.querySelector('.fd').textContent='Feed: '+(m.src==='b'?'Binance ':'Twelve Data ')+m.sym+', last '+m.c.length+' candles ('+span(m.c.length*m.tf)+')';
- if(m.chart){m.chart.applyOptions({timeScale:{timeVisible:m.tf<1440}});m.sr.setData(m.c.slice(-200).map(x=>({time:x.t/1000,open:x.o,high:x.h,low:x.l,close:x.c})));draw(m);m.chart.timeScale().fitContent();}
+ m.days=new Map();m.c.forEach(x=>{const d=day(x.t/1000);if(!m.days.has(d))m.days.set(d,x.t/1000)});
+ if(m.chart){m.chart.applyOptions({timeScale:{timeVisible:m.tf<1440}});m.sr.setData(m.c.map(x=>({time:x.t/1000,open:x.o,high:x.h,low:x.l,close:x.c})));draw(m);jrender(m);m.chart.timeScale().fitContent();m.show_(m.c[m.c.length-1]);}
 }
 async function load(m){
  try{m.c=await getCandles(m,m.tf);m.res=read(m.c,m.tf);paint(m);}
@@ -331,16 +284,34 @@ function toggle(m,force){
  const o=m.el.classList.toggle('open',force);m.el.querySelector('button').setAttribute('aria-expanded',o);
  if(o&&m.res){const k=m.res.mo.k;if(k==='strong')buzz([40,70,40]);else if(k==='moving')buzz(25);}
  if(o&&m.res&&!m.chart){
-  m.chart=LightweightCharts.createChart(m.el.querySelector('.ch'),{layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479'},grid:{vertLines:{color:'#ffffff80'},horzLines:{color:'#ffffff80'}},rightPriceScale:{borderVisible:false},timeScale:{timeVisible:m.tf<1440,borderVisible:false}});
+  const rd=m.el.querySelector('.rd');
+  m.chart=LightweightCharts.createChart(m.el.querySelector('.ch'),{autoSize:true,layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479'},grid:{vertLines:{color:'#ffffff80'},horzLines:{color:'#ffffff80'}},rightPriceScale:{borderVisible:false},timeScale:{timeVisible:m.tf<1440,borderVisible:false}});
   m.sr=m.chart.addCandlestickSeries({upColor:'#ff5fa8',downColor:'#ffc400',borderVisible:false,wickUpColor:'#ff5fa8',wickDownColor:'#e0a800'});
+  m.show_=b=>{if(!b){return}const t=b.t||b.time*1000;rd.textContent=`${m.tf===1440?nice(day(t/1000)):ny(t)} · open ${fmt(b.o??b.open)} · high ${fmt(b.h??b.high)} · low ${fmt(b.l??b.low)} · close ${fmt(b.c??b.close)}`};
+  m.chart.subscribeCrosshairMove(p=>{const b=p.time&&p.seriesData.get(m.sr);m.show_(b||m.c[m.c.length-1])});
+  m.chart.subscribeClick(p=>{if(!p.time)return;m.sel=day(p.time);m.el.querySelector('input[type=date]').value=m.sel;jrender(m)});
   paint(m);
  }
 }
 for(const m of live){
- m.el.querySelector(':scope>button').onclick=()=>{toggle(m);setTimeout(()=>openDaily(m),0)};initJ(m);
- m.el.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{m.tf=+b.dataset.tf;m.el.querySelectorAll('[data-tf]').forEach(x=>x.classList.toggle('on',x===b));m.s.classList.add('w');load(m);});
- m.el.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{m.show[b.dataset.t]=b.classList.toggle('on');draw(m);});
- load(m);
+ const el=m.el,ta=el.querySelector('textarea'),dt=el.querySelector('input[type=date]'),sv=el.querySelector('[data-j=save]'),cn=el.querySelector('[data-j=cancel]'),inp=el.querySelector('[data-ask]');
+ dt.value=new Date().toISOString().slice(0,10);
+ el.querySelector(':scope>button').onclick=()=>toggle(m);
+ el.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{m.tf=+b.dataset.tf;el.querySelectorAll('[data-tf]').forEach(x=>x.classList.toggle('on',x===b));m.s.classList.add('w');load(m);});
+ el.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{m.show[b.dataset.t]=b.classList.toggle('on');draw(m);});
+ el.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{if(!m.res)return;const q=LQ[+b.dataset.q];say(m,'u',q[0]);say(m,'a',LOCAL[q[1]](m))});
+ const go=()=>{const q=inp.value;inp.value='';ask(m,q)};
+ el.querySelector('[data-send]').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing)go()};
+ const reset=()=>{m.editing=null;ta.value='';sv.textContent='Save entry';cn.hidden=true};
+ sv.onclick=()=>{const text=ta.value.trim();if(!text||!dt.value)return;
+  if(m.editing){const e=J.find(x=>x.id===m.editing);if(e){e.text=text;e.date=dt.value;e.edited=true}}
+  else J.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),k:m.k,date:dt.value,text,at:Date.now()});
+  saveJ();m.sel=dt.value;reset();jrender(m)};
+ cn.onclick=reset;dt.onchange=()=>{m.sel=dt.value;jrender(m)};
+ el.querySelector('.el').onclick=ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const e=J.find(x=>x.id===b.closest('.en').dataset.id);if(!e)return;
+  if(b.dataset.a==='edit'){m.editing=e.id;ta.value=e.text;dt.value=e.date;m.sel=e.date;sv.textContent='Save changes';cn.hidden=false;jrender(m);ta.focus()}
+  if(b.dataset.a==='del'&&confirm('Delete this entry?')){J=J.filter(x=>x!==e);saveJ();jrender(m)}};
+ jrender(m);load(m);
 }
 // filters + "where should I look"
 const groups=[...new Set(live.map(m=>m.g))];
@@ -363,17 +334,11 @@ document.getElementById('go').onclick=()=>{
   note.textContent=ins?`Everything is quiet. ${pick.k} has been sitting in a gap the longest.`:`Everything is quiet. ${pick.k} is the closest to a gap.`;
  }
  document.querySelectorAll('[data-f]')[0].click();
- toggle(pick,true);openDaily(pick);pick.el.scrollIntoView({behavior:'smooth',block:'center'});
+ toggle(pick,true);pick.el.scrollIntoView({behavior:'smooth',block:'center'});
 };
-// the light follows your finger or cursor
 addEventListener('pointermove',e=>{const l=document.getElementById('lamp').style;l.setProperty('--x',e.clientX+'px');l.setProperty('--y',e.clientY+'px');});
 // the sky: pink, yellow and white take turns; after about a minute a soft grass green settles in at the bottom
 const SKY=[['#ff7ab8','#ffd23f','#ffffff','#ffb08a'],['#ffd23f','#ff7ab8','#ffe3f1','#ffffff'],['#ffffff','#ffcf33','#ff7ab8','#ffd7a8']];
 let tick=0;
-function sky(){
- tick++;const p=SKY[tick%SKY.length],bs=document.querySelectorAll('.b');
- bs.forEach((b,i)=>b.style.backgroundColor=p[i]);
- if(tick>=5)bs[2].style.backgroundColor='#9ee37d';
-}
-setInterval(sky,12000);
+setInterval(()=>{tick++;const p=SKY[tick%SKY.length],bs=document.querySelectorAll('.b');bs.forEach((b,i)=>b.style.backgroundColor=p[i]);if(tick>=5)bs[2].style.backgroundColor='#9ee37d';},12000);
 </script></body></html>
