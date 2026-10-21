@@ -53,7 +53,7 @@ h2{font-size:15px;font-weight:600;color:var(--mute);margin:44px 0 8px}
 .m.open .p{grid-template-rows:1fr;opacity:1}
 .p>div{overflow:hidden}
 .tf{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;align-items:center}
-.ch{height:380px;margin:6px 0 8px;border-radius:18px;overflow:hidden}
+.ch{height:440px;margin:6px 0 8px;border-radius:18px;overflow:hidden}
 .rd{font-size:14px;color:var(--mute);min-height:1.5em;margin:0 0 10px}
 .dl{font-size:15px;font-weight:600;color:var(--mute);margin:22px 0 8px}
 .th{display:flex;flex-direction:column;gap:10px;margin:0 0 12px}
@@ -191,6 +191,15 @@ header h1::after {
   .m::before { transition: none !important; }
 }
 
+
+/* context fragments under the chart: plain sentences, discovered not announced */
+.fx{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:12px;font-size:15px;line-height:1.5;color:var(--mute)}
+.fx li{max-width:46em}
+.fx b{color:var(--ink);font-weight:600;margin-right:6px}
+.rd b{color:var(--ink);font-weight:600}
+.chip.think{background:linear-gradient(90deg,#ffd7ea,#fff0a8);font-weight:600}
+.chip.shuf{color:var(--mute)}
+.f{padding-top:14px}
 </style></head><body>
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div>
 <header>
@@ -237,7 +246,7 @@ function motion(c,tfm){
  const a=c[c.length-1].c,b=c[c.length-1-LOOK].c,net=a-b;
  const rng=c.slice(-60).reduce((s,x)=>s+(x.h-x.l),0)/Math.min(60,c.length);
  const r=Math.abs(net)/(rng||1);
- return{k:r>=STRONG?'strong':r>=MOVING?'moving':'still',up:net>0,pct:Math.abs(net)/b*100,span:LOOK*tfm};
+ return{k:r>=STRONG?'strong':r>=MOVING?'moving':'still',up:net>0,pct:Math.abs(net)/b*100,span:LOOK*tfm,r};
 }
 function read(c,tfm){
  const last=c[c.length-1],gaps=[];
@@ -256,7 +265,7 @@ function read(c,tfm){
  if(sh&&sl){const down=sl.i>sh.i,range=sh.p-sl.p,end=down?sl.p:sh.p;
   fib={down,from:down?sh.p:sl.p,to:end,back:Math.abs(last.c-end)/range,lvl:r=>down?sl.p+r*range:sh.p-r*range};}
  const inside=!!near&&run>0;
- return{last,near,run,fib,tfm,inside,mo:motion(c,tfm),dist:near?Math.abs(mid(near)-last.c)/last.c:9};
+ return{last,near,run,fib,sh,sl,open,tfm,inside,mo:motion(c,tfm),dist:near?Math.abs(mid(near)-last.c)/last.c:9};
 }
 function sentence(r){
  const{last,near,run,tfm,mo}=r;
@@ -293,7 +302,77 @@ const LOCAL={
  moving:()=>`"Moving" compares how far price travelled over the last ${LOOK} candles with the usual candle size on this chart. ${MOVING} times that is moving, ${STRONG} times is moving fast. Anything less says quiet.`,
  blind:m=>`This rests on ${m.src==='b'?'Binance':'Twelve Data'} prices for ${m.sym}: the last ${m.c.length} ${tfl(m.tf)} candles, about ${span(m.c.length*m.tf)}. It does not know liquidity pools, how many swing lows have broken, or anything you drew in TradingView. It describes the chart. It is not a prediction or advice.`
 };
-const LQ=[['What is this gap?','gap'],['How is "closest" chosen?','closest'],['What are the fib levels?','fib'],['What counts as moving?','moving'],['What can\'t it see?','blind']];
+/* ---- helpers: distances, time, where price sits ---- */
+const unit=m=>m.src==='b'||m.k==='XAUUSD'||m.k==='UUP'?0:0.0001;
+const dst=(m,d)=>{d=Math.abs(d);const u=unit(m);return u?(d/u).toFixed(1)+' pips':'$'+d.toFixed(2)};
+const ago=(m,i)=>{const k=m.c.length-1-i;return k<1?'on the latest candle':span(k*m.tf)+' ago'};
+const hhmm=n=>String(n/60|0).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
+const SES=[[180,'London opens'],[480,'New York opens'],[720,'London closes'],[1020,'New York closes'],[1140,'Asia opens']];
+function nyNow(){const p={};new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(new Date()).forEach(x=>p[x.type]=x.value);return{wd:p.weekday,min:(+p.hour%24)*60+ +p.minute}}
+const closedNow=m=>{const{wd,min}=nyNow();return m.g==='Forex and gold'&&m.k!=='UUP'&&(wd==='Sat'||(wd==='Fri'&&min>=1020)||(wd==='Sun'&&min<1020))};
+function clock(m,more){
+ const{min}=nyNow();
+ if(closedNow(m))return 'The forex week is closed and reopens Sunday at 17:00 New York time. What you see is the last word from Friday.';
+ const cur=min>=1140||min<180?'the Asia session':min<480?'the London session':min<720?'London and New York overlapping':min<1020?'the New York session':'the quiet hour between New York and Asia';
+ const nx=SES.map(s=>[s[0],s[1],(s[0]-min+1440)%1440]).sort((a,b)=>a[2]-b[2]);
+ return `It is ${hhmm(min)} in New York, during ${cur}. ${nx[0][1]} in ${span(nx[0][2])}`+(more?`, then ${nx[1][1]} in ${span(nx[1][2])}.`:'.')+(m.src==='b'?' Crypto never closes. These sessions are habits of people, not rules.':'');
+}
+const pos=m=>{const hi=Math.max(...m.c.map(x=>x.h)),lo=Math.min(...m.c.map(x=>x.l));return{hi,lo,p:(m.res.last.c-lo)/((hi-lo)||1)}};
+const third=p=>p>.66?'upper':p<.34?'lower':'middle';
+const same=(a,b)=>Math.abs(a-b)<1e-9;
+
+/* what changed, and what did not, since this device last looked at this market and timeframe */
+function seen(m){
+ const p=m.seen&&m.seen[m.tf],r=m.res;
+ if(!p)return 'This is your first look at this chart on this device. Next time, this line will say what changed and what did not.';
+ const age=(Date.now()-p.at)/6e4;if(age<10)return null;
+ const dp=r.last.c-p.price,mv=same(dp,0)?'Price is exactly where you left it':`Price is ${dst(m,dp)} ${dp>0?'higher':'lower'} than when you left`;
+ let g;
+ if(!p.g)g=r.near?`A ${r.near.up?'buying':'selling'} gap at ${fmt(r.near.lo)} to ${fmt(r.near.hi)} is new since then.`:'There was no open gap then, and there is none now.';
+ else if(r.near&&same(r.near.lo,p.g.lo)&&same(r.near.hi,p.g.hi))g=`The gap you saw (${fmt(p.g.lo)} to ${fmt(p.g.hi)}) has not changed: still open, still the closest.`;
+ else if(r.open.some(x=>same(x.lo,p.g.lo)&&same(x.hi,p.g.hi)))g='The gap you saw is still open, but another one is now closer.';
+ else g='The gap you saw has since been traded through, or has scrolled out of the loaded candles.';
+ return `You last looked ${span(Math.round(age))} ago. ${mv}. ${g}`;
+}
+
+/* the small text under the chart: sentences that earn their place */
+function ctx(m){
+ const r=m.res;if(!r||!m.fx)return;
+ const c=m.c,last=r.last,P=pos(m),n=r.near,L=[['The clock',clock(m)],['Since you last looked',seen(m)]];
+ L.push(['Where price sits',`The loaded candles run from ${fmt(P.lo)} to ${fmt(P.hi)} (${dst(m,P.hi-P.lo)}). Price is in the ${third(P.p)} third of that. That says where it is, not where it goes.`]);
+ L.push(['The gap',n?`The nearest open ${n.up?'buying':'selling'} gap runs ${fmt(n.lo)} to ${fmt(n.hi)} (${dst(m,n.hi-n.lo)} wide) and formed ${ago(m,n.i)}. ${r.inside?'Price is inside it now.':`Price is ${dst(m,n.lo>last.c?n.lo-last.c:last.c-n.hi)} away.`}`:'No open gap in the loaded candles. Nothing here is waiting to be revisited.']);
+ const lt=c[c.length-1].t,late=m.tf<1440&&m.k!=='UUP'&&!closedNow(m)&&Date.now()-lt>m.tf*18e4;
+ L.push(['The data',`Latest candle opened ${m.tf===1440?new Date(lt).toISOString().slice(0,10)+' (daily, UTC)':ny(lt)}. ${marketBrainUpdatedLabel(m)}. Source: ${m.src==='b'?'Binance':'Twelve Data'} ${m.sym}, ${c.length} ${tfl(m.tf)} candles covering ${span(c.length*m.tf)}.`+(late?' That candle is more than three candles old, so either the feed is late or the market has gone quiet. The page cannot tell which.':'')]);
+ m.fx.innerHTML=L.filter(x=>x[1]).map(x=>`<li><b>${x[0]}.</b>${x[1]}</li>`).join('');
+}
+
+/* ---- the question bank: [level, question, answer]. 0 = new to this, 1 = trader, 2 = worth thinking about.
+   Every answer is read from the loaded candles. None predicts. ---- */
+const QB=[
+ [0,'What does "quiet" or "moving" mean?',m=>{const o=m.res.mo;return (o.k==='still'?'Right now this chart is quiet: price has travelled very little compared with how far a normal candle goes. ':`Right now this chart is ${o.k==='strong'?'moving fast':'moving'} ${o.up?'up':'down'}: ${o.pct.toFixed(2)}% in ${span(o.span)}. `)+'It describes speed. It says nothing about what comes next.'}],
+ [0,'What is a gap, in plain words?',LOCAL.gap],
+ [0,'What is a pip?',m=>{const k=`The last ${tfl(m.tf)} candle travelled ${dst(m,m.res.last.h-m.res.last.l)} from its low to its high.`;return unit(m)?`A pip is the smallest move traders usually quote in a currency pair: 0.0001 on ${m.k}. ${k}`:`Pips belong to currency pairs (0.0001 on most). ${m.k} is quoted in dollars, so this page speaks in dollars here. ${k}`}],
+ [0,'Is price high or low right now?',m=>{const P=pos(m);return `Across the ${m.c.length} loaded candles (${span(m.c.length*m.tf)}), price sits in the ${third(P.p)} third of the range, ${fmt(P.lo)} to ${fmt(P.hi)}. High and low here only mean compared with this window. A different window would answer differently.`}],
+ [0,'Why does this page use New York time?',()=>'Because the forex day turns over at 17:00 in New York and the busiest hours follow when London and New York open. One clock everywhere means a candle here is the same candle on a TradingView chart set to New York time.'],
+ [0,'Which trading session is it?',m=>clock(m,true)+' Sessions only describe when most people in that city are at their desks.'],
+ [1,'How old is this gap?',m=>{const n=m.res.near;return n?`The nearest open ${n.up?'buying':'selling'} gap (${fmt(n.lo)} to ${fmt(n.hi)}) formed ${ago(m,n.i)}. ${n.entered?'Since then price has overlapped it without trading all the way through.':'Price has not overlapped it since.'} Age is a fact. Whether it matters is your reading.`:'No open gap in the loaded candles, so there is nothing to date.'}],
+ [1,'How far is price from the gap?',m=>{const n=m.res.near,l=m.res.last.c;if(!n)return 'No open gap nearby.';return m.res.inside?`Price is inside the gap now, and the last ${m.res.run} close${m.res.run===1?'':'s'} ${m.res.run===1?'was':'were'} inside it.`:`The near edge of the gap is ${fmt(l<n.lo?n.lo:n.hi)}, which is ${dst(m,l<n.lo?n.lo-l:l-n.hi)} ${l<n.lo?'above':'below'} price. The far edge is ${dst(m,l<n.lo?n.hi-l:l-n.lo)} away.`}],
+ [1,'What are the fib levels?',LOCAL.fib],
+ [1,'How is "closest" chosen?',LOCAL.closest],
+ [1,'Where are the nearest swing high and low?',m=>{const{sh,sl,last}=m.res;if(!sh||!sl)return 'No clear swing high or low in these candles yet.';return `Latest swing high: ${fmt(sh.p)}, ${ago(m,sh.i)}, ${dst(m,sh.p-last.c)} ${sh.p>last.c?'above':'below'} price. Latest swing low: ${fmt(sl.p)}, ${ago(m,sl.i)}, ${dst(m,sl.p-last.c)} ${sl.p>last.c?'above':'below'} price. A swing is a candle that is the highest or lowest of the three on each side.`}],
+ [1,'Where did price spend its time?',m=>{const{hi,lo}=pos(m),B=10,h=Array(B).fill(0),l=m.res.last.c;m.c.forEach(x=>h[Math.min(B-1,Math.floor((x.c-lo)/((hi-lo)||1)*B))]++);const k=h.indexOf(Math.max(...h)),a=lo+(hi-lo)*k/B,b=lo+(hi-lo)*(k+1)/B;return `Split the loaded range into ten bands and the most closes (${Math.round(h[k]/m.c.length*100)}%) landed between ${fmt(a)} and ${fmt(b)}. Price is ${l>=a&&l<=b?'inside that band now':dst(m,l>b?l-b:a-l)+(l>b?' above':' below')+' it'}. Where price lingered is a fact about the past. It does not say price will return.`}],
+ [1,'How big is this move against a normal candle?',m=>{const o=m.res.mo;return o.r?`Over the last ${LOOK} candles price travelled ${o.r.toFixed(1)} times the usual candle size here. This page calls ${MOVING} times moving and ${STRONG} times moving fast.`:'Not enough candles are loaded to judge.'}],
+ [1,'How much of the swing has price given back?',m=>{const f=m.res.fib;return f?`Price has given back ${Math.round(f.back*100)}% of the swing from ${fmt(f.from)} to ${fmt(f.to)}. The 70.5% level is ${fmt(f.lvl(.705))}, ${dst(m,m.res.last.c-f.lvl(.705))} from price.`:'No swing is clear enough yet.'}],
+ [2,'What has not changed since I last looked?',m=>seen(m)||'You looked only a few minutes ago, which is too soon for a fair comparison.'],
+ [2,'What would close this gap, by the rule on this page?',m=>{const n=m.res.near,l=m.res.last.c;if(!n)return 'There is no open gap to close.';return `A ${n.up?'buying':'selling'} gap counts as closed when one candle trades ${n.up?`down to ${fmt(n.lo)}`:`up to ${fmt(n.hi)}`}. From ${fmt(l)} that is ${dst(m,n.up?l-n.lo:n.hi-l)}. Whether a closed gap stops mattering to you is your call. The page only keeps the rule.`}],
+ [2,'What is one candle on this chart made of?',m=>m.tf===1?'A 1-minute candle is the smallest this page loads. It is also made of smaller moves it cannot see.':`One ${tfl(m.tf)} candle is ${m.tf>=1440?'1,440':m.tf} one-minute candles squeezed into a single body and two wicks. Flip to 1m and 5m and see whether the picture you are reading survives being unpacked.`],
+ [2,'What is coming up on the clock?',m=>clock(m,true)+' This page has no news feed, so scheduled releases (rate decisions, jobs data) are not here. A quiet chart before one is not the same as a quiet market.'],
+ [2,'What do I think this is, before price answers?',m=>{const k=J.filter(e=>e.k===m.k).length;return `What the page can state: ${sentence(m.res)} What it cannot: why. If you have a read, write it in the journal before you see what price does, so later you can study your reasoning, not just the result. You have ${k} journal ${k===1?'entry':'entries'} on ${m.k}.`}],
+ [2,'Which levels here are still untouched?',m=>{const{near:n,sh,sl}=m.res,c=m.c,t=[];if(n)t.push(`the ${n.up?'buying':'selling'} gap at ${fmt(n.lo)} to ${fmt(n.hi)} is ${n.entered?'overlapped but not fully traded through':'untouched'}`);if(sh)t.push(`the swing high at ${fmt(sh.p)} has ${c.slice(sh.i+1).some(x=>x.h>sh.p)?'been taken out':'not been taken out'}`);if(sl)t.push(`the swing low at ${fmt(sl.p)} has ${c.slice(sl.i+1).some(x=>x.l<sl.p)?'been taken out':'not been taken out'}`);return t.length?'In the loaded candles: '+t.join('; ')+'. That is the state of the chart, not a list of places to act.':'No clear gap or swing in these candles yet.'}]
+];
+function qpick(m,lv,ex){const all=QB.map((q,i)=>i).filter(i=>QB[i][0]===lv&&!ex.includes(i)),fresh=all.filter(i=>!m.asked.has(i)),p=fresh.length?fresh:all;return p.length?p[Math.random()*p.length|0]:null}
+function qdeal(m){m.qs=[];[0,0,1,1,2].forEach(lv=>{const i=qpick(m,lv,m.qs);if(i!=null)m.qs.push(i)})}
+function qrender(m){m.el.querySelector('.qs').innerHTML=m.qs.map((i,j)=>`<button class="chip${QB[i][0]===2?' think':''}" data-qi="${j}">${QB[i][1]}</button>`).join('')+'<button class="chip shuf" data-qi="s">New questions</button>'}
 
 function sysFor(m){
  const r=m.res,n=r.near,f=r.fib;
@@ -366,12 +445,12 @@ for(const m of live){
  <div class="ch"></div><p class="rd"></p>
  <div class="tf"><button class="chip on" data-t="gap">Show the gap</button><button class="chip on" data-t="fib">Show the fib levels</button></div>
  <div class="dl">Ask</div><div class="th"></div>
- <div class="tf">${LQ.map((q,i)=>`<button class="chip" data-q="${i}">${q[0]}</button>`).join('')}</div>
+ <div class="tf qs"></div>
  <div class="ar"><input data-ask type="text" placeholder="Ask about this chart…" aria-label="Ask about this chart"><button class="chip on" data-send>Ask</button></div>
  <div class="jr"><div class="dl">Journal</div><textarea placeholder="Write what you're seeing, or what you expect. No format."></textarea>
  <div class="tf" style="margin-top:10px"><input type="date"><button class="chip on" data-j="save">Save entry</button><button class="chip" data-j="cancel" hidden>Cancel</button></div><div class="el"></div></div>
- <div class="f"><a class="tv" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" target="_blank" rel="noopener">See it on TradingView</a><span>Latest candle: <span class="at"></span></span><span class="fd"></span></div></div></div>`;
- app.appendChild(el);m.s=el.querySelector('.s');
+ <div class="f"><a class="tv" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" target="_blank" rel="noopener">See it on TradingView</a></div><ul class="fx"></ul></div></div>`;
+ app.appendChild(el);m.s=el.querySelector('.s');m.fx=el.querySelector('.fx');m.asked=new Set();qdeal(m);qrender(m);
 }
 function say(m,who,text){const d=document.createElement('div');d.className='msg '+who;d.textContent=text;const th=m.el.querySelector('.th');th.appendChild(d);d.scrollIntoView({block:'nearest',behavior:'smooth'});return d}
 async function ask(m,q){
@@ -386,15 +465,17 @@ async function ask(m,q){
 function draw(m){
  if(!m.sr||!m.res)return;
  m.lines.forEach(l=>m.sr.removePriceLine(l));m.lines=[];
- const pl=(price,title,color)=>m.lines.push(m.sr.createPriceLine({price,title,color,lineWidth:2,lineStyle:2}));
- if(m.show.gap&&m.res.near){pl(m.res.near.hi,'gap','#8b5cf6');pl(m.res.near.lo,'gap','#8b5cf6');}
+ const pl=(price,title,color)=>m.lines.push(m.sr.createPriceLine({price,title,color,lineWidth:1,lineStyle:2,axisLabelVisible:true}));
+ if(m.show.gap&&m.res.near){pl(m.res.near.hi,'gap top','#8b5cf6');pl(m.res.near.lo,'gap bottom','#8b5cf6');}
  if(m.show.fib&&m.res.fib){pl(m.res.fib.lvl(.5),'50%','#e0408f');pl(m.res.fib.lvl(.705),'70.5%','#e0408f');}
 }
 function jrender(m){
  const L=m.el.querySelector('.el'),es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)||b.at-a.at);
  const tx=s=>{const d=document.createElement('div');d.textContent=s;return d.innerHTML};
  L.innerHTML=es.map(e=>`<div class="en${e.date===m.sel?' sel':''}" data-id="${e.id}"><p class="d">${nice(e.date)}${m.days&&!m.days.has(e.date)?' · outside this chart':''}${e.edited?' · edited':''}</p><p class="t">${tx(e.text)}</p><div class="tf"><button class="chip" data-a="edit">Edit</button><button class="chip" data-a="del">Delete</button></div></div>`).join('');
- if(m.sr&&m.days)m.sr.setMarkers(es.filter(e=>m.days.has(e.date)).map(e=>({time:m.days.get(e.date),position:'belowBar',color:'#ff5fa8',shape:'circle'})).sort((a,b)=>a.time-b.time).filter((x,i,a)=>!i||x.time!==a[i-1].time));
+ if(m.sr&&m.days){const R=m.res,sw=R&&m.show.fib?[R.sh&&{time:m.c[R.sh.i].t/1000,position:'aboveBar',color:'#6f6479',shape:'arrowDown',text:'swing high'},R.sl&&{time:m.c[R.sl.i].t/1000,position:'belowBar',color:'#6f6479',shape:'arrowUp',text:'swing low'}].filter(Boolean):[];
+  const jm=es.filter(e=>m.days.has(e.date)).map(e=>({time:m.days.get(e.date),position:'belowBar',color:'#ff5fa8',shape:'circle'})).sort((a,b)=>a.time-b.time).filter((x,i,a)=>!i||x.time!==a[i-1].time);
+  m.sr.setMarkers(jm.concat(sw).sort((a,b)=>a.time-b.time))}
 }
 function paint(m){
  const el=m.el,mo=m.res.mo,mv=mo.k!=='still';
@@ -403,23 +484,27 @@ function paint(m){
  if(changed){m.s.classList.remove('fresh');void m.s.offsetWidth;m.s.classList.add('fresh');}
  el.classList.toggle('up',mv&&mo.up);el.classList.toggle('dn',mv&&!mo.up);el.classList.toggle('strong',mo.k==='strong');
  const lt=m.c[m.c.length-1].t;
- el.querySelector('.at').textContent=m.tf===1440?new Date(lt).toISOString().slice(0,10)+' (daily, UTC)':ny(lt);
- el.querySelector('.fd').textContent='Feed: '+(m.src==='b'?'Binance ':'Twelve Data ')+m.sym+', last '+m.c.length+' candles ('+span(m.c.length*m.tf)+') · '+marketBrainUpdatedLabel(m);
+ const sk='mb_seen_'+m.k+'_'+m.tf;m.seen=m.seen||{};
+ if(!(m.tf in m.seen)){const pv=store.get(sk,null);m.seen[m.tf]=pv;if(!pv||Date.now()-pv.at>12e5)store.set(sk,{at:Date.now(),price:m.res.last.c,g:m.res.near?{lo:m.res.near.lo,hi:m.res.near.hi,up:m.res.near.up}:null})}
+ ctx(m);
+
  m.days=new Map();m.c.forEach(x=>{const d=day(x.t/1000);if(!m.days.has(d))m.days.set(d,x.t/1000)});
- if(m.chart){m.chart.applyOptions({timeScale:{timeVisible:m.tf<1440}});m.sr.setData(m.c.map(x=>({time:x.t/1000,open:x.o,high:x.h,low:x.l,close:x.c})));draw(m);jrender(m);m.chart.timeScale().fitContent();m.show_(m.c[m.c.length-1]);}
+ if(m.chart){m.chart.applyOptions({timeScale:{timeVisible:m.tf<1440}});m.sr.setData(m.c.map(x=>({time:x.t/1000,open:x.o,high:x.h,low:x.l,close:x.c})));draw(m);jrender(m);m.chart.timeScale().setVisibleLogicalRange({from:Math.max(0,m.c.length-90),to:m.c.length+6});m.show_(m.c[m.c.length-1]);}
 }
 async function load(m){
  try{m.c=await getCandles(m,m.tf);m.res=read(m.c,m.tf);m.lastUpdated=Date.now();paint(m);}
  catch(e){m.s.classList.remove('w');m.s.classList.add('calm');m.s.textContent=e==='nokey'?'Add your Twelve Data key using the Data key button in the header.':m.src==='t'?'No data came back for this market. Check the key, or this market may need a paid Twelve Data plan.':'Couldn\'t reach the price feed. Try again in a moment.';}
 }
 function toggle(m,force){
- const o=m.el.classList.toggle('open',force);m.el.querySelector('button').setAttribute('aria-expanded',o);
+ const o=m.el.classList.toggle('open',force);m.el.querySelector('button').setAttribute('aria-expanded',o);if(o){qdeal(m);qrender(m)}
  if(o&&m.res){const k=m.res.mo.k;if(k==='strong')buzz([40,70,40]);else if(k==='moving')buzz(25);}
  if(o&&m.res&&!m.chart){
   const rd=m.el.querySelector('.rd');
-  m.chart=LightweightCharts.createChart(m.el.querySelector('.ch'),{autoSize:true,layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479'},grid:{vertLines:{color:'#ffffff80'},horzLines:{color:'#ffffff80'}},rightPriceScale:{borderVisible:false},timeScale:{timeVisible:m.tf<1440,borderVisible:false}});
-  m.sr=m.chart.addCandlestickSeries({upColor:'#ff5fa8',downColor:'#ffc400',borderVisible:false,wickUpColor:'#ff5fa8',wickDownColor:'#e0a800'});
-  m.show_=b=>{if(!b){return}const t=b.t||b.time*1000;rd.textContent=`${m.tf===1440?nice(day(t/1000)):ny(t)} · open ${fmt(b.o??b.open)} · high ${fmt(b.h??b.high)} · low ${fmt(b.l??b.low)} · close ${fmt(b.c??b.close)}`};
+  const pr=m.res.last.c<10?5:m.res.last.c<1000?3:2,CM=LightweightCharts.CrosshairMode.Magnet,ln={color:'#1a1325',width:1,style:3,labelBackgroundColor:'#1a1325'};
+  const nyd=(t,o)=>new Date(t*1000).toLocaleString('en-US',Object.assign({timeZone:'America/New_York'},o));
+  m.chart=LightweightCharts.createChart(m.el.querySelector('.ch'),{autoSize:true,layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479',fontSize:12},grid:{vertLines:{color:'#ffffff55'},horzLines:{color:'#ffffffa0'}},crosshair:{mode:CM,vertLine:ln,horzLine:ln},rightPriceScale:{borderVisible:false,scaleMargins:{top:.12,bottom:.12}},timeScale:{timeVisible:m.tf<1440,borderVisible:false,rightOffset:6,tickMarkFormatter:(t,ty)=>m.tf===1440?new Date(t*1000).toLocaleDateString('en-US',{timeZone:'UTC',day:'numeric',month:'short'}):ty<3?nyd(t,{day:'numeric',month:'short'}):nyd(t,{hour:'2-digit',minute:'2-digit',hour12:false})},localization:{timeFormatter:t=>m.tf===1440?nice(day(t)):nyd(t,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})+' NY'}});
+  m.sr=m.chart.addCandlestickSeries({upColor:'#ff5fa8',downColor:'#ffc400',borderVisible:false,wickUpColor:'#ff5fa8',wickDownColor:'#e0a800',priceFormat:{type:'price',precision:pr,minMove:1/10**pr},priceLineColor:'#1a1325',priceLineStyle:0});
+  m.show_=b=>{if(!b)return;const t=b.t||b.time*1000,o=b.o??b.open,h=b.h??b.high,l=b.l??b.low,c=b.c??b.close,Z=m.c[m.c.length-1].c;rd.innerHTML=`<b>${m.tf===1440?nice(day(t/1000)):ny(t)}</b> · open ${fmt(o)} · high ${fmt(h)} · low ${fmt(l)} · close ${fmt(c)} · body ${c>=o?'up':'down'} ${dst(m,c-o)} · range ${dst(m,h-l)} · ${same(Z,c)?'this is the latest close':'close is '+dst(m,Z-c)+(c<Z?' below':' above')+' the latest close'}`};
   m.chart.subscribeCrosshairMove(p=>{const b=p.time&&p.seriesData.get(m.sr);m.show_(b||m.c[m.c.length-1])});
   m.chart.subscribeClick(p=>{if(!p.time)return;m.sel=day(p.time);m.el.querySelector('input[type=date]').value=m.sel;jrender(m)});
   paint(m);
@@ -430,8 +515,8 @@ for(const m of live){
  dt.value=new Date().toISOString().slice(0,10);
  el.querySelector(':scope>button').onclick=()=>toggle(m);
  el.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{m.tf=+b.dataset.tf;el.querySelectorAll('[data-tf]').forEach(x=>x.classList.toggle('on',x===b));m.s.classList.add('w');load(m);});
- el.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{m.show[b.dataset.t]=b.classList.toggle('on');draw(m);});
- el.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{if(!m.res)return;const q=LQ[+b.dataset.q];say(m,'u',q[0]);say(m,'a',LOCAL[q[1]](m))});
+ el.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{m.show[b.dataset.t]=b.classList.toggle('on');draw(m);jrender(m);});
+ el.querySelector('.qs').onclick=ev=>{const b=ev.target.closest('[data-qi]');if(!b||!m.res)return;if(b.dataset.qi==='s'){qdeal(m);qrender(m);return}const j=+b.dataset.qi,i=m.qs[j];m.asked.add(i);say(m,'u',QB[i][1]);say(m,'a',QB[i][2](m));const nx=qpick(m,QB[i][0],m.qs);if(nx!=null)m.qs[j]=nx;qrender(m)};
  const go=()=>{const q=inp.value;inp.value='';ask(m,q)};
  el.querySelector('[data-send]').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing)go()};
  const reset=()=>{m.editing=null;ta.value='';sv.textContent='Save entry';cn.hidden=true};
@@ -473,4 +558,5 @@ addEventListener('pointermove',e=>{const l=document.getElementById('lamp').style
 const SKY=[['#ff7ab8','#ffd23f','#ffffff','#ffb08a'],['#ffd23f','#ff7ab8','#ffe3f1','#ffffff'],['#ffffff','#ffcf33','#ff7ab8','#ffd7a8']];
 let tick=0;
 setInterval(()=>{tick++;const p=SKY[tick%SKY.length],bs=document.querySelectorAll('.b');bs.forEach((b,i)=>b.style.backgroundColor=p[i]);if(tick>=5)bs[2].style.backgroundColor='#9ee37d';},12000);
+setInterval(()=>live.forEach(m=>{if(m.res&&m.el.classList.contains('open'))ctx(m)}),30000);
 </script></body></html>
