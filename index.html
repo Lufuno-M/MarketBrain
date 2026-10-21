@@ -72,6 +72,125 @@ h2{font-size:15px;font-weight:600;color:var(--mute);margin:44px 0 8px}
 .en .tf{margin:0}
 .f{padding:22px 0 26px;font-size:14px;color:var(--mute);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* MarketBrain — liquid silver + living typography
+   Append after the existing styles. Keeps the current pink/yellow atmosphere. */
+
+:root {
+  --silver-hi: rgba(255,255,255,.96);
+  --silver-mid: rgba(220,226,235,.66);
+  --silver-low: rgba(151,162,178,.20);
+  --silver-edge: rgba(255,255,255,.88);
+}
+
+/* A restrained reflective finish on the title, not the whole interface. */
+header h1 {
+  position: relative;
+  display: inline-block;
+  color: transparent;
+  background:
+    linear-gradient(112deg,
+      #8d96a5 0%,
+      #fdfefe 14%,
+      #aab3c1 27%,
+      #ffffff 39%,
+      #8b95a5 53%,
+      #f8fbff 67%,
+      #aeb7c5 81%,
+      #ffffff 100%);
+  background-size: 220% 100%;
+  background-position: 0% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 1px 0 rgba(255,255,255,.75));
+  animation: mb-silver-drift 12s ease-in-out infinite alternate;
+}
+
+header h1::after {
+  content: "";
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: -.10em;
+  height: .075em;
+  border-radius: 999px;
+  background: linear-gradient(90deg,
+    transparent, rgba(255,255,255,.9), rgba(163,174,190,.42), transparent);
+  filter: blur(2px);
+  opacity: .7;
+  pointer-events: none;
+}
+
+@keyframes mb-silver-drift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* A quiet liquid-glass highlight behind market summaries. */
+.m {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.m::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .42;
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(255,255,255,.94), transparent 38%),
+    linear-gradient(118deg, transparent 22%, rgba(255,255,255,.38) 42%, transparent 59%);
+  background-size: 100% 100%, 230% 100%;
+  background-position: 0 0, -120% 0;
+  transition: opacity .6s ease, background-position 1.2s ease;
+}
+
+.m:hover::before,
+.m.open::before {
+  opacity: .72;
+  background-position: 0 0, 120% 0;
+}
+
+/* Text updates animate once, then settle. JS adds .fresh after a successful refresh. */
+.s {
+  transform: translateY(0);
+  filter: drop-shadow(0 0 0 rgba(255,255,255,0));
+}
+
+.s.fresh {
+  animation: mb-text-arrive .72s cubic-bezier(.2,.7,.2,1) both;
+}
+
+@keyframes mb-text-arrive {
+  0% { opacity: .25; transform: translateY(5px); filter: drop-shadow(0 0 10px rgba(255,255,255,.95)); }
+  65% { opacity: 1; transform: translateY(-1px); filter: drop-shadow(0 0 5px rgba(255,255,255,.55)); }
+  100% { opacity: 1; transform: translateY(0); filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
+}
+
+/* Make the market summary read like a deliberate editorial line. */
+.s {
+  line-height: 1.12;
+  text-wrap: pretty;
+  letter-spacing: -.035em;
+}
+
+.n {
+  letter-spacing: .015em;
+}
+
+.rd, .f, .dl, #note {
+  letter-spacing: -.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  header h1 { animation: none !important; }
+  .s.fresh { animation: none !important; }
+  .m::before { transition: none !important; }
+}
+
 </style></head><body>
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div>
 <header>
@@ -144,10 +263,21 @@ function sentence(r){
  let pre=mo.k==='still'?'Quiet. ':`Moving ${mo.up?'up':'down'}${mo.k==='strong'?' fast':''}: ${mo.pct.toFixed(2)}% in the last ${span(mo.span)}. `;
  if(!near)return pre+'No open gaps nearby.';
  const side=near.up?'buying':'selling';
- if(r.inside)return pre+`Price is sitting inside a ${side} gap and has stayed there for ${span(run*tfm)}.`;
+ if(r.inside)return pre+`The last ${run} consecutive candle close${run===1?'':'s'} ${run===1?'is':'are'} inside a ${side} gap.`;
  const where=near.lo>last.c?'above':'below';
  if(near.entered)return pre+`The closest open ${side} gap is ${where} price. Price has dipped into it before, but never all the way through.`;
  return pre+`The closest open ${side} gap is ${where} price, and price hasn't come back to it yet.`;
+}
+
+function gapStateLabel(r){
+ const n=r.near;if(!n)return 'No open gap was detected in the loaded candles.';
+ const side=n.up?'buying':'selling',price=r.last.c,loc=price<n.lo?'below':price>n.hi?'above':'inside';
+ const status=n.entered?'It has been overlapped since formation and has not been fully traversed under the current rule.':'No overlap has been detected since formation in the loaded candles.';
+ return `Nearest open ${side} gap: ${fmt(n.lo)}–${fmt(n.hi)}. Current close is ${loc} the gap. ${status}`;
+}
+function marketBrainUpdatedLabel(m){
+ if(!m.lastUpdated)return 'Update time unavailable';
+ return 'Updated '+new Date(m.lastUpdated).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
 
 /* ---- the logic, written once: the assistant reads it, and the quick questions answer from it ---- */
@@ -157,7 +287,7 @@ Swing: a candle whose high (or low) is the highest (lowest) of the 3 candles on 
 Motion: net change over the last ${LOOK} candles divided by the average candle size over the last 60. ${MOVING} or more = moving, ${STRONG} or more = moving fast, otherwise quiet.
 Blind spots: no liquidity pools, no count of broken swing lows, nothing drawn or set as alerts in TradingView, nothing older than the loaded candles, no news.`;
 const LOCAL={
- gap:m=>{const n=m.res.near;return 'A gap is a spot where three candles in a row moved so fast that the middle one left a space the first and third never touched. Markets often come back to check these.'+(n?` The closest open one here sits between ${fmt(n.lo)} and ${fmt(n.hi)}. ${n.entered?'Price has been inside it since, without filling it.':'Price has not touched it since it formed.'} Price is now ${fmt(m.res.last.c)}.`:' No open gap is nearby right now.')},
+ gap:m=>{const n=m.res.near;return 'A gap is a spot where three candles in a row moved so fast that the middle one left a space the first and third never touched. Markets often come back to check these.'+(n?` The closest open one here sits between ${fmt(n.lo)} and ${fmt(n.hi)}. ${n.entered?'Price has overlapped it since formation, without fully traversing it under the current rule.':'No overlap has been detected since it formed in the loaded candles.'} Price is now ${fmt(m.res.last.c)}.`:' No open gap is nearby right now.')},
  closest:()=>'"Open" means nothing has traded fully back through the gap since it formed. "Closest" means the open gap whose middle is nearest the latest price. It does not weigh how big or how important a gap is.',
  fib:m=>{const f=m.res.fib;return f?`The latest swing ran ${f.down?'down':'up'} from ${fmt(f.from)} to ${fmt(f.to)}. Price has pulled back ${Math.round(f.back*100)}% of it. The 50% level is ${fmt(f.lvl(.5))} and the 70.5% level is ${fmt(f.lvl(.705))}. A swing is a candle that is the highest or lowest of the three on each side.`:'No swing is clear enough in these candles yet.'},
  moving:()=>`"Moving" compares how far price travelled over the last ${LOOK} candles with the usual candle size on this chart. ${MOVING} times that is moving, ${STRONG} times is moving fast. Anything less says quiet.`,
@@ -174,7 +304,7 @@ function sysFor(m){
 ${LOGIC}
 
 NOW: ${m.k} (${m.name}), ${tfl(m.tf)} chart. ${sentence(r)}
-Closest open gap: ${n?`${n.up?'buying':'selling'}, ${fmt(n.lo)} to ${fmt(n.hi)}, ${n.entered?'price has entered it since':'untouched since it formed'}`:'none nearby'}
+Gap: ${gapStateLabel(r)}
 Swing: ${f?`${f.down?'down':'up'} from ${fmt(f.from)} to ${fmt(f.to)}, pulled back ${Math.round(f.back*100)}%, 50% at ${fmt(f.lvl(.5))}, 70.5% at ${fmt(f.lvl(.705))}`:'none clear'}
 Feed: ${m.src==='b'?'Binance':'Twelve Data'} ${m.sym}, ${m.c.length} candles.
 LAST 30 CANDLES (UTC month-day hour:minute, open high low close), newest last:
@@ -268,16 +398,18 @@ function jrender(m){
 }
 function paint(m){
  const el=m.el,mo=m.res.mo,mv=mo.k!=='still';
- m.s.textContent=sentence(m.res);m.s.classList.remove('w');m.s.classList.toggle('calm',!mv);
+ const nextSentence=sentence(m.res),changed=m.s.textContent!==nextSentence;
+ m.s.textContent=nextSentence;m.s.classList.remove('w');m.s.classList.toggle('calm',!mv);
+ if(changed){m.s.classList.remove('fresh');void m.s.offsetWidth;m.s.classList.add('fresh');}
  el.classList.toggle('up',mv&&mo.up);el.classList.toggle('dn',mv&&!mo.up);el.classList.toggle('strong',mo.k==='strong');
  const lt=m.c[m.c.length-1].t;
  el.querySelector('.at').textContent=m.tf===1440?new Date(lt).toISOString().slice(0,10)+' (daily, UTC)':ny(lt);
- el.querySelector('.fd').textContent='Feed: '+(m.src==='b'?'Binance ':'Twelve Data ')+m.sym+', last '+m.c.length+' candles ('+span(m.c.length*m.tf)+')';
+ el.querySelector('.fd').textContent='Feed: '+(m.src==='b'?'Binance ':'Twelve Data ')+m.sym+', last '+m.c.length+' candles ('+span(m.c.length*m.tf)+') · '+marketBrainUpdatedLabel(m);
  m.days=new Map();m.c.forEach(x=>{const d=day(x.t/1000);if(!m.days.has(d))m.days.set(d,x.t/1000)});
  if(m.chart){m.chart.applyOptions({timeScale:{timeVisible:m.tf<1440}});m.sr.setData(m.c.map(x=>({time:x.t/1000,open:x.o,high:x.h,low:x.l,close:x.c})));draw(m);jrender(m);m.chart.timeScale().fitContent();m.show_(m.c[m.c.length-1]);}
 }
 async function load(m){
- try{m.c=await getCandles(m,m.tf);m.res=read(m.c,m.tf);paint(m);}
+ try{m.c=await getCandles(m,m.tf);m.res=read(m.c,m.tf);m.lastUpdated=Date.now();paint(m);}
  catch(e){m.s.classList.remove('w');m.s.classList.add('calm');m.s.textContent=e==='nokey'?'Add your Twelve Data key using the Data key button in the header.':m.src==='t'?'No data came back for this market. Check the key, or this market may need a paid Twelve Data plan.':'Couldn\'t reach the price feed. Try again in a moment.';}
 }
 function toggle(m,force){
