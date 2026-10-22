@@ -71,3 +71,4 @@ White canvas, black text, size and weight for hierarchy. Sentence case, never al
 ## Publishing
 
 To host on GitHub Pages: push to a repo, then Settings, Pages, deploy from the `main` branch root. The page is one self-contained file.
+![Profile views](https://komarev.com/ghpvc/?username=Lufuno-M&label=PROFILE+VIEWS&color=grey&style=flat-square)
