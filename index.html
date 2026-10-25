@@ -213,18 +213,38 @@ header h1::after {
 <script>
 const TWELVE_KEY=localStorage.getItem('mb_td_key')||'';
 const AI_MODEL='claude-sonnet-5-5',GH_MODEL='openai/gpt-4.1',GEMINI_MODEL='gemini-3.6-flash';
-// Add or remove markets here. on:false hides one until you switch it on.
+// Add or remove markets here. on:false hides one until you switch it on (change it to true or delete it).
+// src:'b' = Binance (free, no key). src:'t' = Twelve Data (needs your Data key; the free plan allows about 8 requests a minute,
+// so keep the number of switched-on 't' markets small, or they will take turns loading).
+// etf:true marks a fund that trades only in US stock hours, not the 24-hour forex week.
 const MARKETS=[
  {g:'Crypto',k:'BTC',name:'Bitcoin',src:'b',sym:'BTCUSDT',tv:'BINANCE:BTCUSDT'},
  {g:'Crypto',k:'ETH',name:'Ethereum',src:'b',sym:'ETHUSDT',tv:'BINANCE:ETHUSDT'},
  {g:'Crypto',k:'SOL',name:'Solana',src:'b',sym:'SOLUSDT',tv:'BINANCE:SOLUSDT'},
+ {g:'Crypto',k:'BNB',name:'BNB',src:'b',sym:'BNBUSDT',tv:'BINANCE:BNBUSDT'},
+ {g:'Crypto',k:'XRP',name:'XRP',src:'b',sym:'XRPUSDT',tv:'BINANCE:XRPUSDT'},
+ {g:'Crypto',k:'DOGE',name:'Dogecoin',src:'b',sym:'DOGEUSDT',tv:'BINANCE:DOGEUSDT'},
+ {g:'Crypto',k:'ADA',name:'Cardano',src:'b',sym:'ADAUSDT',tv:'BINANCE:ADAUSDT',on:false},
+ {g:'Crypto',k:'AVAX',name:'Avalanche',src:'b',sym:'AVAXUSDT',tv:'BINANCE:AVAXUSDT',on:false},
+ {g:'Crypto',k:'LINK',name:'Chainlink',src:'b',sym:'LINKUSDT',tv:'BINANCE:LINKUSDT',on:false},
  {g:'Forex and gold',k:'GBPUSD',name:'Pound / Dollar',src:'t',sym:'GBP/USD',tv:'FX:GBPUSD'},
  {g:'Forex and gold',k:'EURUSD',name:'Euro / Dollar',src:'t',sym:'EUR/USD',tv:'FX:EURUSD'},
+ {g:'Forex and gold',k:'USDJPY',name:'Dollar / Yen',src:'t',sym:'USD/JPY',tv:'FX:USDJPY'},
  {g:'Forex and gold',k:'XAUUSD',name:'Gold / Dollar',src:'t',sym:'XAU/USD',tv:'OANDA:XAUUSD'},
- {g:'Forex and gold',k:'UUP',name:'Dollar (UUP fund)',src:'t',sym:'UUP',tv:'AMEX:UUP'},
+ {g:'Forex and gold',k:'XAGUSD',name:'Silver / Dollar',src:'t',sym:'XAG/USD',tv:'OANDA:XAGUSD'},
+ {g:'Forex and gold',k:'UUP',name:'Dollar (UUP fund)',src:'t',sym:'UUP',tv:'AMEX:UUP',etf:true},
+ {g:'Forex and gold',k:'AUDUSD',name:'Aussie / Dollar',src:'t',sym:'AUD/USD',tv:'FX:AUDUSD',on:false},
+ {g:'Forex and gold',k:'USDCAD',name:'Dollar / Loonie',src:'t',sym:'USD/CAD',tv:'FX:USDCAD',on:false},
+ {g:'Forex and gold',k:'USDCHF',name:'Dollar / Franc',src:'t',sym:'USD/CHF',tv:'FX:USDCHF',on:false},
+ {g:'Forex and gold',k:'NZDUSD',name:'Kiwi / Dollar',src:'t',sym:'NZD/USD',tv:'FX:NZDUSD',on:false},
+ {g:'Forex and gold',k:'EURGBP',name:'Euro / Pound',src:'t',sym:'EUR/GBP',tv:'FX:EURGBP',on:false},
+ {g:'Forex and gold',k:'GBPJPY',name:'Pound / Yen',src:'t',sym:'GBP/JPY',tv:'FX:GBPJPY',on:false},
  {g:'Indices',k:'SPX500',name:'S&P 500',src:'t',sym:'SPX',tv:'OANDA:SPX500USD',on:false},
  {g:'Indices',k:'US30',name:'Dow Jones',src:'t',sym:'DJI',tv:'OANDA:US30USD',on:false},
- {g:'Indices',k:'NAS100',name:'Nasdaq 100',src:'t',sym:'IXIC',tv:'OANDA:NAS100USD',on:false}
+ {g:'Indices',k:'NAS100',name:'Nasdaq 100',src:'t',sym:'IXIC',tv:'OANDA:NAS100USD',on:false},
+ {g:'Indices',k:'SPY',name:'S&P 500 (SPY fund)',src:'t',sym:'SPY',tv:'AMEX:SPY',etf:true,on:false},
+ {g:'Indices',k:'QQQ',name:'Nasdaq 100 (QQQ fund)',src:'t',sym:'QQQ',tv:'NASDAQ:QQQ',etf:true,on:false},
+ {g:'Indices',k:'TLT',name:'Long US bonds (TLT fund)',src:'t',sym:'TLT',tv:'NASDAQ:TLT',etf:true,on:false}
 ];
 // label, minutes, Binance interval, Twelve Data interval. 1d is the daily feed, cached for the day.
 const TFS=[['1m',1,'1m','1min'],['5m',5,'5m','5min'],['15m',15,'15m','15min'],['30m',30,'30m','30min'],['1h',60,'1h','1h'],['1d',1440,'1d','1day']];
@@ -303,13 +323,15 @@ const LOCAL={
  blind:m=>`This rests on ${m.src==='b'?'Binance':'Twelve Data'} prices for ${m.sym}: the last ${m.c.length} ${tfl(m.tf)} candles, about ${span(m.c.length*m.tf)}. It does not know liquidity pools, how many swing lows have broken, or anything you drew in TradingView. It describes the chart. It is not a prediction or advice.`
 };
 /* ---- helpers: distances, time, where price sits ---- */
-const unit=m=>m.src==='b'||m.k==='XAUUSD'||m.k==='UUP'?0:0.0001;
-const dst=(m,d)=>{d=Math.abs(d);const u=unit(m);return u?(d/u).toFixed(1)+' pips':'$'+d.toFixed(2)};
+// pip size: 0 means "quote in dollars" (crypto, metals, funds); yen pairs use 0.01; other pairs 0.0001
+const unit=m=>m.src==='b'||m.etf||m.k==='XAUUSD'||m.k==='XAGUSD'?0:m.k.endsWith('JPY')?0.01:0.0001;
+// dollar distances keep enough decimals for sub-dollar assets such as DOGE, XRP and ADA
+const dst=(m,d)=>{d=Math.abs(d);const u=unit(m);if(u)return (d/u).toFixed(1)+' pips';const px=m.c&&m.c.length?m.c[m.c.length-1].c:1;return '$'+d.toFixed(px<0.1?5:px<1?4:2)};
 const ago=(m,i)=>{const k=m.c.length-1-i;return k<1?'on the latest candle':span(k*m.tf)+' ago'};
 const hhmm=n=>String(n/60|0).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
 const SES=[[180,'London opens'],[480,'New York opens'],[720,'London closes'],[1020,'New York closes'],[1140,'Asia opens']];
 function nyNow(){const p={};new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(new Date()).forEach(x=>p[x.type]=x.value);return{wd:p.weekday,min:(+p.hour%24)*60+ +p.minute}}
-const closedNow=m=>{const{wd,min}=nyNow();return m.g==='Forex and gold'&&m.k!=='UUP'&&(wd==='Sat'||(wd==='Fri'&&min>=1020)||(wd==='Sun'&&min<1020))};
+const closedNow=m=>{const{wd,min}=nyNow();return m.g==='Forex and gold'&&!m.etf&&(wd==='Sat'||(wd==='Fri'&&min>=1020)||(wd==='Sun'&&min<1020))};
 function clock(m,more){
  const{min}=nyNow();
  if(closedNow(m))return 'The forex week is closed and reopens Sunday at 17:00 New York time. What you see is the last word from Friday.';
@@ -341,7 +363,7 @@ function ctx(m){
  const c=m.c,last=r.last,P=pos(m),n=r.near,L=[['The clock',clock(m)],['Since you last looked',seen(m)]];
  L.push(['Where price sits',`The loaded candles run from ${fmt(P.lo)} to ${fmt(P.hi)} (${dst(m,P.hi-P.lo)}). Price is in the ${third(P.p)} third of that. That says where it is, not where it goes.`]);
  L.push(['The gap',n?`The nearest open ${n.up?'buying':'selling'} gap runs ${fmt(n.lo)} to ${fmt(n.hi)} (${dst(m,n.hi-n.lo)} wide) and formed ${ago(m,n.i)}. ${r.inside?'Price is inside it now.':`Price is ${dst(m,n.lo>last.c?n.lo-last.c:last.c-n.hi)} away.`}`:'No open gap in the loaded candles. Nothing here is waiting to be revisited.']);
- const lt=c[c.length-1].t,late=m.tf<1440&&m.k!=='UUP'&&!closedNow(m)&&Date.now()-lt>m.tf*18e4;
+ const lt=c[c.length-1].t,late=m.tf<1440&&!m.etf&&!closedNow(m)&&Date.now()-lt>m.tf*18e4;
  L.push(['The data',`Latest candle opened ${m.tf===1440?new Date(lt).toISOString().slice(0,10)+' (daily, UTC)':ny(lt)}. ${marketBrainUpdatedLabel(m)}. Source: ${m.src==='b'?'Binance':'Twelve Data'} ${m.sym}, ${c.length} ${tfl(m.tf)} candles covering ${span(c.length*m.tf)}.`+(late?' That candle is more than three candles old, so either the feed is late or the market has gone quiet. The page cannot tell which.':'')]);
  m.fx.innerHTML=L.filter(x=>x[1]).map(x=>`<li><b>${x[0]}.</b>${x[1]}</li>`).join('');
 }
@@ -351,7 +373,7 @@ function ctx(m){
 const QB=[
  [0,'What does "quiet" or "moving" mean?',m=>{const o=m.res.mo;return (o.k==='still'?'Right now this chart is quiet: price has travelled very little compared with how far a normal candle goes. ':`Right now this chart is ${o.k==='strong'?'moving fast':'moving'} ${o.up?'up':'down'}: ${o.pct.toFixed(2)}% in ${span(o.span)}. `)+'It describes speed. It says nothing about what comes next.'}],
  [0,'What is a gap, in plain words?',LOCAL.gap],
- [0,'What is a pip?',m=>{const k=`The last ${tfl(m.tf)} candle travelled ${dst(m,m.res.last.h-m.res.last.l)} from its low to its high.`;return unit(m)?`A pip is the smallest move traders usually quote in a currency pair: 0.0001 on ${m.k}. ${k}`:`Pips belong to currency pairs (0.0001 on most). ${m.k} is quoted in dollars, so this page speaks in dollars here. ${k}`}],
+ [0,'What is a pip?',m=>{const k=`The last ${tfl(m.tf)} candle travelled ${dst(m,m.res.last.h-m.res.last.l)} from its low to its high.`;return unit(m)?`A pip is the smallest move traders usually quote in a currency pair: ${unit(m)} on ${m.k}. ${k}`:`Pips belong to currency pairs (0.0001 on most, 0.01 on yen pairs). ${m.k} is quoted in dollars, so this page speaks in dollars here. ${k}`}],
  [0,'Is price high or low right now?',m=>{const P=pos(m);return `Across the ${m.c.length} loaded candles (${span(m.c.length*m.tf)}), price sits in the ${third(P.p)} third of the range, ${fmt(P.lo)} to ${fmt(P.hi)}. High and low here only mean compared with this window. A different window would answer differently.`}],
  [0,'Why does this page use New York time?',()=>'Because the forex day turns over at 17:00 in New York and the busiest hours follow when London and New York open. One clock everywhere means a candle here is the same candle on a TradingView chart set to New York time.'],
  [0,'Which trading session is it?',m=>clock(m,true)+' Sessions only describe when most people in that city are at their desks.'],
