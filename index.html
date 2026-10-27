@@ -73,126 +73,23 @@ h2{font-size:15px;font-weight:600;color:var(--mute);margin:44px 0 8px}
 .f{padding:22px 0 26px;font-size:14px;color:var(--mute);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
-/* MarketBrain — liquid silver + living typography
-   Append after the existing styles. Keeps the current pink/yellow atmosphere. */
+/* liquid silver + living typography */
+:root{--silver-hi:rgba(255,255,255,.96);--silver-mid:rgba(220,226,235,.66);--silver-low:rgba(151,162,178,.20);--silver-edge:rgba(255,255,255,.88)}
+header h1{position:relative;display:inline-block;color:transparent;background:linear-gradient(112deg,#8d96a5 0%,#fdfefe 14%,#aab3c1 27%,#ffffff 39%,#8b95a5 53%,#f8fbff 67%,#aeb7c5 81%,#ffffff 100%);background-size:220% 100%;background-position:0% 50%;-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 1px 0 rgba(255,255,255,.75));animation:mb-silver-drift 12s ease-in-out infinite alternate}
+header h1::after{content:"";position:absolute;left:4%;right:4%;bottom:-.10em;height:.075em;border-radius:999px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),rgba(163,174,190,.42),transparent);filter:blur(2px);opacity:.7;pointer-events:none}
+@keyframes mb-silver-drift{0%{background-position:0% 50%}100%{background-position:100% 50%}}
+.m{position:relative;isolation:isolate;overflow:hidden}
+.m::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.42;background:radial-gradient(ellipse at 12% 0%,rgba(255,255,255,.94),transparent 38%),linear-gradient(118deg,transparent 22%,rgba(255,255,255,.38) 42%,transparent 59%);background-size:100% 100%,230% 100%;background-position:0 0,-120% 0;transition:opacity .6s ease,background-position 1.2s ease}
+.m:hover::before,.m.open::before{opacity:.72;background-position:0 0,120% 0}
+.s{transform:translateY(0);filter:drop-shadow(0 0 0 rgba(255,255,255,0))}
+.s.fresh{animation:mb-text-arrive .72s cubic-bezier(.2,.7,.2,1) both}
+@keyframes mb-text-arrive{0%{opacity:.25;transform:translateY(5px);filter:drop-shadow(0 0 10px rgba(255,255,255,.95))}65%{opacity:1;transform:translateY(-1px);filter:drop-shadow(0 0 5px rgba(255,255,255,.55))}100%{opacity:1;transform:translateY(0);filter:drop-shadow(0 0 0 rgba(255,255,255,0))}}
+.s{line-height:1.12;text-wrap:pretty;letter-spacing:-.035em}
+.n{letter-spacing:.015em}
+.rd,.f,.dl,#note{letter-spacing:-.01em}
+@media (prefers-reduced-motion:reduce){header h1{animation:none!important}.s.fresh{animation:none!important}.m::before{transition:none!important}}
 
-:root {
-  --silver-hi: rgba(255,255,255,.96);
-  --silver-mid: rgba(220,226,235,.66);
-  --silver-low: rgba(151,162,178,.20);
-  --silver-edge: rgba(255,255,255,.88);
-}
-
-/* A restrained reflective finish on the title, not the whole interface. */
-header h1 {
-  position: relative;
-  display: inline-block;
-  color: transparent;
-  background:
-    linear-gradient(112deg,
-      #8d96a5 0%,
-      #fdfefe 14%,
-      #aab3c1 27%,
-      #ffffff 39%,
-      #8b95a5 53%,
-      #f8fbff 67%,
-      #aeb7c5 81%,
-      #ffffff 100%);
-  background-size: 220% 100%;
-  background-position: 0% 50%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  filter: drop-shadow(0 1px 0 rgba(255,255,255,.75));
-  animation: mb-silver-drift 12s ease-in-out infinite alternate;
-}
-
-header h1::after {
-  content: "";
-  position: absolute;
-  left: 4%;
-  right: 4%;
-  bottom: -.10em;
-  height: .075em;
-  border-radius: 999px;
-  background: linear-gradient(90deg,
-    transparent, rgba(255,255,255,.9), rgba(163,174,190,.42), transparent);
-  filter: blur(2px);
-  opacity: .7;
-  pointer-events: none;
-}
-
-@keyframes mb-silver-drift {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
-}
-
-/* A quiet liquid-glass highlight behind market summaries. */
-.m {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-}
-
-.m::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: .42;
-  background:
-    radial-gradient(ellipse at 12% 0%, rgba(255,255,255,.94), transparent 38%),
-    linear-gradient(118deg, transparent 22%, rgba(255,255,255,.38) 42%, transparent 59%);
-  background-size: 100% 100%, 230% 100%;
-  background-position: 0 0, -120% 0;
-  transition: opacity .6s ease, background-position 1.2s ease;
-}
-
-.m:hover::before,
-.m.open::before {
-  opacity: .72;
-  background-position: 0 0, 120% 0;
-}
-
-/* Text updates animate once, then settle. JS adds .fresh after a successful refresh. */
-.s {
-  transform: translateY(0);
-  filter: drop-shadow(0 0 0 rgba(255,255,255,0));
-}
-
-.s.fresh {
-  animation: mb-text-arrive .72s cubic-bezier(.2,.7,.2,1) both;
-}
-
-@keyframes mb-text-arrive {
-  0% { opacity: .25; transform: translateY(5px); filter: drop-shadow(0 0 10px rgba(255,255,255,.95)); }
-  65% { opacity: 1; transform: translateY(-1px); filter: drop-shadow(0 0 5px rgba(255,255,255,.55)); }
-  100% { opacity: 1; transform: translateY(0); filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
-}
-
-/* Make the market summary read like a deliberate editorial line. */
-.s {
-  line-height: 1.12;
-  text-wrap: pretty;
-  letter-spacing: -.035em;
-}
-
-.n {
-  letter-spacing: .015em;
-}
-
-.rd, .f, .dl, #note {
-  letter-spacing: -.01em;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  header h1 { animation: none !important; }
-  .s.fresh { animation: none !important; }
-  .m::before { transition: none !important; }
-}
-
-
-/* context fragments under the chart: plain sentences, discovered not announced */
+/* context fragments under the chart */
 .fx{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:12px;font-size:15px;line-height:1.5;color:var(--mute)}
 .fx li{max-width:46em}
 .fx b{color:var(--ink);font-weight:600;margin-right:6px}
@@ -214,8 +111,7 @@ header h1::after {
 const TWELVE_KEY=localStorage.getItem('mb_td_key')||'';
 const AI_MODEL='claude-sonnet-5-5',GH_MODEL='openai/gpt-4.1',GEMINI_MODEL='gemini-3.6-flash';
 // Add or remove markets here. on:false hides one until you switch it on (change it to true or delete it).
-// src:'b' = Binance (free, no key). src:'t' = Twelve Data (needs your Data key; the free plan allows about 8 requests a minute,
-// so keep the number of switched-on 't' markets small, or they will take turns loading).
+// src:'b' = Binance (free, no key). src:'t' = Twelve Data (needs your Data key; the free plan allows about 8 requests a minute).
 // etf:true marks a fund that trades only in US stock hours, not the 24-hour forex week.
 const MARKETS=[
  {g:'Crypto',k:'BTC',name:'Bitcoin',src:'b',sym:'BTCUSDT',tv:'BINANCE:BTCUSDT'},
@@ -246,10 +142,8 @@ const MARKETS=[
  {g:'Indices',k:'QQQ',name:'Nasdaq 100 (QQQ fund)',src:'t',sym:'QQQ',tv:'NASDAQ:QQQ',etf:true,on:false},
  {g:'Indices',k:'TLT',name:'Long US bonds (TLT fund)',src:'t',sym:'TLT',tv:'NASDAQ:TLT',etf:true,on:false}
 ];
-// label, minutes, Binance interval, Twelve Data interval. 1d is the daily feed, cached for the day.
 const TFS=[['1m',1,'1m','1min'],['5m',5,'5m','5min'],['15m',15,'15m','15min'],['30m',30,'30m','30min'],['1h',60,'1h','1h'],['1d',1440,'1d','1day']];
 const HUES=['#ff5fa8','#ffcf33','#ff9a6b','#b98cff','#ff7ec9','#ffb800','#e86bd6'];
-// How far a market must travel over the last LOOK candles (in average candle sizes) to count as moving / moving fast.
 const MOVING=3,STRONG=5,LOOK=12;
 const fmt=p=>p.toFixed(p<10?5:p<1000?3:2);
 const ny=t=>new Date(t).toLocaleString('en-US',{timeZone:'America/New_York',weekday:'short',hour:'numeric',minute:'2-digit'})+' New York time';
@@ -260,6 +154,8 @@ const store={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==
 const day=t=>new Date(t*1000).toISOString().slice(0,10);
 const nice=d=>new Date(d+'T12:00:00Z').toLocaleDateString('en-US',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
 let J=store.get('mb_journal',[]);const saveJ=()=>store.set('mb_journal',J);
+const hsh=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
+const cap=s=>s[0].toUpperCase()+s.slice(1);
 
 function motion(c,tfm){
  if(c.length<LOOK+20)return{k:'still'};
@@ -268,11 +164,10 @@ function motion(c,tfm){
  const r=Math.abs(net)/(rng||1);
  return{k:r>=STRONG?'strong':r>=MOVING?'moving':'still',up:net>0,pct:Math.abs(net)/b*100,span:LOOK*tfm,r};
 }
+function gapsOf(c){const g=[];for(let i=2;i<c.length;i++){const a=c[i-2],b=c[i];if(a.h<b.l)g.push({up:true,lo:a.h,hi:b.l,i});else if(a.l>b.h)g.push({up:false,lo:b.h,hi:a.l,i});}return g}
 function read(c,tfm){
- const last=c[c.length-1],gaps=[];
- for(let i=2;i<c.length;i++){const a=c[i-2],b=c[i];
-  if(a.h<b.l)gaps.push({up:true,lo:a.h,hi:b.l,i});else if(a.l>b.h)gaps.push({up:false,lo:b.h,hi:a.l,i});}
- const open=gaps.filter(g=>{for(let j=g.i+1;j<c.length;j++){const k=c[j];if(g.up?k.l<=g.lo:k.h>=g.hi)return false}return true});
+ const last=c[c.length-1];
+ const open=gapsOf(c).filter(g=>{for(let j=g.i+1;j<c.length;j++){const k=c[j];if(g.up?k.l<=g.lo:k.h>=g.hi)return false}return true});
  const mid=g=>(g.lo+g.hi)/2;
  const near=open.sort((a,b)=>Math.abs(mid(a)-last.c)-Math.abs(mid(b)-last.c))[0];
  if(near){near.entered=false;for(let j=near.i+1;j<c.length;j++){const k=c[j];if(k.l<near.hi&&k.h>near.lo){near.entered=true;break}}}
@@ -287,16 +182,45 @@ function read(c,tfm){
  const inside=!!near&&run>0;
  return{last,near,run,fib,sh,sl,open,tfm,inside,mo:motion(c,tfm),dist:near?Math.abs(mid(near)-last.c)/last.c:9};
 }
-function sentence(r){
- const{last,near,run,tfm,mo}=r;
- let pre=mo.k==='still'?'Quiet. ':`Moving ${mo.up?'up':'down'}${mo.k==='strong'?' fast':''}: ${mo.pct.toFixed(2)}% in the last ${span(mo.span)}. `;
- if(!near)return pre+'No open gaps nearby.';
- const side=near.up?'buying':'selling';
- if(r.inside)return pre+`The last ${run} consecutive candle close${run===1?'':'s'} ${run===1?'is':'are'} inside a ${side} gap.`;
- const where=near.lo>last.c?'above':'below';
- if(near.entered)return pre+`The closest open ${side} gap is ${where} price. Price has dipped into it before, but never all the way through.`;
- return pre+`The closest open ${side} gap is ${where} price, and price hasn't come back to it yet.`;
+
+/* ---- the card sentence: an opener about motion + a body about the gap, each with many phrasings.
+   Every open card gets a different sentence, even when two markets are in the same state.
+   Numbers stay exact; only the wording changes. Template variety, not AI. ---- */
+function openers(mo){
+ if(mo.k==='still')return['Quiet.','Barely stirring.','Calm here.','Not much happening.','Hardly any movement.','Nothing urgent.','Still waters.','Holding its breath.','Almost motionless.','A slow stretch.'];
+ const D=mo.up?'up':'down',f=mo.k==='strong',p=mo.pct.toFixed(2),s=span(mo.span);
+ return[`Moving ${D}${f?' fast':''}: ${p}% in the last ${s}.`,`${p}% ${D} over the last ${s}${f?', and quickly':''}.`,`Price has leaned ${D}${f?' hard':''}, ${p}% across ${s}.`,`A ${f?'fast ':''}drift ${D}: ${p}% in ${s}.`,`${mo.up?'Rising':'Falling'}${f?' fast':''}, ${p}% in ${s}.`,`Heading ${D}${f?' quickly':''}, ${p}% in ${s}.`,`In the last ${s}, ${p}% ${D}${f?' at speed':''}.`,`${cap(D)} ${p}% since ${s} ago${f?', in a hurry':''}.`,`A ${f?'sharp ':''}push ${D}: ${p}% over ${s}.`];
 }
+function bodies(r){
+ const n=r.near;
+ if(!n)return['No open gaps nearby.','Nothing unfinished close by.','No gap is waiting to be revisited.','Every gap in view has been filled.','There is no open gap in the loaded candles.','Nothing here to come back to.','The slate is clean: no open gaps.'];
+ const sd=n.up?'buying':'selling',w=n.lo>r.last.c?'above':'below',run=r.run,pl=run===1?'':'s';
+ if(r.inside)return[`The last ${run} consecutive close${pl} ${run===1?'is':'are'} inside a ${sd} gap.`,`Price is sitting in a ${sd} gap, ${run} close${pl} running.`,`A ${sd} gap is holding price: ${run} close${pl} in a row inside it.`,`Price has closed inside a ${sd} gap ${run} ${run===1?'time':'times'} running.`,`Right now price lives inside a ${sd} gap, ${run} close${pl} so far.`,`${run} straight close${pl} inside a ${sd} gap.`,`Price keeps settling inside a ${sd} gap: ${run} close${pl} and counting.`];
+ if(n.entered)return[`The closest open ${sd} gap is ${w} price. Price has dipped into it before, but never all the way through.`,`A ${sd} gap sits ${w} price. It has been touched, never fully crossed.`,`${cap(w)} price there is a ${sd} gap that has been visited but not filled.`,`The nearest unfinished ${sd} gap is ${w}; price has entered it without crossing it.`,`Price has touched the ${sd} gap ${w} it without closing it.`,`One ${sd} gap is still open ${w} price, partly visited.`,`A half-visited ${sd} gap lies ${w} price.`];
+ return[`The closest open ${sd} gap is ${w} price, and price hasn't come back to it yet.`,`A ${sd} gap waits ${w} price, untouched.`,`${cap(w)} price sits a ${sd} gap nobody has revisited.`,`Price hasn't returned to the ${sd} gap ${w} it.`,`An unvisited ${sd} gap lies ${w} price.`,`The ${sd} gap ${w} price is still intact.`,`${cap(w)} price, a ${sd} gap remains unvisited.`];
+}
+function build(m,used){
+ const O=openers(m.res.mo),B=bodies(m.res),h=hsh(m.k+m.tf);let pick=null;
+ for(const strict of[true,false])for(let t=0;t<O.length*B.length&&!pick;t++){
+  const o=O[(h+t)%O.length],b=B[((h>>>3)+t*5+(t/O.length|0))%B.length];
+  if(strict?(!used.o.has(o)&&!used.b.has(b)):!used.t.has(o+' '+b))pick=[o,b];
+ }
+ pick=pick||[O[h%O.length],B[(h>>>3)%B.length]];
+ used.o.add(pick[0]);used.b.add(pick[1]);used.t.add(pick.join(' '));return pick.join(' ');
+}
+const freshUsed=()=>({o:new Set(),b:new Set(),t:new Set()});
+function sentence(r){
+ const used=freshUsed();
+ for(const x of live){if(!x.res)continue;const s=build(x,used);if(x.res===r)return s}
+ return build({res:r,k:'x',tf:0},freshUsed());
+}
+function setSentence(m,s){
+ const changed=m.s.textContent!==s;
+ m.s.textContent=s;m.s.classList.remove('w');m.s.classList.toggle('calm',m.res.mo.k==='still');
+ if(changed){m.s.classList.remove('fresh');void m.s.offsetWidth;m.s.classList.add('fresh');}
+}
+// Re-deal every card's sentence together so no two cards share an opener or body.
+function refreshSentences(){const used=freshUsed();for(const x of live){if(x.res)setSentence(x,build(x,used))}}
 
 function gapStateLabel(r){
  const n=r.near;if(!n)return 'No open gap was detected in the loaded candles.';
@@ -309,7 +233,6 @@ function marketBrainUpdatedLabel(m){
  return 'Updated '+new Date(m.lastUpdated).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
 
-/* ---- the logic, written once: the assistant reads it, and the quick questions answer from it ---- */
 const LOGIC=`How this page reads a chart (this is all it does):
 Gap: three candles where the first high is below the third low (buying gap), or the first low is above the third high (selling gap). The space between is the gap. Open = no later candle has traded fully back through it. Entered = a later candle overlapped it without filling it. Closest = the open gap whose middle is nearest the latest price; size and importance are not weighed.
 Swing: a candle whose high (or low) is the highest (lowest) of the 3 candles on each side. The latest swing high and low make the swing. Fib levels (50%, 70.5%) are measured on it; pullback is how much of the swing price has retraced.
@@ -322,10 +245,7 @@ const LOCAL={
  moving:()=>`"Moving" compares how far price travelled over the last ${LOOK} candles with the usual candle size on this chart. ${MOVING} times that is moving, ${STRONG} times is moving fast. Anything less says quiet.`,
  blind:m=>`This rests on ${m.src==='b'?'Binance':'Twelve Data'} prices for ${m.sym}: the last ${m.c.length} ${tfl(m.tf)} candles, about ${span(m.c.length*m.tf)}. It does not know liquidity pools, how many swing lows have broken, or anything you drew in TradingView. It describes the chart. It is not a prediction or advice.`
 };
-/* ---- helpers: distances, time, where price sits ---- */
-// pip size: 0 means "quote in dollars" (crypto, metals, funds); yen pairs use 0.01; other pairs 0.0001
 const unit=m=>m.src==='b'||m.etf||m.k==='XAUUSD'||m.k==='XAGUSD'?0:m.k.endsWith('JPY')?0.01:0.0001;
-// dollar distances keep enough decimals for sub-dollar assets such as DOGE, XRP and ADA
 const dst=(m,d)=>{d=Math.abs(d);const u=unit(m);if(u)return (d/u).toFixed(1)+' pips';const px=m.c&&m.c.length?m.c[m.c.length-1].c:1;return '$'+d.toFixed(px<0.1?5:px<1?4:2)};
 const ago=(m,i)=>{const k=m.c.length-1-i;return k<1?'on the latest candle':span(k*m.tf)+' ago'};
 const hhmm=n=>String(n/60|0).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
@@ -343,7 +263,14 @@ const pos=m=>{const hi=Math.max(...m.c.map(x=>x.h)),lo=Math.min(...m.c.map(x=>x.
 const third=p=>p>.66?'upper':p<.34?'lower':'middle';
 const same=(a,b)=>Math.abs(a-b)<1e-9;
 
-/* what changed, and what did not, since this device last looked at this market and timeframe */
+/* what changed, and what did not, since this device last looked.
+   Verified vs unknown: a vanished gap is either confirmed filled (with a time) or simply no longer loaded. */
+function fate(m,p){
+ const g=gapsOf(m.c).find(x=>x.up===p.up&&same(x.lo,p.lo)&&same(x.hi,p.hi));
+ if(!g)return{k:'gone'};
+ for(let j=g.i+1;j<m.c.length;j++){const k=m.c[j];if(g.up?k.l<=g.lo:k.h>=g.hi)return{k:'filled',t:k.t}}
+ return{k:'open'};
+}
 function seen(m){
  const p=m.seen&&m.seen[m.tf],r=m.res;
  if(!p)return 'This is your first look at this chart on this device. Next time, this line will say what changed and what did not.';
@@ -353,11 +280,12 @@ function seen(m){
  if(!p.g)g=r.near?`A ${r.near.up?'buying':'selling'} gap at ${fmt(r.near.lo)} to ${fmt(r.near.hi)} is new since then.`:'There was no open gap then, and there is none now.';
  else if(r.near&&same(r.near.lo,p.g.lo)&&same(r.near.hi,p.g.hi))g=`The gap you saw (${fmt(p.g.lo)} to ${fmt(p.g.hi)}) has not changed: still open, still the closest.`;
  else if(r.open.some(x=>same(x.lo,p.g.lo)&&same(x.hi,p.g.hi)))g='The gap you saw is still open, but another one is now closer.';
- else g='The gap you saw has since been traded through, or has scrolled out of the loaded candles.';
+ else{const f=fate(m,p.g);
+  g=f.k==='filled'?`The gap you saw (${fmt(p.g.lo)} to ${fmt(p.g.hi)}) was traded through. Confirmed in the loaded candles: ${ny(f.t)}.`
+   :`The gap you saw (${fmt(p.g.lo)} to ${fmt(p.g.hi)}) is no longer in the loaded candles. The page cannot tell whether it was traded through or simply scrolled out of view.`;}
  return `You last looked ${span(Math.round(age))} ago. ${mv}. ${g}`;
 }
 
-/* the small text under the chart: sentences that earn their place */
 function ctx(m){
  const r=m.res;if(!r||!m.fx)return;
  const c=m.c,last=r.last,P=pos(m),n=r.near,L=[['The clock',clock(m)],['Since you last looked',seen(m)]];
@@ -368,8 +296,22 @@ function ctx(m){
  m.fx.innerHTML=L.filter(x=>x[1]).map(x=>`<li><b>${x[0]}.</b>${x[1]}</li>`).join('');
 }
 
-/* ---- the question bank: [level, question, answer]. 0 = new to this, 1 = trader, 2 = worth thinking about.
-   Every answer is read from the loaded candles. None predicts. ---- */
+/* ---- interpretation without prediction: what is unfinished above and below, and where a reading would break ---- */
+function around(m){
+ const r=m.res,l=r.last.c,c=m.c;
+ const up=r.open.filter(g=>g.lo>l).sort((a,b)=>a.lo-b.lo)[0],dn=r.open.filter(g=>g.hi<l).sort((a,b)=>b.hi-a.hi)[0];
+ const sh=r.sh&&!c.slice(r.sh.i+1).some(x=>x.h>r.sh.p)?r.sh:null,sl=r.sl&&!c.slice(r.sl.i+1).some(x=>x.l<r.sl.p)?r.sl:null;
+ const above=[up&&`a ${up.up?'buying':'selling'} gap at ${fmt(up.lo)} to ${fmt(up.hi)}`,sh&&`the swing high at ${fmt(sh.p)}`].filter(Boolean);
+ const below=[dn&&`a ${dn.up?'buying':'selling'} gap at ${fmt(dn.lo)} to ${fmt(dn.hi)}`,sl&&`the swing low at ${fmt(sl.p)}`].filter(Boolean);
+ return{above:above.join(' and ')||'nothing marked',below:below.join(' and ')||'nothing marked'};
+}
+function cond(m){
+ const r=m.res,n=r.near,f=r.fib,P=[];
+ if(n)P.push(`Closes above the gap (${fmt(n.hi)}) would put price clear of it on top; closes below ${fmt(n.lo)}, clear of it underneath. Closes inside it mean it is still undecided.`);
+ if(f)P.push(`On the swing from ${fmt(f.from)} to ${fmt(f.to)}, a close beyond ${fmt(f.from)} would undo the whole swing, and a close beyond ${fmt(f.to)} would extend it. The ${fmt(f.lvl(.705))} line is the deeper retracement mark in between.`);
+ return `Shown: ${sentence(r)} Inferred: price is reacting to the structure around it, though the page cannot see why. ${P.join(' ')||'There is no gap or swing clear enough to build a reading on.'} These are places where the reading changes, not forecasts.`;
+}
+
 const QB=[
  [0,'What does "quiet" or "moving" mean?',m=>{const o=m.res.mo;return (o.k==='still'?'Right now this chart is quiet: price has travelled very little compared with how far a normal candle goes. ':`Right now this chart is ${o.k==='strong'?'moving fast':'moving'} ${o.up?'up':'down'}: ${o.pct.toFixed(2)}% in ${span(o.span)}. `)+'It describes speed. It says nothing about what comes next.'}],
  [0,'What is a gap, in plain words?',LOCAL.gap],
@@ -390,10 +332,18 @@ const QB=[
  [2,'What is one candle on this chart made of?',m=>m.tf===1?'A 1-minute candle is the smallest this page loads. It is also made of smaller moves it cannot see.':`One ${tfl(m.tf)} candle is ${m.tf>=1440?'1,440':m.tf} one-minute candles squeezed into a single body and two wicks. Flip to 1m and 5m and see whether the picture you are reading survives being unpacked.`],
  [2,'What is coming up on the clock?',m=>clock(m,true)+' This page has no news feed, so scheduled releases (rate decisions, jobs data) are not here. A quiet chart before one is not the same as a quiet market.'],
  [2,'What do I think this is, before price answers?',m=>{const k=J.filter(e=>e.k===m.k).length;return `What the page can state: ${sentence(m.res)} What it cannot: why. If you have a read, write it in the journal before you see what price does, so later you can study your reasoning, not just the result. You have ${k} journal ${k===1?'entry':'entries'} on ${m.k}.`}],
- [2,'Which levels here are still untouched?',m=>{const{near:n,sh,sl}=m.res,c=m.c,t=[];if(n)t.push(`the ${n.up?'buying':'selling'} gap at ${fmt(n.lo)} to ${fmt(n.hi)} is ${n.entered?'overlapped but not fully traded through':'untouched'}`);if(sh)t.push(`the swing high at ${fmt(sh.p)} has ${c.slice(sh.i+1).some(x=>x.h>sh.p)?'been taken out':'not been taken out'}`);if(sl)t.push(`the swing low at ${fmt(sl.p)} has ${c.slice(sl.i+1).some(x=>x.l<sl.p)?'been taken out':'not been taken out'}`);return t.length?'In the loaded candles: '+t.join('; ')+'. That is the state of the chart, not a list of places to act.':'No clear gap or swing in these candles yet.'}]
+ [2,'Which levels here are still untouched?',m=>{const{near:n,sh,sl}=m.res,c=m.c,t=[];if(n)t.push(`the ${n.up?'buying':'selling'} gap at ${fmt(n.lo)} to ${fmt(n.hi)} is ${n.entered?'overlapped but not fully traded through':'untouched'}`);if(sh)t.push(`the swing high at ${fmt(sh.p)} has ${c.slice(sh.i+1).some(x=>x.h>sh.p)?'been taken out':'not been taken out'}`);if(sl)t.push(`the swing low at ${fmt(sl.p)} has ${c.slice(sl.i+1).some(x=>x.l<sl.p)?'been taken out':'not been taken out'}`);return t.length?'In the loaded candles: '+t.join('; ')+'. That is the state of the chart, not a list of places to act.':'No clear gap or swing in these candles yet.'}],
+ [2,'Where is price trying to go?',m=>{const a=around(m);return `Nothing on this chart shows intent, only motion and unfinished business. Motion: ${sentence(m.res)} Above price: ${a.above}. Below price: ${a.below}. Those are the places price has left open, not places it is heading.`}],
+ [2,'What do you think happens next?',m=>"I can't know that, but I can give a reading and say what would break it. "+cond(m)],
+ [2,'What would change my mind?',cond],
+ [2,'Why does this gap matter?',m=>{
+  const n=m.res.near,c=m.c;if(!n)return 'There is no open gap, so there is nothing to weigh.';
+  const s=Math.max(0,n.i-14),e=Math.max(0,n.i-2),d=c[e].c-c[s].c,pc=Math.abs(d)/c[s].c*100;
+  const af=c.slice(n.i+1),ins=af.filter(x=>x.c>=n.lo&&x.c<=n.hi).length;
+  return `Shown: before it formed, price ${d>=0?'rose':'fell'} ${pc.toFixed(2)}% over ${span((e-s)*m.tf)}, then jumped, leaving ${dst(m,n.hi-n.lo)} that no candle traded in. Since then (${ago(m,n.i)}) price has ranged ${fmt(Math.min(...af.map(x=>x.l),n.lo))} to ${fmt(Math.max(...af.map(x=>x.h),n.hi))}, and ${ins} of ${af.length} closes landed inside it. Inferred: a fast move left space behind, and the gap is where that move is still unresolved. Uncertain: whether it matters to anyone else. That is your reading.`}]
 ];
 function qpick(m,lv,ex){const all=QB.map((q,i)=>i).filter(i=>QB[i][0]===lv&&!ex.includes(i)),fresh=all.filter(i=>!m.asked.has(i)),p=fresh.length?fresh:all;return p.length?p[Math.random()*p.length|0]:null}
-function qdeal(m){m.qs=[];[0,0,1,1,2].forEach(lv=>{const i=qpick(m,lv,m.qs);if(i!=null)m.qs.push(i)})}
+function qdeal(m){m.qs=[];[0,0,1,1,2,2].forEach(lv=>{const i=qpick(m,lv,m.qs);if(i!=null)m.qs.push(i)})}
 function qrender(m){m.el.querySelector('.qs').innerHTML=m.qs.map((i,j)=>`<button class="chip${QB[i][0]===2?' think':''}" data-qi="${j}">${QB[i][1]}</button>`).join('')+'<button class="chip shuf" data-qi="s">New questions</button>'}
 
 function sysFor(m){
@@ -402,11 +352,17 @@ function sysFor(m){
  const rows=m.c.slice(-30).map(b=>`${new Date(b.t).toISOString().slice(5,16)} ${fmt(b.o)} ${fmt(b.h)} ${fmt(b.l)} ${fmt(b.c)}`).join('\n');
  return `You are the assistant inside MarketBrain, which restores context for a trader. Answer the user's question about the chart they are looking at, in plain friendly language, under 160 words, no markdown. Keep apart what the data shows, what you infer, and what is uncertain whenever it matters. Never predict price, give trade calls or advice, or describe the user's personality. Use only the information below; if asked about something the page cannot see, say so.
 
+HOW TO ANSWER WHEN ASKED WHERE PRICE IS GOING OR WHAT IT IS DOING: not knowing the future is not a reason to skip interpreting the present. Do not open with a disclaimer; if you need one, one short clause. Say what price just did, what unfinished structure sits above and below it, and give an if/then reading with closes beyond specific levels from the data below, plus what would contradict it. Label what the data shows, what you infer, and what is uncertain. Never say where price will go.
+When the old gap is reported as not in the loaded candles, say plainly that it is unknown whether it was traded through.
+
 ${LOGIC}
 
 NOW: ${m.k} (${m.name}), ${tfl(m.tf)} chart. ${sentence(r)}
 Gap: ${gapStateLabel(r)}
 Swing: ${f?`${f.down?'down':'up'} from ${fmt(f.from)} to ${fmt(f.to)}, pulled back ${Math.round(f.back*100)}%, 50% at ${fmt(f.lvl(.5))}, 70.5% at ${fmt(f.lvl(.705))}`:'none clear'}
+Above price: ${around(m).above}. Below price: ${around(m).below}.
+Since last look: ${seen(m)||'not applicable'}
+Reading now: ${cond(m)}
 Feed: ${m.src==='b'?'Binance':'Twelve Data'} ${m.sym}, ${m.c.length} candles.
 LAST 30 CANDLES (UTC month-day hour:minute, open high low close), newest last:
 ${rows}
@@ -442,7 +398,7 @@ async function getCandles(m,tf){
   const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${m.sym}&interval=${T[2]}&limit=300`);
   if(!r.ok)throw'feed';return(await r.json()).map(k=>({t:k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4]}));
  }
- const ck='mb_'+m.k+tf; // Twelve Data: each market and timeframe is kept 15 minutes, so refreshing costs no credits.
+ const ck='mb_'+m.k+tf;
  try{const c=JSON.parse(localStorage.getItem(ck));if(c&&Date.now()-c.at<9e5)return c.d}catch(e){}
  if(!TWELVE_KEY)throw'nokey';
  const j=await(await fetch(`https://api.twelvedata.com/time_series?interval=${T[3]}&outputsize=300&timezone=UTC&symbol=${encodeURIComponent(m.sym)}&apikey=${TWELVE_KEY}`)).json();
@@ -501,11 +457,9 @@ function jrender(m){
 }
 function paint(m){
  const el=m.el,mo=m.res.mo,mv=mo.k!=='still';
- const nextSentence=sentence(m.res),changed=m.s.textContent!==nextSentence;
- m.s.textContent=nextSentence;m.s.classList.remove('w');m.s.classList.toggle('calm',!mv);
- if(changed){m.s.classList.remove('fresh');void m.s.offsetWidth;m.s.classList.add('fresh');}
+ // every card's sentence is dealt together, so no two cards say the same thing
+ refreshSentences();
  el.classList.toggle('up',mv&&mo.up);el.classList.toggle('dn',mv&&!mo.up);el.classList.toggle('strong',mo.k==='strong');
- const lt=m.c[m.c.length-1].t;
  const sk='mb_seen_'+m.k+'_'+m.tf;m.seen=m.seen||{};
  if(!(m.tf in m.seen)){const pv=store.get(sk,null);m.seen[m.tf]=pv;if(!pv||Date.now()-pv.at>12e5)store.set(sk,{at:Date.now(),price:m.res.last.c,g:m.res.near?{lo:m.res.near.lo,hi:m.res.near.hi,up:m.res.near.up}:null})}
  ctx(m);
@@ -552,7 +506,6 @@ for(const m of live){
   if(b.dataset.a==='del'&&confirm('Delete this entry?')){J=J.filter(x=>x!==e);saveJ();jrender(m)}};
  jrender(m);load(m);
 }
-// filters + "where should I look"
 const groups=[...new Set(live.map(m=>m.g))];
 bar.insertAdjacentHTML('afterbegin',['All',...groups].map((g,i)=>`<button class="chip${i?'':' on'}" data-f="${g}">${g}</button>`).join('')+'<button class="go" id="go">Show me what\'s moving</button>');
 bar.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{
@@ -576,7 +529,6 @@ document.getElementById('go').onclick=()=>{
  toggle(pick,true);pick.el.scrollIntoView({behavior:'smooth',block:'center'});
 };
 addEventListener('pointermove',e=>{const l=document.getElementById('lamp').style;l.setProperty('--x',e.clientX+'px');l.setProperty('--y',e.clientY+'px');});
-// the sky: pink, yellow and white take turns; after about a minute a soft grass green settles in at the bottom
 const SKY=[['#ff7ab8','#ffd23f','#ffffff','#ffb08a'],['#ffd23f','#ff7ab8','#ffe3f1','#ffffff'],['#ffffff','#ffcf33','#ff7ab8','#ffd7a8']];
 let tick=0;
 setInterval(()=>{tick++;const p=SKY[tick%SKY.length],bs=document.querySelectorAll('.b');bs.forEach((b,i)=>b.style.backgroundColor=p[i]);if(tick>=5)bs[2].style.backgroundColor='#9ee37d';},12000);
