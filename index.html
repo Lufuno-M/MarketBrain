@@ -130,6 +130,24 @@ main.swap{animation:arrive .55s cubic-bezier(.2,.7,.2,1)}
 #dock .nv,#dock .lbl{display:none}
 body.v-focus #dock .nv{display:block}
 body.v-focus #dock .lbl{display:block;font-size:14px;color:var(--mute);padding:0 6px;white-space:nowrap}
+
+/* marks: crosshair, magnet and drawings sit on the chart, and stay quiet until you reach for them */
+.ch{position:relative}
+.ch .mbc{position:absolute;left:0;top:0;pointer-events:none;z-index:2}
+.dk{position:absolute;left:10px;top:10px;z-index:3;display:flex;flex-wrap:wrap;align-items:center;gap:2px;max-width:calc(100% - 84px);padding:4px;border-radius:22px;background:#ffffff8c;border:1px solid #ffffffd0;backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);box-shadow:inset 0 1px 0 #fff,0 6px 20px #3b1d5a14;opacity:.5;transition:opacity .5s}
+.ch:hover .dk,.dk:focus-within,.ch.drawing .dk,.ch.sel .dk{opacity:1}
+@media (hover:none){.dk{opacity:.92}}
+.dk button{all:unset;cursor:pointer;font-size:13px;font-weight:600;color:var(--mute);padding:6px 11px;border-radius:99px;transition:background .3s,color .3s}
+.dk button:hover{color:var(--ink);background:#ffffffb8}
+.dk button:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.dk button.on{color:var(--ink);background:linear-gradient(90deg,#ffd7ea,#fff0a8)}
+.dk button[hidden]{display:none}
+.dk .dh{font-size:13px;color:var(--mute);padding:0 10px 0 6px}
+.dk .dh:empty{display:none}
+.ch.drawing,.ch.drawing *{cursor:crosshair!important;touch-action:none!important}
+.ch.sel{touch-action:none}
+@media (max-width:560px){.dk{left:6px;top:6px;max-width:calc(100% - 72px)}.dk button{font-size:12px;padding:5px 8px}.dk .dh{font-size:12px;padding:0 6px}}
+.ch.pt,.ch.pt *{cursor:pointer!important}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body class="v-cards">
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div>
@@ -480,6 +498,178 @@ async function ask(m,q){
  try{const t=await callAI(key,sysFor(m),m.hist.slice(-7));m.hist.push({role:'assistant',text:t});w.textContent=t}
  catch(e){m.hist.pop();w.textContent=(e instanceof TypeError?"The browser couldn't reach the AI service. ":"The assistant couldn't answer: ")+(e.message||e)}
 }
+/* ---- marks: the crosshair, the magnet, and your own drawings, on one overlay ---- */
+const MB=(()=>{
+ const INK='#1a1325',PINK='#e0408f',GOLD='#e0a800',FIB=[0,.5,.705,1],FL={0:'0',.5:'50%',.705:'70.5%',1:'100%'};
+ const COARSE=matchMedia('(pointer:coarse)').matches,V=COARSE?'Tap':'Click',FONT='600 11px -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif';
+ const HINT={level:V+' where the level sits',line:V+' the first point',zone:V+' one corner',fib:V+' the start of the swing'};
+ const HINT2={line:V+' the second point',zone:V+' the opposite corner',fib:V+' the end of the swing'};
+ let magnet=store.get('mb_magnet',true),active=null;
+ const key=m=>'mb_dr_'+m.k;
+ // time <-> bar index. Drawings are stored in absolute time, so they survive a change of timeframe.
+ function t2i(m,t){const c=m.c,n=c.length,ms=t*1000,st=m.tf*60000;
+  if(ms>=c[n-1].t)return n-1+(ms-c[n-1].t)/st;
+  if(ms<=c[0].t)return(ms-c[0].t)/st;
+  let lo=0,hi=n-1;while(hi-lo>1){const k=(lo+hi)>>1;c[k].t<=ms?lo=k:hi=k}
+  return lo+(ms-c[lo].t)/(c[lo+1].t-c[lo].t)}
+ function i2t(m,i){const c=m.c,n=c.length,st=m.tf*60000;
+  if(i>=n-1)return(c[n-1].t+(i-(n-1))*st)/1000;
+  if(i<=0)return(c[0].t+i*st)/1000;
+  const lo=Math.floor(i);return(c[lo].t+(i-lo)*(c[lo+1].t-c[lo].t))/1000}
+ const X=(m,t)=>m.chart.timeScale().logicalToCoordinate(t2i(m,t)),Y=(m,p)=>m.sr.priceToCoordinate(p);
+ const geo=m=>{const W=m.dr.el.clientWidth,H=m.dr.el.clientHeight,ps=m.chart.priceScale('right').width()||56,th=m.chart.timeScale().height()||26;return{W,H,ps,th,pw:W-ps,ph:H-th}};
+ const tlab=(m,t)=>m.tf===1440?new Date(t*1000).toLocaleDateString('en-US',{timeZone:'UTC',weekday:'short',day:'numeric',month:'short'}):new Date(t*1000).toLocaleString('en-US',{timeZone:'America/New_York',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})+' NY';
+
+ // the magnet: the bar under the pointer, then the nearest of its open / high / low / close if you are close to it
+ function snap(m,x,y,free){
+  const ts=m.chart.timeScale(),L=ts.coordinateToLogical(x),n=m.c.length;if(L==null)return null;
+  let i=L,sx=x,bar=null;
+  if(!free&&magnet){const r=Math.round(L);if(r>=0&&r<n){i=r;bar=m.c[r];const cx=ts.logicalToCoordinate(r);if(cx!=null)sx=cx}}
+  let p=m.sr.coordinateToPrice(y),sy=y,kind=null;
+  if(bar){let bd=1e9,bv=0,bk=null;for(const[k,v]of[['open',bar.o],['high',bar.h],['low',bar.l],['close',bar.c]]){const vy=Y(m,v);if(vy==null)continue;const dd=Math.abs(vy-y);if(dd<bd){bd=dd;bv=v;bk=k}}
+   if(bk&&bd<=(COARSE?40:24)){p=bv;sy=Y(m,bv);kind=bk}}
+  if(p==null)return null;
+  return{x:sx,y:sy,t:i2t(m,i),p,snapped:!!kind,kind}}
+
+ const seg=(px,py,ax,ay,bx,by)=>{const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;let u=l?((px-ax)*dx+(py-ay)*dy)/l:0;u=Math.max(0,Math.min(1,u));return Math.hypot(px-ax-u*dx,py-ay-u*dy)};
+ const P=(m,o)=>({ax:X(m,o.a.t),ay:Y(m,o.a.p),bx:o.b?X(m,o.b.t):null,by:o.b?Y(m,o.b.p):null});
+ const fl=(o,r)=>o.b.p+(o.a.p-o.b.p)*r;
+
+ function hit(m,x,y){
+  const d=m.dr,g=geo(m),th=COARSE?14:8;if(x>g.pw||y>g.ph)return null;
+  const s=d.list.find(o=>o.id===d.sel);
+  if(s&&s.b){const q=P(m,s);for(const k of['a','b']){const px=k==='a'?q.ax:q.bx,py=k==='a'?q.ay:q.by;if(px!=null&&py!=null&&Math.hypot(x-px,y-py)<=th+2)return{o:s,part:k}}}
+  for(let i=d.list.length-1;i>=0;i--){const o=d.list[i],q=P(m,o);if(q.ax==null||q.ay==null)continue;
+   if(o.type==='level'){if(Math.abs(y-q.ay)<=th&&x>=q.ax-th)return{o,part:'move'};continue}
+   if(q.bx==null||q.by==null)continue;
+   if(o.type==='line'&&seg(x,y,q.ax,q.ay,q.bx,q.by)<=th)return{o,part:'move'};
+   if(o.type==='zone'&&x>=Math.min(q.ax,q.bx)-th&&x<=Math.max(q.ax,q.bx)+th&&y>=Math.min(q.ay,q.by)-th&&y<=Math.max(q.ay,q.by)+th)return{o,part:'move'};
+   if(o.type==='fib'&&x>=Math.min(q.ax,q.bx)-th)for(const r of FIB){const yy=Y(m,fl(o,r));if(yy!=null&&Math.abs(y-yy)<=th)return{o,part:'move'}}}
+  return null}
+
+ function pill(x,txt,cx,cy,w,h,fill,col){x.fillStyle=fill;x.beginPath();x.roundRect?x.roundRect(cx-w/2,cy-h/2,w,h,5):x.rect(cx-w/2,cy-h/2,w,h);x.fill();x.fillStyle=col;x.textAlign='center';x.textBaseline='middle';x.fillText(txt,cx,cy+.5)}
+
+ function one(m,x,o,g,sel,al,axis){
+  const q=P(m,o);if(q.ax==null||q.ay==null)return;x.globalAlpha=al;x.setLineDash([]);x.lineWidth=1.5;
+  const hd=(px,py)=>{x.globalAlpha=1;x.fillStyle='#fff';x.strokeStyle=INK;x.lineWidth=1.5;x.beginPath();x.arc(px,py,COARSE?7:5,0,7);x.fill();x.stroke()};
+  if(o.type==='level'){x.strokeStyle=INK;x.beginPath();x.moveTo(q.ax,q.ay);x.lineTo(g.pw,q.ay);x.stroke();x.fillStyle=INK;x.beginPath();x.arc(q.ax,q.ay,3,0,7);x.fill();axis.push({y:q.ay,t:fmt(o.a.p),f:INK});if(sel)hd(q.ax,q.ay);return}
+  if(q.bx==null||q.by==null)return;
+  if(o.type==='line'){x.strokeStyle=INK;x.beginPath();x.moveTo(q.ax,q.ay);x.lineTo(q.bx,q.by);x.stroke()}
+  if(o.type==='zone'){const l=Math.min(q.ax,q.bx),t=Math.min(q.ay,q.by),w=Math.abs(q.bx-q.ax),h=Math.abs(q.by-q.ay);x.fillStyle='rgba(255,196,0,.17)';x.fillRect(l,t,w,h);x.strokeStyle=GOLD;x.lineWidth=1.2;x.strokeRect(l,t,w,h)}
+  if(o.type==='fib'){const x0=Math.min(q.ax,q.bx);x.strokeStyle=PINK;x.lineWidth=1;x.globalAlpha=al*.5;x.setLineDash([3,4]);x.beginPath();x.moveTo(q.ax,q.ay);x.lineTo(q.bx,q.by);x.stroke();x.globalAlpha=al;
+   x.font=FONT;x.textAlign='left';x.textBaseline='alphabetic';
+   for(const r of FIB){const yy=Y(m,fl(o,r));if(yy==null)continue;x.setLineDash(r===0||r===1?[]:[6,4]);x.strokeStyle=PINK;x.beginPath();x.moveTo(x0,yy);x.lineTo(g.pw,yy);x.stroke();x.setLineDash([]);x.fillStyle=PINK;x.fillText(FL[r]+'  '+fmt(fl(o,r)),x0+6,yy-5);if(r===.5||r===.705)axis.push({y:yy,t:fmt(fl(o,r)),f:PINK})}}
+  if(sel){hd(q.ax,q.ay);hd(q.bx,q.by)}}
+
+ function render(m){
+  const d=m.dr;if(!d||!m.c||!m.c.length)return;
+  const g=geo(m),dpr=devicePixelRatio||1,cv=d.cv,W=Math.round(g.W*dpr),H=Math.round(g.H*dpr);
+  if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;cv.style.width=g.W+'px';cv.style.height=g.H+'px'}
+  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,g.W,g.H);
+  const axis=[];x.save();x.beginPath();x.rect(0,0,g.pw,g.ph);x.clip();
+  for(const o of d.list)one(m,x,o,g,o.id===d.sel,1,axis);
+  if(d.ghost)one(m,x,d.ghost,g,false,.6,[]);
+  x.restore();x.globalAlpha=1;x.setLineDash([]);x.font=FONT;
+  for(const a of axis)if(a.y>6&&a.y<g.ph-6)pill(x,a.t,g.pw+g.ps/2,a.y,g.ps-4,18,a.f,'#fff');
+  // the crosshair: runs the whole way across and down, resting on a wick when the magnet finds one
+  const mo=d.mouse;
+  if(mo&&mo.x>=0&&mo.y>=0&&mo.x<=g.pw&&mo.y<=g.ph){
+   const s=d.pt=snap(m,mo.x,mo.y,d.free);
+   if(s){x.strokeStyle='rgba(26,19,37,.55)';x.lineWidth=1;x.setLineDash([4,4]);x.beginPath();x.moveTo(s.x+.5,0);x.lineTo(s.x+.5,g.ph);x.moveTo(0,s.y+.5);x.lineTo(g.pw,s.y+.5);x.stroke();x.setLineDash([]);
+    if(s.snapped){x.fillStyle='#fff';x.strokeStyle=PINK;x.lineWidth=2;x.beginPath();x.arc(s.x,s.y,4.5,0,7);x.fill();x.stroke()}
+    pill(x,fmt(s.p),g.pw+g.ps/2,Math.max(9,Math.min(g.ph-9,s.y)),g.ps-4,18,INK,'#fff');
+    const tl=tlab(m,s.t),tw=x.measureText(tl).width+14;pill(x,tl,Math.max(tw/2,Math.min(g.pw-tw/2,s.x)),g.ph+Math.min(g.th,22)/2+1,tw,Math.min(g.th,22)-2,INK,'#fff')}
+  }else d.pt=null;
+ }
+
+ function save(m){store.set(key(m),m.dr.list.slice(-80))}
+ function ui(m){
+  const d=m.dr,dk=d.dk;
+  dk.querySelectorAll('[data-d]').forEach(b=>{const k=b.dataset.d;
+   if(k==='mag')b.classList.toggle('on',magnet);
+   else if(k==='del')b.hidden=!d.sel;
+   else if(k==='clr')b.hidden=!d.list.length;
+   else b.classList.toggle('on',d.tool===k)});
+  dk.querySelector('.dh').textContent=d.tool?(d.pend?HINT2[d.tool]:HINT[d.tool]):d.sel&&!COARSE?'Drag to move · Delete removes':'';
+  d.el.classList.toggle('drawing',!!d.tool);d.el.classList.toggle('sel',!!d.sel);d.dirty=true}
+ function commit(m,type,a,b){const d=m.dr,o={id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),type,a:{t:a.t,p:a.p}};if(b)o.b={t:b.t,p:b.p};d.list.push(o);d.sel=o.id;d.tool=null;d.pend=null;d.ghost=null;d.down=null;save(m);ui(m)}
+ function remove(m){const d=m.dr;d.list=d.list.filter(o=>o.id!==d.sel);d.sel=null;save(m);ui(m)}
+ function cancel(m){const d=m.dr;d.pend=null;d.ghost=null;d.tool=null;d.sel=null;d.down=null;d.drag=null;d.hold=false;ui(m)}
+
+ function attach(m){
+  const el=m.el.querySelector('.ch');
+  const d=m.dr={el,list:store.get(key(m),[]),sel:null,tool:null,pend:null,ghost:null,mouse:null,down:null,drag:null,hold:false,free:false,dirty:true,sig:'',pt:null};
+  d.cv=el.appendChild(Object.assign(document.createElement('canvas'),{className:'mbc'}));
+  el.insertAdjacentHTML('beforeend','<div class="dk" role="toolbar" aria-label="Chart marks"><button data-d="mag" title="Snap to the open, high, low and close (M). Hold Alt to place freely.">Magnet</button><button data-d="level">Level</button><button data-d="line">Line</button><button data-d="zone">Zone</button><button data-d="fib">Fib</button><button data-d="del" hidden>Remove</button><button data-d="clr" hidden>Clear</button><span class="dh"></span></div>');
+  d.dk=el.querySelector('.dk');
+  const pos=e=>{const r=el.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
+  const ghost=(p)=>{const a=d.pend||(d.down&&Math.hypot(p.x-d.down.x,p.y-d.down.y)>6?d.down.pt:null);if(a&&d.tool!=='level'){const b=snap(m,p.x,p.y,d.free);d.ghost=b?{type:d.tool,a,b}:null}else d.ghost=null};
+  d.dk.addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;const k=b.dataset.d;
+   if(k==='mag'){magnet=!magnet;store.set('mb_magnet',magnet);live.forEach(x=>x.dr&&ui(x))}
+   else if(k==='del'){if(d.sel)remove(m)}
+   else if(k==='clr'){if(d.list.length&&confirm('Clear all your marks on '+m.k+'?')){d.list=[];save(m);cancel(m)}}
+   else{d.tool=d.tool===k?null:k;d.pend=null;d.ghost=null;d.sel=null;ui(m)}});
+  el.addEventListener('pointerenter',()=>{active=m});
+  el.addEventListener('pointerleave',()=>{if(!d.hold){d.mouse=null;d.dirty=true}});
+  el.addEventListener('pointermove',e=>{
+   if(e.target.closest('.dk')){d.mouse=null;d.dirty=true;return}
+   const p=pos(e);d.free=e.altKey;active=m;
+   if(e.pointerType!=='touch'||d.tool||d.hold)d.mouse=p;else d.mouse=null;
+   if(d.drag){
+    const dr=d.drag,o=d.list.find(z=>z.id===dr.id);
+    if(o){if(Math.hypot(p.x-dr.x0,p.y-dr.y0)>2)dr.moved=true;
+     if(dr.part==='move'){const L=m.chart.timeScale().coordinateToLogical(p.x),pr=m.sr.coordinateToPrice(p.y);
+      if(L!=null&&pr!=null)for(const k of['a','b'])if(o[k]&&dr.o[k])o[k]={t:i2t(m,dr.o[k].i+(L-dr.L0)),p:dr.o[k].p+(pr-dr.P0)}}
+     else{const s=snap(m,p.x,p.y,d.free);if(s)o[dr.part]={t:s.t,p:s.p}}}
+   }else if(d.tool)ghost(p);
+   else if(!d.hold)el.classList.toggle('pt',!!hit(m,p.x,p.y));
+   d.dirty=true});
+  el.addEventListener('pointerdown',e=>{
+   if(e.target.closest('.dk')||(e.pointerType==='mouse'&&e.button!==0))return;
+   const p=pos(e);d.free=e.altKey;d.mouse=p;
+   if(d.tool){e.preventDefault();e.stopPropagation();d.hold=true;d.down={x:p.x,y:p.y,pt:snap(m,p.x,p.y,d.free)};try{el.setPointerCapture(e.pointerId)}catch(_){}d.dirty=true;return}
+   const h=hit(m,p.x,p.y);
+   if(h){e.preventDefault();e.stopPropagation();d.hold=true;d.sel=h.o.id;
+    const ts=m.chart.timeScale();d.drag={id:h.o.id,part:h.part,x0:p.x,y0:p.y,moved:false,L0:ts.coordinateToLogical(p.x),P0:m.sr.coordinateToPrice(p.y),o:{a:{i:t2i(m,h.o.a.t),p:h.o.a.p},b:h.o.b&&{i:t2i(m,h.o.b.t),p:h.o.b.p}}};
+    try{el.setPointerCapture(e.pointerId)}catch(_){}ui(m)}
+   else if(d.sel){d.sel=null;ui(m)}
+  },true);
+  // the chart library listens for mouse and touch events; while a mark is being placed or dragged, it must not also pan
+  ['mousedown','touchstart'].forEach(t=>el.addEventListener(t,e=>{if(d.hold&&!e.target.closest('.dk'))e.stopPropagation()},true));
+  const up=e=>{
+   if(!d.hold)return;d.hold=false;try{el.releasePointerCapture(e.pointerId)}catch(_){}
+   if(d.drag){if(d.drag.moved)save(m);d.drag=null;d.dirty=true;return}
+   if(d.tool&&d.down){const p=pos(e),dn=d.down,t=d.tool;
+    if(!dn.pt){d.down=null;return}
+    if(t==='level')commit(m,t,dn.pt);
+    else if(d.pend){const b=snap(m,p.x,p.y,d.free);if(b&&(b.t!==d.pend.t||b.p!==d.pend.p))commit(m,t,d.pend,b)}
+    else if(Math.hypot(p.x-dn.x,p.y-dn.y)>6){const b=snap(m,p.x,p.y,d.free);if(b)commit(m,t,dn.pt,b)}
+    else{d.pend=dn.pt;ui(m)}
+    d.down=null;d.dirty=true}};
+  el.addEventListener('pointerup',up);
+  el.addEventListener('pointercancel',e=>{d.hold=false;d.drag=null;d.down=null;d.dirty=true});
+  ui(m);
+ }
+ addEventListener('keydown',e=>{
+  const m=active;if(!m||!m.dr||!m.el.classList.contains('open')||e.target.closest&&e.target.closest('input,textarea,select,[contenteditable]'))return;
+  const d=m.dr;
+  if(e.key==='Escape'&&(d.tool||d.pend||d.sel))cancel(m);
+  else if((e.key==='Delete'||e.key==='Backspace')&&d.sel){e.preventDefault();remove(m)}
+  else if((e.key==='z'||e.key==='Z')&&(e.ctrlKey||e.metaKey)&&d.list.length){e.preventDefault();d.list.pop();d.sel=null;save(m);ui(m)}
+  else if((e.key==='m'||e.key==='M')&&!e.ctrlKey&&!e.metaKey&&!e.altKey){magnet=!magnet;store.set('mb_magnet',magnet);live.forEach(x=>x.dr&&ui(x))}
+  else if(e.key==='Alt'){d.free=true;d.dirty=true}
+ });
+ addEventListener('keyup',e=>{if(e.key==='Alt')live.forEach(x=>{if(x.dr){x.dr.free=false;x.dr.dirty=true}})});
+ // the overlay follows the chart: redraw whenever the scale, the pan, the size or the data moves
+ (function loop(){
+  for(const m of live){const d=m.dr;if(!d||!m.chart||!m.c||!m.c.length||!m.el.classList.contains('open'))continue;
+   const vr=m.chart.timeScale().getVisibleLogicalRange(),ref=m.c[m.c.length-1];
+   const sig=[d.el.clientWidth,d.el.clientHeight,vr&&vr.from.toFixed(3),vr&&vr.to.toFixed(3),m.sr.priceToCoordinate(ref.c),m.sr.priceToCoordinate(ref.c*1.01),m.c.length,ref.t,m.tf,m.chart.priceScale('right').width()].join('|');
+   if(d.dirty||sig!==d.sig){d.sig=sig;d.dirty=false;render(m)}}
+  requestAnimationFrame(loop)})();
+ return{attach,touch:m=>{if(m.dr){m.dr.pend=null;m.dr.ghost=null;m.dr.dirty=true}}};
+})();
+
 function draw(m){
  if(!m.sr||!m.res)return;
  m.lines.forEach(l=>m.sr.removePriceLine(l));m.lines=[];
@@ -505,7 +695,7 @@ function paint(m){
  ctx(m);
 
  m.days=new Map();m.c.forEach(x=>{const d=day(x.t/1000);if(!m.days.has(d))m.days.set(d,x.t/1000)});
- if(m.chart){m.chart.applyOptions({timeScale:{timeVisible:m.tf<1440}});m.sr.setData(m.c.map(x=>({time:x.t/1000,open:x.o,high:x.h,low:x.l,close:x.c})));draw(m);jrender(m);m.chart.timeScale().setVisibleLogicalRange({from:Math.max(0,m.c.length-90),to:m.c.length+6});m.show_(m.c[m.c.length-1]);}
+ if(m.chart){m.chart.applyOptions({timeScale:{timeVisible:m.tf<1440}});m.sr.setData(m.c.map(x=>({time:x.t/1000,open:x.o,high:x.h,low:x.l,close:x.c})));draw(m);jrender(m);m.chart.timeScale().setVisibleLogicalRange({from:Math.max(0,m.c.length-90),to:m.c.length+6});m.show_(m.c[m.c.length-1]);MB.touch(m);}
 }
 async function load(m){
  try{m.c=await getCandles(m,m.tf);m.res=read(m.c,m.tf);m.lastUpdated=Date.now();paint(m);}
@@ -516,28 +706,14 @@ function toggle(m,force){
  if(o&&m.res){const k=m.res.mo.k;if(k==='strong')buzz([40,70,40]);else if(k==='moving')buzz(25);}
  if(o&&m.res&&!m.chart){
   const rd=m.el.querySelector('.rd');
-  // Normal mode: the library no longer snaps to the close. The page snaps to open/high/low/close itself, so wick tips are reachable.
-  const pr=m.res.last.c<10?5:m.res.last.c<1000?3:2,CM=LightweightCharts.CrosshairMode.Normal,ln={color:'#1a1325',width:1,style:3,labelBackgroundColor:'#1a1325'};
+  // The library's crosshair only feeds the readout below. The visible crosshair, the magnet and the drawings are the page's own overlay (MB).
+  const pr=m.res.last.c<10?5:m.res.last.c<1000?3:2,CM=LightweightCharts.CrosshairMode.Normal,ln={visible:false,labelVisible:false};
   const nyd=(t,o)=>new Date(t*1000).toLocaleString('en-US',Object.assign({timeZone:'America/New_York'},o));
   m.chart=LightweightCharts.createChart(m.el.querySelector('.ch'),{autoSize:true,layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479',fontSize:12},grid:{vertLines:{color:'#ffffff55'},horzLines:{color:'#ffffffa0'}},crosshair:{mode:CM,vertLine:ln,horzLine:ln},rightPriceScale:{borderVisible:false,scaleMargins:{top:.12,bottom:.12}},timeScale:{timeVisible:m.tf<1440,borderVisible:false,rightOffset:6,tickMarkFormatter:(t,ty)=>m.tf===1440?new Date(t*1000).toLocaleDateString('en-US',{timeZone:'UTC',day:'numeric',month:'short'}):ty<3?nyd(t,{day:'numeric',month:'short'}):nyd(t,{hour:'2-digit',minute:'2-digit',hour12:false})},localization:{timeFormatter:t=>m.tf===1440?nice(day(t)):nyd(t,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})+' NY'}});
   m.sr=m.chart.addCandlestickSeries({upColor:'#ff5fa8',downColor:'#ffc400',borderVisible:false,wickUpColor:'#ff5fa8',wickDownColor:'#e0a800',priceFormat:{type:'price',precision:pr,minMove:1/10**pr},priceLineColor:'#1a1325',priceLineStyle:0});
   m.show_=b=>{if(!b)return;const t=b.t||b.time*1000,o=b.o??b.open,h=b.h??b.high,l=b.l??b.low,c=b.c??b.close,Z=m.c[m.c.length-1].c;rd.innerHTML=`<b>${m.tf===1440?nice(day(t/1000)):ny(t)}</b> · open ${fmt(o)} · high ${fmt(h)} · low ${fmt(l)} · close ${fmt(c)} · body ${c>=o?'up':'down'} ${dst(m,c-o)} · range ${dst(m,h-l)} · ${same(Z,c)?'this is the latest close':'close is '+dst(m,Z-c)+(c<Z?' below':' above')+' the latest close'}`};
-  let snapped=null;
-  m.chart.subscribeCrosshairMove(p=>{
-   const b=p.time&&p.seriesData.get(m.sr);
-   m.show_(b||m.c[m.c.length-1]);
-   if(!p.time){snapped=null;return}
-   if(!b||!p.point)return;
-   // snap to whichever of open / high / low / close is nearest the pointer
-   let best=b.close,bd=Infinity;
-   for(const v of [b.open,b.high,b.low,b.close]){
-    const y=m.sr.priceToCoordinate(v);if(y==null)continue;
-    const d=Math.abs(y-p.point.y);if(d<bd){bd=d;best=v}
-   }
-   if(snapped&&snapped.t===p.time&&snapped.v===best)return; // already there, avoids a feedback loop
-   snapped={t:p.time,v:best};
-   m.chart.setCrosshairPosition(best,p.time,m.sr);
-  });
+  m.chart.subscribeCrosshairMove(p=>{const b=p.time&&p.seriesData.get(m.sr);m.show_(b||m.c[m.c.length-1])});
+  MB.attach(m);
   m.chart.subscribeClick(p=>{if(!p.time)return;m.sel=day(p.time);m.el.querySelector('input[type=date]').value=m.sel;jrender(m)});
   paint(m);
  }
