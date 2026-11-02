@@ -516,12 +516,28 @@ function toggle(m,force){
  if(o&&m.res){const k=m.res.mo.k;if(k==='strong')buzz([40,70,40]);else if(k==='moving')buzz(25);}
  if(o&&m.res&&!m.chart){
   const rd=m.el.querySelector('.rd');
-  const pr=m.res.last.c<10?5:m.res.last.c<1000?3:2,CM=LightweightCharts.CrosshairMode.Magnet,ln={color:'#1a1325',width:1,style:3,labelBackgroundColor:'#1a1325'};
+  // Normal mode: the library no longer snaps to the close. The page snaps to open/high/low/close itself, so wick tips are reachable.
+  const pr=m.res.last.c<10?5:m.res.last.c<1000?3:2,CM=LightweightCharts.CrosshairMode.Normal,ln={color:'#1a1325',width:1,style:3,labelBackgroundColor:'#1a1325'};
   const nyd=(t,o)=>new Date(t*1000).toLocaleString('en-US',Object.assign({timeZone:'America/New_York'},o));
   m.chart=LightweightCharts.createChart(m.el.querySelector('.ch'),{autoSize:true,layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479',fontSize:12},grid:{vertLines:{color:'#ffffff55'},horzLines:{color:'#ffffffa0'}},crosshair:{mode:CM,vertLine:ln,horzLine:ln},rightPriceScale:{borderVisible:false,scaleMargins:{top:.12,bottom:.12}},timeScale:{timeVisible:m.tf<1440,borderVisible:false,rightOffset:6,tickMarkFormatter:(t,ty)=>m.tf===1440?new Date(t*1000).toLocaleDateString('en-US',{timeZone:'UTC',day:'numeric',month:'short'}):ty<3?nyd(t,{day:'numeric',month:'short'}):nyd(t,{hour:'2-digit',minute:'2-digit',hour12:false})},localization:{timeFormatter:t=>m.tf===1440?nice(day(t)):nyd(t,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})+' NY'}});
   m.sr=m.chart.addCandlestickSeries({upColor:'#ff5fa8',downColor:'#ffc400',borderVisible:false,wickUpColor:'#ff5fa8',wickDownColor:'#e0a800',priceFormat:{type:'price',precision:pr,minMove:1/10**pr},priceLineColor:'#1a1325',priceLineStyle:0});
   m.show_=b=>{if(!b)return;const t=b.t||b.time*1000,o=b.o??b.open,h=b.h??b.high,l=b.l??b.low,c=b.c??b.close,Z=m.c[m.c.length-1].c;rd.innerHTML=`<b>${m.tf===1440?nice(day(t/1000)):ny(t)}</b> · open ${fmt(o)} · high ${fmt(h)} · low ${fmt(l)} · close ${fmt(c)} · body ${c>=o?'up':'down'} ${dst(m,c-o)} · range ${dst(m,h-l)} · ${same(Z,c)?'this is the latest close':'close is '+dst(m,Z-c)+(c<Z?' below':' above')+' the latest close'}`};
-  m.chart.subscribeCrosshairMove(p=>{const b=p.time&&p.seriesData.get(m.sr);m.show_(b||m.c[m.c.length-1])});
+  let snapped=null;
+  m.chart.subscribeCrosshairMove(p=>{
+   const b=p.time&&p.seriesData.get(m.sr);
+   m.show_(b||m.c[m.c.length-1]);
+   if(!p.time){snapped=null;return}
+   if(!b||!p.point)return;
+   // snap to whichever of open / high / low / close is nearest the pointer
+   let best=b.close,bd=Infinity;
+   for(const v of [b.open,b.high,b.low,b.close]){
+    const y=m.sr.priceToCoordinate(v);if(y==null)continue;
+    const d=Math.abs(y-p.point.y);if(d<bd){bd=d;best=v}
+   }
+   if(snapped&&snapped.t===p.time&&snapped.v===best)return; // already there, avoids a feedback loop
+   snapped={t:p.time,v:best};
+   m.chart.setCrosshairPosition(best,p.time,m.sr);
+  });
   m.chart.subscribeClick(p=>{if(!p.time)return;m.sel=day(p.time);m.el.querySelector('input[type=date]').value=m.sel;jrender(m)});
   paint(m);
  }
