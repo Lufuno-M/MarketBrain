@@ -174,6 +174,18 @@ const MARKETS=[
  {g:'Crypto',k:'BNB',name:'BNB',src:'b',sym:'BNBUSDT',tv:'BINANCE:BNBUSDT'},
  {g:'Crypto',k:'XRP',name:'XRP',src:'b',sym:'XRPUSDT',tv:'BINANCE:XRPUSDT'},
  {g:'Crypto',k:'DOGE',name:'Dogecoin',src:'b',sym:'DOGEUSDT',tv:'BINANCE:DOGEUSDT'},
+ {g:'Crypto',k:'PEPE',name:'Pepe',src:'b',sym:'PEPEUSDT',tv:'BINANCE:PEPEUSDT'},
+ {g:'Crypto',k:'SHIB',name:'Shiba Inu',src:'b',sym:'SHIBUSDT',tv:'BINANCE:SHIBUSDT'},
+ {g:'Crypto',k:'BONK',name:'Bonk',src:'b',sym:'BONKUSDT',tv:'BINANCE:BONKUSDT'},
+ {g:'Crypto',k:'FLOKI',name:'Floki',src:'b',sym:'FLOKIUSDT',tv:'BINANCE:FLOKIUSDT'},
+ {g:'Crypto',k:'WIF',name:'dogwifhat',src:'b',sym:'WIFUSDT',tv:'BINANCE:WIFUSDT'},
+ {g:'Crypto',k:'POPCAT',name:'Popcat',src:'b',sym:'POPCATUSDT',tv:'BINANCE:POPCATUSDT',on:false},
+ {g:'Crypto',k:'JUP',name:'Jupiter',src:'b',sym:'JUPUSDT',tv:'BINANCE:JUPUSDT',on:false},
+ {g:'Crypto',k:'RAY',name:'Raydium',src:'b',sym:'RAYUSDT',tv:'BINANCE:RAYUSDT',on:false},
+ {g:'Crypto',k:'SUI',name:'Sui',src:'b',sym:'SUIUSDT',tv:'BINANCE:SUIUSDT',on:false},
+ {g:'Crypto',k:'AVAX',name:'Avalanche',src:'b',sym:'AVAXUSDT',tv:'BINANCE:AVAXUSDT',on:false},
+ {g:'Crypto',k:'LINK',name:'Chainlink',src:'b',sym:'LINKUSDT',tv:'BINANCE:LINKUSDT',on:false},
+ {g:'Crypto',k:'DOT',name:'Polkadot',src:'b',sym:'DOTUSDT',tv:'BINANCE:DOTUSDT',on:false},
  {g:'Crypto',k:'ADA',name:'Cardano',src:'b',sym:'ADAUSDT',tv:'BINANCE:ADAUSDT',on:false},
  {g:'Crypto',k:'AVAX',name:'Avalanche',src:'b',sym:'AVAXUSDT',tv:'BINANCE:AVAXUSDT',on:false},
  {g:'Crypto',k:'LINK',name:'Chainlink',src:'b',sym:'LINKUSDT',tv:'BINANCE:LINKUSDT',on:false},
@@ -211,12 +223,91 @@ let J=store.get('mb_journal',[]);const saveJ=()=>store.set('mb_journal',J);
 const hsh=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
 const cap=s=>s[0].toUpperCase()+s.slice(1);
 
+/* ---- evidence coverage: dates, candle provenance and metric definitions ---- */
+const NY_ZONE='America/New_York',EXT_MAX=3000;
+const nyDay=t=>new Date(t).toLocaleDateString('en-CA',{timeZone:NY_ZONE});
+const ny24=t=>new Date(t).toLocaleString('en-US',{timeZone:NY_ZONE,month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).replace(',','');
+const t24=(m,t)=>m.tf===1440?new Date(t).toISOString().slice(0,10)+' UTC date':ny24(t)+' New York time';
+// Convert a New York calendar-day midnight into UTC without hard-coding daylight-saving offsets.
+function nyMidnightMs(day){
+ const [y,mo,d]=day.split('-').map(Number),target=Date.UTC(y,mo-1,d);let guess=target;
+ const f=new Intl.DateTimeFormat('en-CA',{timeZone:NY_ZONE,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+ for(let i=0;i<3;i++){const p=Object.fromEntries(f.formatToParts(new Date(guess)).filter(x=>x.type!=='literal').map(x=>[x.type,+x.value]));const represented=Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second);guess+=target-represented;}
+ return guess;
+}
+// Recognises explicit calendar dates only. A single date means that calendar day; two or more define a range.
+function askedDays(q){
+ const s=q.toLowerCase(),today=nyDay(Date.now()),Y=+today.slice(0,4),out=[];
+ const M='(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sept|sep|october|oct|november|nov|december|dec)';
+ const add=(mo,d,y)=>{if(mo<0||d<1||d>31)return;let yy=y||Y,k=yy+'-'+String(mo+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');if(!y&&k>today){yy--;k=yy+'-'+String(mo+1).padStart(2,'0')+'-'+String(d).padStart(2,'0')}const dt=new Date(k+'T00:00:00Z');if(dt.getUTCFullYear()===yy&&dt.getUTCMonth()===mo&&dt.getUTCDate()===d)out.push(k)};
+ for(const x of s.matchAll(new RegExp('\\b'+M+'\\.?\\s+(\\d{1,2})(?!\\d)','g')))add('jan feb mar apr may jun jul aug sep oct nov dec'.split(' ').indexOf(x[1].slice(0,3)),+x[2]);
+ for(const x of s.matchAll(new RegExp('\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?'+M+'\\b','g')))add('jan feb mar apr may jun jul aug sep oct nov dec'.split(' ').indexOf(x[2].slice(0,3)),+x[1]);
+ for(const x of s.matchAll(/\b(\d{4})-(\d{2})-(\d{2})\b/g))add(+x[2]-1,+x[3],+x[1]);
+ if(!out.length)return null;out.sort();return[out[0],out[out.length-1]];
+}
+// Binance extension only. Never silently spend Twelve Data credits.
+async function older(m,start){
+ const T=TFS.find(t=>t[1]===m.tf),st=m.tf*60000,end=m.c[0].t-1,out=[];let from=start;
+ while(from<end&&out.length<EXT_MAX){
+  const limit=Math.min(1000,EXT_MAX-out.length);
+  const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${encodeURIComponent(m.sym)}&interval=${T[2]}&startTime=${from}&endTime=${end}&limit=${limit}`);
+  if(!r.ok)throw new Error('feed');const k=await r.json();if(!k.length)break;
+  k.forEach(x=>out.push({t:x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4]}));from=k[k.length-1][0]+st;
+ }
+ return out.sort((a,b)=>a.t-b.t);
+}
+async function windowFor(m,q){
+ const w=askedDays(q);if(!w)return m.win||null;
+ const c=m.c,st=m.tf*60000,win={from:w[0],to:w[1],ext:[],note:''};
+ if(w[0]<nyDay(c[0].t)){
+  if(m.src!=='b')win.note=`Earlier candles were not fetched: ${m.sym} uses Twelve Data, and extending history would consume API credits.`;
+  else{
+   const start=nyMidnightMs(w[0]),need=Math.ceil((c[0].t-start)/st);
+   if(need>EXT_MAX)win.note=`Earlier candles were not fetched: the requested start is about ${need} candles back, beyond the ${EXT_MAX}-candle extension limit.`;
+   else try{win.ext=await older(m,start);if(!win.ext.length)win.note='The price feed returned no earlier candles for this period.'}catch(e){win.note='The price feed could not return the earlier candles.'}
+  }
+ }
+ return m.win=win;
+}
+function winInfo(m,win){
+ const all=win.ext.concat(m.c).sort((a,b)=>a.t-b.t),T=tfl(m.tf),inW=all.filter(x=>{const d=nyDay(x.t);return d>=win.from&&d<=win.to});let s;
+ if(!inW.length)s=`No ${T} candles are available for ${win.from} to ${win.to} (New York calendar days).`;
+ else{
+  s=`${win.from} to ${win.to} (New York calendar days): ${inW.length} ${T} candles, from ${t24(m,inW[0].t)} through ${t24(m,inW[inW.length-1].t)}.`;
+  if(nyDay(inW[0].t)>win.from)s+=' The beginning of the requested period is missing.';
+  if(nyDay(inW[inW.length-1].t)<win.to)s+=' The available candles do not reach the end of the requested period.';
+  if(m.src==='b'){const step=m.tf*60000,gaps=inW.slice(1).filter((x,i)=>x.t-inW[i].t>step*1.5).length;if(gaps)s+=` There are ${gaps} internal gaps in the Binance candle sequence; the missing intervals are not reconstructed.`;}
+ }
+ if(win.ext.length)s+=` ${win.ext.length} additional earlier candles were fetched for this question; they are separate from the candles currently drawn on the chart.`;
+ if(win.note)s+=' '+win.note;
+ return{inW,line:s};
+}
+function digest(m,c,max){
+ const k=Math.max(1,Math.ceil(c.length/max)),rows=[];
+ for(let i=0;i<c.length;i+=k){const g=c.slice(i,i+k);rows.push(`${t24(m,g[0].t)} ${fmt(g[0].o)} ${fmt(Math.max(...g.map(x=>x.h)))} ${fmt(Math.min(...g.map(x=>x.l)))} ${fmt(g[g.length-1].c)}`)}
+ return{rows:rows.join('\n'),k};
+}
+function evidence(m,win){
+ const c=m.c,T=tfl(m.tf),mo=m.res.mo,R=m.res,L=[],w=win&&winInfo(m,win);
+ L.push('EVIDENCE PROVENANCE: generated by the page from its actual candle arrays. The chart-loaded candles and any extra historical candles fetched for a question are identified separately.');
+ L.push(`Instrument: ${m.k} (${m.name}); source: ${m.src==='b'?'Binance':'Twelve Data'}; provider symbol: ${m.sym}; timeframe: ${T}.`);
+ L.push(`Candles drawn on the chart: ${c.length}; first ${t24(m,c[0].t)}; latest ${t24(m,c[c.length-1].t)}; nominal span ${span(c.length*m.tf)}.`);
+ if(w){L.push(`REQUESTED PERIOD COVERAGE: ${w.line}`);L.push('If any part of the requested period is unavailable, state that limitation before interpreting it. Do not fill missing periods with assumptions.');}
+ L.push('METRIC DEFINITIONS — do not merge these measurements:');
+ if(mo.k!=='still'&&Number.isFinite(mo.a)&&Number.isFinite(mo.b))L.push(`- Headline movement ${mo.pct.toFixed(2)}%: absolute percentage change from close ${fmt(mo.b)} at ${t24(m,mo.bt)} to close ${fmt(mo.a)} at ${t24(m,mo.at)}; ${LOOK} candle intervals (${span(mo.span)}). Formula: abs(latest close - base close) / base close × 100. Direction: ${mo.up?'up':'down'}. This is not the swing range.`);
+ if(R.sh&&R.sl)L.push(`- Detected swing-extreme range: high ${fmt(R.sh.p)} at ${t24(m,c[R.sh.i].t)} and low ${fmt(R.sl.p)} at ${t24(m,c[R.sl.i].t)}; percentage = abs(high-low) / higher price × 100 = ${(Math.abs(R.sh.p-R.sl.p)/Math.max(R.sh.p,R.sl.p)*100).toFixed(2)}%. This is a separate calculation.`);
+ const b=digest(m,c,40);L.push(`ALL CHART-LOADED CANDLES${b.k>1?`, aggregated into consecutive groups of ${b.k} candles`:''} (each row: first time, first open, group high, group low, last close):\n${b.rows}`);
+ if(w&&w.inW.length){if(w.inW.length<=240){L.push('REQUESTED PERIOD CANDLES, individual OHLC rows (time, open, high, low, close), oldest first:\n'+w.inW.map(x=>`${t24(m,x.t)} ${fmt(x.o)} ${fmt(x.h)} ${fmt(x.l)} ${fmt(x.c)}`).join('\n'))}else{const d=digest(m,w.inW,120);L.push(`REQUESTED PERIOD CANDLES${d.k>1?`, aggregated into consecutive groups of ${d.k} candles`:''} (first time, first open, group high, group low, last close):\n${d.rows}`)}}
+ L.push('LAST 30 CHART CANDLES, individual OHLC rows, oldest first:\n'+c.slice(-30).map(x=>`${t24(m,x.t)} ${fmt(x.o)} ${fmt(x.h)} ${fmt(x.l)} ${fmt(x.c)}`).join('\n'));
+ return L.join('\n');
+}
+
 function motion(c,tfm){
  if(c.length<LOOK+20)return{k:'still'};
- const a=c[c.length-1].c,b=c[c.length-1-LOOK].c,net=a-b;
+ const end=c.length-1,base=end-LOOK,a=c[end].c,b=c[base].c,net=a-b;
  const rng=c.slice(-60).reduce((s,x)=>s+(x.h-x.l),0)/Math.min(60,c.length);
  const r=Math.abs(net)/(rng||1);
- return{k:r>=STRONG?'strong':r>=MOVING?'moving':'still',up:net>0,pct:Math.abs(net)/b*100,span:LOOK*tfm,r};
+ return{k:r>=STRONG?'strong':r>=MOVING?'moving':'still',up:net>0,pct:Math.abs(net)/b*100,span:LOOK*tfm,r,a,b,bt:c[base].t,at:c[end].t};
 }
 function gapsOf(c){const g=[];for(let i=2;i<c.length;i++){const a=c[i-2],b=c[i];if(a.h<b.l)g.push({up:true,lo:a.h,hi:b.l,i});else if(a.l>b.h)g.push({up:false,lo:b.h,hi:a.l,i});}return g}
 function read(c,tfm){
@@ -403,14 +494,16 @@ function qpick(m,lv,ex){const all=QB.map((q,i)=>i).filter(i=>QB[i][0]===lv&&!ex.
 function qdeal(m){m.qs=[];[0,0,1,1,2,2].forEach(lv=>{const i=qpick(m,lv,m.qs);if(i!=null)m.qs.push(i)})}
 function qrender(m){m.el.querySelector('.qs').innerHTML=m.qs.map((i,j)=>`<button class="chip${QB[i][0]===2?' think':''}" data-qi="${j}">${QB[i][1]}</button>`).join('')+'<button class="chip shuf" data-qi="s">New questions</button>'}
 
-function sysFor(m){
+function sysFor(m,win){
  const r=m.res,n=r.near,f=r.fib;
  const es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(e=>`[${e.date}] ${e.text.slice(0,400)}`).join('\n')||'none';
- const rows=m.c.slice(-30).map(b=>`${new Date(b.t).toISOString().slice(5,16)} ${fmt(b.o)} ${fmt(b.h)} ${fmt(b.l)} ${fmt(b.c)}`).join('\n');
- return `You are the assistant inside MarketBrain, which restores context for a trader. Answer the user's question about the chart they are looking at, in plain friendly language, under 160 words, no markdown. Keep apart what the data shows, what you infer, and what is uncertain whenever it matters. Never predict price, give trade calls or advice, or describe the user's personality. Use only the information below; if asked about something the page cannot see, say so.
+ const ev=evidence(m,win);
+ return `You are the assistant inside MarketBrain, which restores context for a trader. Answer the user's question about the chart they are looking at, in plain friendly language, under 180 words, no markdown. Keep apart what the data shows, what you infer, and what is uncertain whenever it matters. Never predict price, give trade calls or advice, or describe, score, profile, or assess the user. Use only the information below; if asked about something the page cannot see, say so.
 
-HOW TO ANSWER WHEN ASKED WHERE PRICE IS GOING OR WHAT IT IS DOING: not knowing the future is not a reason to skip interpreting the present. Do not open with a disclaimer; if you need one, one short clause. Say what price just did, what unfinished structure sits above and below it, and give an if/then reading with closes beyond specific levels from the data below, plus what would contradict it. Label what the data shows, what you infer, and what is uncertain. Never say where price will go.
-When the old gap is reported as not in the loaded candles, say plainly that it is unknown whether it was traded through.
+ANSWER MODE: identify the kind of question before answering. A CONCEPT question (for example, “what is liquidity?”) needs a direct definition; do not pretend the chart proves the concept. An OBSERVATION question (what happened between dates?) needs a chronological account grounded in the requested-period candles. A CAUSE question (why did price move?) must separate the observed sequence from possible explanations; candles alone do not establish participant intent, resting orders, news causation, or motive. Say what additional evidence would be needed when relevant.
+
+When asked where price is going or what it is doing, interpret the present rather than refusing to read it: say what price just did, what unfinished structure sits above and below, and give an if/then reading using closes beyond specific levels from the data. State what would contradict the reading. These are conditions, not forecasts.
+Do not invent liquidity, orders, institutional intent, news, or reasons for a move. A detector output is a detected structure, not proof of the underlying market mechanism.
 
 ${LOGIC}
 
@@ -420,9 +513,8 @@ Swing: ${f?`${f.down?'down':'up'} from ${fmt(f.from)} to ${fmt(f.to)}, pulled ba
 Above price: ${around(m).above}. Below price: ${around(m).below}.
 Since last look: ${seen(m)||'not applicable'}
 Reading now: ${cond(m)}
-Feed: ${m.src==='b'?'Binance':'Twelve Data'} ${m.sym}, ${m.c.length} candles.
-LAST 30 CANDLES (UTC month-day hour:minute, open high low close), newest last:
-${rows}
+
+${ev}
 THE USER'S JOURNAL NOTES on ${m.k} (their words, not facts):
 ${es}`;
 }
@@ -465,11 +557,39 @@ async function getCandles(m,tf){
  return d;
 }
 
+/* ---- Solana / Pump.fun discovery ----
+   Discovery is intentionally separate from Binance candles. DEX Screener supplies discovery
+   and pair statistics; GeckoTerminal supplies pool OHLCV. Neither source proves token safety.
+*/
+const dexStyle=document.createElement('style');dexStyle.textContent=`
+#launches{margin:42px 0 120px;padding:20px;border:1px solid var(--line);border-radius:18px;background:var(--panel,rgba(255,255,255,.45))}
+#launches h2{margin:0 0 7px}#launches .sub{color:var(--mute);font-size:13px;line-height:1.5;margin:0 0 16px}
+.dexbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.dexbar input{flex:1;min-width:190px;background:transparent;border:1px solid var(--line);border-radius:10px;padding:11px;color:inherit}
+.dexbar button,.dexcard button{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:transparent;color:inherit;cursor:pointer}
+.dexgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:14px 0}.dexcard{border:1px solid var(--line);border-radius:13px;padding:12px;min-width:0}.dexcard .top{display:flex;justify-content:space-between;gap:8px}.dexcard strong{font-size:14px}.dexcard small{color:var(--mute)}.dexstats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:12px 0;font-size:12px}.dexstats span{color:var(--mute)}.dexstats b{display:block;color:var(--ink,inherit);font-weight:600;margin-top:2px}.dexcard button{font-size:12px}.dexdetail{border-top:1px solid var(--line);padding-top:14px;margin-top:14px}.dexchart{height:300px;width:100%;margin-top:12px}.dexstatus{font-size:12px;color:var(--mute);min-height:18px}.dexlinks{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin-top:8px}.dexlinks a{color:inherit}
+@media(max-width:560px){#launches{padding:14px}.dexchart{height:240px}}
+`;document.head.appendChild(dexStyle);
+const launch=document.createElement('section');launch.id='launches';launch.innerHTML=`<h2>New launches & Solana tokens</h2><p class="sub">Discover recently listed Solana pools, inspect market activity, or open a token by its mint address. Discovery data is not a safety rating or a buy signal.</p><div class="dexbar"><button id="dexnew">New Solana pools</button><button id="dextrend">Trending Solana pools</button><button id="dexboost">Recently boosted</button></div><div class="dexbar"><input id="mintInput" placeholder="Paste a Solana token mint address" autocomplete="off"><button id="mintAdd">Open token</button></div><div class="dexstatus" id="dexStatus" aria-live="polite">Ready. Choose a discovery feed or paste a mint address.</div><div class="dexgrid" id="dexGrid"></div><div class="dexdetail" id="dexDetail" hidden><div id="dexTitle"></div><div class="dexlinks" id="dexLinks"></div><div class="dexchart" id="dexChart"></div><div class="dexstatus" id="dexChartStatus"></div></div>`;
+const dexStatus=document.getElementById('dexStatus'),dexGrid=document.getElementById('dexGrid');let dexItems=[],dexChart=null,dexSeries=null;
+const usd=v=>v==null||!Number.isFinite(+v)?'—':(+v>=1e9?'$'+(+v/1e9).toFixed(2)+'B':+v>=1e6?'$'+(+v/1e6).toFixed(2)+'M':+v>=1e3?'$'+(+v/1e3).toFixed(1)+'K':'$'+(+v).toFixed(2));
+const age=t=>{if(!t)return'Age unknown';const h=Math.max(0,(Date.now()-t)/36e5);return h<24?Math.floor(h)+'h old':Math.floor(h/24)+'d old'};
+function bestPair(pairs){return(pairs||[]).filter(p=>p.chainId==='solana'&&p.baseToken&&p.priceUsd).sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0]||null}
+function pairCard(p){const b=p.baseToken||{},tx=p.txns?.h24||{},sym=b.symbol||'TOKEN';return `<article class="dexcard"><div class="top"><div><strong>${dexEsc(sym)} · ${dexEsc(b.name||'Unknown token')}</strong><br><small>${dexEsc(p.dexId||'Solana DEX')} · ${age(p.pairCreatedAt)}</small></div><strong>${p.priceUsd?'$'+Number(p.priceUsd).toPrecision(5):'—'}</strong></div><div class="dexstats"><div><span>Liquidity</span><b>${usd(p.liquidity?.usd)}</b></div><div><span>24h volume</span><b>${usd(p.volume?.h24)}</b></div><div><span>24h change</span><b>${p.priceChange?.h24==null?'—':Number(p.priceChange.h24).toFixed(1)+'%'}</b></div><div><span>24h transactions</span><b>${(tx.buys||0)+(tx.sells||0)}</b></div></div><button data-openmint="${dexEsc(b.address||'')}">Inspect token</button> <a href="${dexEsc(p.url||'#')}" target="_blank" rel="noopener" style="font-size:12px;color:inherit;margin-left:8px">DEX Screener</a></article>`}
+function dexEsc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function dexFeed(kind){dexStatus.textContent='Loading Solana market data…';dexGrid.innerHTML='';try{let rows=[];if(kind==='new'||kind==='trending'){const path=kind==='new'?'new_pools':'trending_pools';const j=await(await fetch(`https://api.geckoterminal.com/api/v2/networks/solana/${path}?include=base_token&page=1`,{headers:{accept:'application/json;version=20230302'}})).json();rows=(j.data||[]).map(x=>{const a=x.attributes||{},rel=x.relationships||{},inc=(j.included||[]).find(z=>z.id===rel.base_token?.data?.id);return{pool:a.address||x.id.split('_').pop(),name:a.name||'Solana pool',symbol:inc?.attributes?.symbol||a.name||'TOKEN',token:inc?.attributes?.address,liquidity:+a.reserve_in_usd||0,volume:+a.volume_usd?.h24||0,price:+a.base_token_price_usd||0,created:a.pool_created_at?Date.parse(a.pool_created_at):0,source:'gecko'}}).filter(x=>x.token)}else{const j=await(await fetch('https://api.dexscreener.com/token-boosts/latest/v1')).json();rows=(j||[]).filter(x=>x.chainId==='solana').slice(0,25);}
+if(kind==='boost'){const addresses=rows.map(x=>x.tokenAddress).filter(Boolean);const pairs=[];for(let i=0;i<addresses.length;i+=30){const part=addresses.slice(i,i+30);if(part.length){const a=await(await fetch(`https://api.dexscreener.com/tokens/v1/solana/${part.join(',')}`)).json();pairs.push(...(a||[]));}}rows=pairs;}
+if(kind==='new'||kind==='trending'){const pairs=[];for(const r of rows.slice(0,20)){try{const j=await(await fetch(`https://api.dexscreener.com/token-pairs/v1/solana/${r.token}`)).json();const p=bestPair(j);if(p)pairs.push(p)}catch(e){}}rows=pairs;}
+const unique=new Map();for(const r of rows){const p=r.baseToken?r: r.token?{baseToken:{address:r.token,name:r.name,symbol:r.symbol},pairAddress:r.pool,priceUsd:r.price,liquidity:{usd:r.liquidity},volume:{h24:r.volume},pairCreatedAt:r.created,url:`https://www.geckoterminal.com/solana/pools/${r.pool}`,dexId:'GeckoTerminal'}:null;if(p){const k=p.baseToken.address;if(!unique.has(k))unique.set(k,p)}}dexItems=[...unique.values()];dexGrid.innerHTML=dexItems.length?dexItems.map(pairCard).join(''):'<p>No Solana pools were returned. Try another feed in a moment.</p>';dexStatus.textContent=`Showing ${dexItems.length} Solana tokens. Source: ${kind==='boost'?'DEX Screener boosts':'GeckoTerminal discovery, with DEX Screener pair data'}.`; }catch(e){dexStatus.textContent='Could not load this feed. The public data service may be rate-limited or temporarily unavailable.'}}
+async function openMint(address){address=(address||'').trim();if(!address){dexStatus.textContent='Paste a token mint address first.';return}dexStatus.textContent='Looking up token pools…';try{const r=await fetch(`https://api.dexscreener.com/token-pairs/v1/solana/${encodeURIComponent(address)}`);if(!r.ok)throw Error('lookup');const pairs=await r.json(),p=bestPair(pairs);if(!p)throw Error('No active Solana pool with a USD price was found for this mint.');await inspectPair(p)}catch(e){dexStatus.textContent=e.message==='lookup'?'Token lookup failed. Check the mint address and try again.':e.message||'Token lookup failed.'}}
+async function inspectPair(p){const b=p.baseToken||{},pool=p.pairAddress;document.getElementById('dexDetail').hidden=false;document.getElementById('dexTitle').innerHTML=`<strong>${dexEsc(b.name||'Token')} (${dexEsc(b.symbol||'—')})</strong> · ${usd(p.marketCap||p.fdv)} market cap / FDV · ${usd(p.liquidity?.usd)} liquidity`;document.getElementById('dexLinks').innerHTML=`<a href="${dexEsc(p.url||'#')}" target="_blank" rel="noopener">Open DEX Screener</a><a href="https://pump.fun/coin/${encodeURIComponent(b.address||'')}" target="_blank" rel="noopener">Check on Pump.fun</a><span>Mint: ${dexEsc(b.address||'')}</span>`;dexStatus.textContent='Token selected. Loading pool history…';document.getElementById('dexChartStatus').textContent='';try{const meta=await(await fetch(`https://api.geckoterminal.com/api/v2/networks/solana/tokens/${encodeURIComponent(b.address)}/pools`,{headers:{accept:'application/json;version=20230302'}})).json();const poolId=meta.data?.[0]?.attributes?.address||pool;if(!poolId)throw Error('No indexed pool history is available.');const j=await(await fetch(`https://api.geckoterminal.com/api/v2/networks/solana/pools/${encodeURIComponent(poolId)}/ohlcv/hour?aggregate=1&limit=300&currency=usd`,{headers:{accept:'application/json;version=20230302'}})).json();const arr=j.data?.attributes?.ohlcv_list||[];if(!arr.length)throw Error('No historical candles are available for this pool yet.');const candles=arr.map(x=>({time:x[0],open:+x[1],high:+x[2],low:+x[3],close:+x[4]})).sort((a,b)=>a.time-b.time);const node=document.getElementById('dexChart');node.innerHTML='';if(dexChart)dexChart.remove();dexChart=LightweightCharts.createChart(node,{width:node.clientWidth,height:node.clientHeight,layout:{background:{color:'transparent'},textColor:getComputedStyle(document.body).color},grid:{vertLines:{visible:false},horzLines:{visible:false}},rightPriceScale:{borderVisible:false},timeScale:{borderVisible:false,timeVisible:true}});dexSeries=dexChart.addCandlestickSeries();dexSeries.setData(candles);dexChart.timeScale().fitContent();new ResizeObserver(()=>{if(dexChart)dexChart.applyOptions({width:node.clientWidth,height:node.clientHeight})}).observe(node);document.getElementById('dexChartStatus').textContent=`Hourly OHLCV · ${candles.length} candles · GeckoTerminal pool data. Pool: ${poolId}`;dexStatus.textContent='Token history loaded.'}catch(e){document.getElementById('dexChartStatus').textContent=e.message||'Historical pool candles unavailable.';dexStatus.textContent='Token market data loaded; history is not available for this pool.'}}
+document.getElementById('dexnew').onclick=()=>dexFeed('new');document.getElementById('dextrend').onclick=()=>dexFeed('trending');document.getElementById('dexboost').onclick=()=>dexFeed('boost');document.getElementById('mintAdd').onclick=()=>openMint(document.getElementById('mintInput').value);document.getElementById('mintInput').addEventListener('keydown',e=>{if(e.key==='Enter')openMint(e.target.value)});dexGrid.addEventListener('click',e=>{const b=e.target.closest('[data-openmint]');if(b)openMint(b.dataset.openmint)});
+
 /* ---- cards ---- */
 const app=document.getElementById('app'),note=document.getElementById('note'),bar=document.getElementById('bar');
 const keyBtn=(id,msg,k,reload)=>document.getElementById(id).onclick=()=>{const v=prompt(msg,localStorage.getItem(k)||'');if(v!==null){try{v.trim()?localStorage.setItem(k,v.trim()):localStorage.removeItem(k);if(reload)location.reload()}catch(e){alert('Could not save the key in this browser.')}}};
 keyBtn('tdkey','Paste your Twelve Data API key. It is stored only in this browser. Leave empty to remove it.','mb_td_key',true);
 keyBtn('aikey','Paste an AI key for the assistant: Google Gemini (starts AIza or AQ.), GitHub Models (github_pat_ or ghp_), or Anthropic (sk-ant-). Stored only in this browser. Leave empty to remove it.','mb_ai_key',false);
+app.appendChild(launch);
 const live=MARKETS.filter(m=>m.on!==false);let group='',n=0;
 for(const m of live){
  if(m.g!==group){group=m.g;app.insertAdjacentHTML('beforeend',`<h2 data-g="${group}">${group}</h2>`);}
@@ -494,8 +614,8 @@ async function ask(m,q){
  say(m,'u',q);
  const key=localStorage.getItem('mb_ai_key');
  if(!key){say(m,'a','Typed questions need an AI key. Add one with the AI key button at the top. The quick questions work without it.');return}
- m.hist.push({role:'user',text:q});const w=say(m,'a','Reading…');
- try{const t=await callAI(key,sysFor(m),m.hist.slice(-7));m.hist.push({role:'assistant',text:t});w.textContent=t}
+ m.hist.push({role:'user',text:q});const w=say(m,'a','Checking the evidence…');
+ try{const fresh=!!askedDays(q),win=await windowFor(m,q),t=await callAI(key,sysFor(m,win),m.hist.slice(-7));m.hist.push({role:'assistant',text:t});w.textContent=(fresh&&win?'Coverage checked: '+winInfo(m,win).line+'\n\n':'')+t}
  catch(e){m.hist.pop();w.textContent=(e instanceof TypeError?"The browser couldn't reach the AI service. ":"The assistant couldn't answer: ")+(e.message||e)}
 }
 /* ---- marks: the crosshair, the magnet, and your own drawings, on one overlay ---- */
@@ -722,7 +842,7 @@ for(const m of live){
  const el=m.el,ta=el.querySelector('textarea'),dt=el.querySelector('input[type=date]'),sv=el.querySelector('[data-j=save]'),cn=el.querySelector('[data-j=cancel]'),inp=el.querySelector('[data-ask]');
  dt.value=new Date().toISOString().slice(0,10);
  el.querySelector(':scope>button').onclick=()=>toggle(m);
- el.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{m.tf=+b.dataset.tf;el.querySelectorAll('[data-tf]').forEach(x=>x.classList.toggle('on',x===b));m.s.classList.add('w');load(m);});
+ el.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{m.win=null;m.tf=+b.dataset.tf;el.querySelectorAll('[data-tf]').forEach(x=>x.classList.toggle('on',x===b));m.s.classList.add('w');load(m);});
  el.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{m.show[b.dataset.t]=b.classList.toggle('on');draw(m);jrender(m);});
  el.querySelector('.qs').onclick=ev=>{const b=ev.target.closest('[data-qi]');if(!b||!m.res)return;if(b.dataset.qi==='s'){qdeal(m);qrender(m);return}const j=+b.dataset.qi,i=m.qs[j];m.asked.add(i);say(m,'u',QB[i][1]);say(m,'a',QB[i][2](m));const nx=qpick(m,QB[i][0],m.qs);if(nx!=null)m.qs[j]=nx;qrender(m)};
  // tiles: tap to grow, or send a tile to the assistant
