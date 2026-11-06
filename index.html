@@ -570,6 +570,8 @@ const dexStyle=document.createElement('style');dexStyle.textContent=`
 @media(max-width:560px){#launches{padding:14px}.dexchart{height:240px}}
 `;document.head.appendChild(dexStyle);
 const launch=document.createElement('section');launch.id='launches';launch.innerHTML=`<h2>New launches & Solana tokens</h2><p class="sub">Discover recently listed Solana pools, inspect market activity, or open a token by its mint address. Discovery data is not a safety rating or a buy signal.</p><div class="dexbar"><button id="dexnew">New Solana pools</button><button id="dextrend">Trending Solana pools</button><button id="dexboost">Recently boosted</button></div><div class="dexbar"><input id="mintInput" placeholder="Paste a Solana token mint address" autocomplete="off"><button id="mintAdd">Open token</button></div><div class="dexstatus" id="dexStatus" aria-live="polite">Ready. Choose a discovery feed or paste a mint address.</div><div class="dexgrid" id="dexGrid"></div><div class="dexdetail" id="dexDetail" hidden><div id="dexTitle"></div><div class="dexlinks" id="dexLinks"></div><div class="dexchart" id="dexChart"></div><div class="dexstatus" id="dexChartStatus"></div></div>`;
+// Mount the section before querying elements inside it.
+document.getElementById('app').appendChild(launch);
 const dexStatus=document.getElementById('dexStatus'),dexGrid=document.getElementById('dexGrid');let dexItems=[],dexChart=null,dexSeries=null;
 const usd=v=>v==null||!Number.isFinite(+v)?'—':(+v>=1e9?'$'+(+v/1e9).toFixed(2)+'B':+v>=1e6?'$'+(+v/1e6).toFixed(2)+'M':+v>=1e3?'$'+(+v/1e3).toFixed(1)+'K':'$'+(+v).toFixed(2));
 const age=t=>{if(!t)return'Age unknown';const h=Math.max(0,(Date.now()-t)/36e5);return h<24?Math.floor(h)+'h old':Math.floor(h/24)+'d old'};
