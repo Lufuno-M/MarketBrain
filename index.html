@@ -90,7 +90,7 @@ header h1::after{content:"";position:absolute;left:4%;right:4%;bottom:-.10em;hei
 .m{position:relative;isolation:isolate;overflow:hidden}
 .m::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.42;background:radial-gradient(ellipse at 12% 0%,rgba(255,255,255,.94),transparent 38%),linear-gradient(118deg,transparent 22%,rgba(255,255,255,.38) 42%,transparent 59%);background-size:100% 100%,230% 100%;background-position:0 0,-120% 0;transition:opacity .6s ease,background-position 1.2s ease}
 .m:hover::before,.m.open::before{opacity:.72;background-position:0 0,120% 0}
-.s.fresh{animation:mb-text-arrive .72s cubic-bezier(.2,.7,.2,1) both}
+.s.fresh,.sc.fresh{animation:mb-text-arrive .72s cubic-bezier(.2,.7,.2,1) both}
 @keyframes mb-text-arrive{0%{opacity:.25;transform:translateY(5px);filter:drop-shadow(0 0 10px rgba(255,255,255,.95))}65%{opacity:1;transform:translateY(-1px);filter:drop-shadow(0 0 5px rgba(255,255,255,.55))}100%{opacity:1;transform:translateY(0);filter:drop-shadow(0 0 0 rgba(255,255,255,0))}}
 .n{letter-spacing:.015em}
 .rd,.f,#note{letter-spacing:-.01em}
@@ -148,6 +148,8 @@ body.v-focus #dock .lbl{display:block;font-size:14px;color:var(--mute);padding:0
 .ch.sel{touch-action:none}
 @media (max-width:560px){.dk{left:6px;top:6px;max-width:calc(100% - 72px)}.dk button{font-size:12px;padding:5px 8px}.dk .dh{font-size:12px;padding:0 6px}}
 .ch.pt,.ch.pt *{cursor:pointer!important}
+.sc{grid-column:1;font-size:15px;line-height:1.4;color:var(--mute);letter-spacing:-.01em;max-width:44em}.sc:empty{display:none}
+.tf .chip.hot{position:relative}.tf .chip.hot::after{content:"";position:absolute;top:5px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--c);box-shadow:0 0 8px 2px var(--c)}.tf .chip.unread{opacity:.55}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body class="v-cards">
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div>
@@ -331,8 +333,13 @@ function read(c,tfm){
 /* ---- the card sentence: an opener about motion + a body about the gap, each with many phrasings.
    Every open card gets a different sentence, even when two markets are in the same state.
    Numbers stay exact; only the wording changes. Template variety, not AI. ---- */
-function openers(mo){
- if(mo.k==='still')return['Quiet.','Barely stirring.','Calm here.','Not much happening.','Hardly any movement.','Nothing urgent.','Still waters.','Holding its breath.','Almost motionless.','A slow stretch.'];
+function openers(m){const mo=m.res.mo,a=m.act||{},T=m.tf?tfl(m.tf):'chart',cv=m.rd?cov(m):null;
+ if(mo.k==='still'){
+  if(a.taken){const w=ago({c:m.c,tf:m.tf},a.taken.j);return[`The swing ${a.taken.kind} at ${fmt(a.taken.p)} was taken out ${w}.`,`Price ran through the swing ${a.taken.kind} at ${fmt(a.taken.p)} ${w}.`]}
+  if(a.changed)return['Something has shifted since you last looked.','The picture is different from when you left.','This has changed since your last look.'];
+  if(cv&&cv.full)return['Quiet on every timeframe.','Calm from the 1m to the daily.','Nothing stirring, 1m to daily.','Still at every scale.','Nothing urgent on any timeframe.'];
+  return[`Quiet on the ${T}.`,`The ${T} is calm.`,`Nothing on the ${T}.`,`The ${T} is barely stirring.`,`Not much on the ${T}.`];
+ }
  const D=mo.up?'up':'down',f=mo.k==='strong',p=mo.pct.toFixed(2),s=span(mo.span);
  return[`Moving ${D}${f?' fast':''}: ${p}% in the last ${s}.`,`${p}% ${D} over the last ${s}${f?', and quickly':''}.`,`Price has leaned ${D}${f?' hard':''}, ${p}% across ${s}.`,`A ${f?'fast ':''}drift ${D}: ${p}% in ${s}.`,`${mo.up?'Rising':'Falling'}${f?' fast':''}, ${p}% in ${s}.`,`Heading ${D}${f?' quickly':''}, ${p}% in ${s}.`,`In the last ${s}, ${p}% ${D}${f?' at speed':''}.`,`${cap(D)} ${p}% since ${s} ago${f?', in a hurry':''}.`,`A ${f?'sharp ':''}push ${D}: ${p}% over ${s}.`];
 }
@@ -345,7 +352,7 @@ function bodies(r){
  return[`The closest open ${sd} gap is ${w} price, and price hasn't come back to it yet.`,`A ${sd} gap waits ${w} price, untouched.`,`${cap(w)} price sits a ${sd} gap nobody has revisited.`,`Price hasn't returned to the ${sd} gap ${w} it.`,`An unvisited ${sd} gap lies ${w} price.`,`The ${sd} gap ${w} price is still intact.`,`${cap(w)} price, a ${sd} gap remains unvisited.`];
 }
 function build(m,used){
- const O=openers(m.res.mo),B=bodies(m.res),h=hsh(m.k+m.tf);let pick=null;
+ const O=openers(m),B=bodies(m.res),h=hsh(m.k+m.tf);let pick=null;
  for(const strict of[true,false])for(let t=0;t<O.length*B.length&&!pick;t++){
   const o=O[(h+t)%O.length],b=B[((h>>>3)+t*5+(t/O.length|0))%B.length];
   if(strict?(!used.o.has(o)&&!used.b.has(b)):!used.t.has(o+' '+b))pick=[o,b];
@@ -361,7 +368,7 @@ function sentence(r){
 }
 function setSentence(m,s){
  const changed=m.s.textContent!==s;
- m.s.textContent=s;m.s.classList.remove('w');m.s.classList.toggle('calm',m.res.mo.k==='still');
+ m.s.textContent=s;m.s.classList.remove('w');m.s.classList.toggle('calm',m.res.mo.k==='still'&&!(m.act&&(m.act.taken||m.act.changed)));
  if(changed){m.s.classList.remove('fresh');void m.s.offsetWidth;m.s.classList.add('fresh');}
 }
 // Re-deal every card's sentence together so no two cards share an opener or body.
@@ -382,6 +389,7 @@ const LOGIC=`How this page reads a chart (this is all it does):
 Gap: three candles where the first high is below the third low (buying gap), or the first low is above the third high (selling gap). The space between is the gap. Open = no later candle has traded fully back through it. Entered = a later candle overlapped it without filling it. Closest = the open gap whose middle is nearest the latest price; size and importance are not weighed.
 Swing: a candle whose high (or low) is the highest (lowest) of the 3 candles on each side. The latest swing high and low make the swing. Fib levels (50%, 70.5%) are measured on it; pullback is how much of the swing price has retraced.
 Motion: net change over the last ${LOOK} candles divided by the average candle size over the last 60. ${MOVING} or more = moving, ${STRONG} or more = moving fast, otherwise quiet.
+Timeframes: each card reads up to six (1m, 5m, 15m, 30m, 1h, 1d) and opens on the one with the most going on: the nearest open gap changed since the last look, a swing was taken out within ${LOOK} candles, price is inside a gap, or motion. Each is judged against its own usual candle size, so no timeframe wins just for being busier by nature. "Quiet on every timeframe" is only said when all six were read and none stood out. Forex and index markets read only timeframes already fetched, to protect data credits.
 Blind spots: no liquidity pools, no count of broken swing lows, nothing drawn or set as alerts in TradingView, nothing older than the loaded candles, no news.`;
 const LOCAL={
  gap:m=>{const n=m.res.near;return 'A gap is a spot where three candles in a row moved so fast that the middle one left a space the first and third never touched. Markets often come back to check these.'+(n?` The closest open one here sits between ${fmt(n.lo)} and ${fmt(n.hi)}. ${n.entered?'Price has overlapped it since formation, without fully traversing it under the current rule.':'No overlap has been detected since it formed in the loaded candles.'} Price is now ${fmt(m.res.last.c)}.`:' No open gap is nearby right now.')},
@@ -461,6 +469,7 @@ function cond(m){
 }
 
 const QB=[
+ [0,'Why did this card open on this timeframe?',m=>openedWhy(m)],
  [0,'What does "quiet" or "moving" mean?',m=>{const o=m.res.mo;return (o.k==='still'?'Right now this chart is quiet: price has travelled very little compared with how far a normal candle goes. ':`Right now this chart is ${o.k==='strong'?'moving fast':'moving'} ${o.up?'up':'down'}: ${o.pct.toFixed(2)}% in ${span(o.span)}. `)+'It describes speed. It says nothing about what comes next.'}],
  [0,'What is a gap, in plain words?',LOCAL.gap],
  [0,'What is a pip?',m=>{const k=`The last ${tfl(m.tf)} candle travelled ${dst(m,m.res.last.h-m.res.last.l)} from its low to its high.`;return unit(m)?`A pip is the smallest move traders usually quote in a currency pair: ${unit(m)} on ${m.k}. ${k}`:`Pips belong to currency pairs (0.0001 on most, 0.01 on yen pairs). ${m.k} is quoted in dollars, so this page speaks in dollars here. ${k}`}],
@@ -512,6 +521,7 @@ Gap: ${gapStateLabel(r)}
 Swing: ${f?`${f.down?'down':'up'} from ${fmt(f.from)} to ${fmt(f.to)}, pulled back ${Math.round(f.back*100)}%, 50% at ${fmt(f.lvl(.5))}, 70.5% at ${fmt(f.lvl(.705))}`:'none clear'}
 Above price: ${around(m).above}. Below price: ${around(m).below}.
 Since last look: ${seen(m)||'not applicable'}
+Timeframes read: ${scopeFacts(m)}
 Reading now: ${cond(m)}
 
 ${ev}
@@ -557,6 +567,59 @@ async function getCandles(m,tf){
  return d;
 }
 
+/* ---- which timeframe has the most going on ----
+   Each timeframe is judged against its own usual candle size, so the 1m does not win for ticking constantly.
+   The weights are first guesses to tune. Forex and index markets read only timeframes already fetched (data credits). */
+const HOME=15;
+const atrOf=c=>c.slice(-60).reduce((s,x)=>s+(x.h-x.l),0)/Math.min(60,c.length);
+function ensureSeen(m,tf,res){m.seen=m.seen||{};if(tf in m.seen)return;const sk='mb_seen_'+m.k+'_'+tf,pv=store.get(sk,null);m.seen[tf]=pv;if(!pv||Date.now()-pv.at>12e5)store.set(sk,{at:Date.now(),price:res.last.c,g:res.near?{lo:res.near.lo,hi:res.near.hi,up:res.near.up}:null})}
+function act(m,tf,c,r){
+ const a={inside:!!r.inside,taken:null,changed:false},p=m.seen&&m.seen[tf];
+ if(p&&(Date.now()-p.at)/6e4>=10)a.changed=!p.g?!!r.near:!(r.near&&same(r.near.lo,p.g.lo)&&same(r.near.hi,p.g.hi));
+ for(const[kind,s]of[['high',r.sh],['low',r.sl]]){if(!s)continue;for(let j=s.i+1;j<c.length;j++)if(kind==='high'?c[j].h>s.p:c[j].l<s.p){if(c.length-1-j<LOOK&&(!a.taken||j>a.taken.j))a.taken={kind,p:s.p,j};break}}
+ const n=r.near,l=r.last.c,d=n?(r.inside?0:Math.min(Math.abs(n.lo-l),Math.abs(n.hi-l))/(atrOf(c)||1)):9;
+ a.active=a.changed||a.inside||!!a.taken||r.mo.k!=='still';
+ a.score=(a.changed?100:0)+(a.taken?40:0)+(a.inside?20+Math.min(r.run,5):0)+Math.min(r.mo.r||0,STRONG)*6+(n?12/(1+d):0);
+ return a}
+function setRd(m,tf,c){const r=read(c,tf);ensureSeen(m,tf,r);m.rd[tf]={c,res:r,a:act(m,tf,c,r),at:Date.now()}}
+function use(m,tf){const e=m.rd[tf];m.tf=tf;m.c=e.c;m.res=e.res;m.act=e.a;m.lastUpdated=e.at}
+function cov(m){const all=TFS.map(t=>t[1]),read=all.filter(t=>m.rd[t]);return{read,unread:all.filter(t=>!m.rd[t]),any:read.some(t=>m.rd[t].a.active),full:read.length===all.length&&!read.some(t=>m.rd[t].a.active)}}
+function bestOf(m){let b={tf:m.rd[HOME]?HOME:+Object.keys(m.rd)[0],score:-1,active:false};for(const tf of Object.keys(m.rd).map(Number)){const a=m.rd[tf].a;if(!a.active)continue;const s=a.score+(tf===HOME?4:0);if(!b.active||s>b.score)b={tf,score:s,active:true}}return b}
+function why(m,tf){const e=m.rd[tf],a=e.a,r=e.res,w=[];
+ if(a.taken)w.push(`the swing ${a.taken.kind} at ${fmt(a.taken.p)} was taken out ${ago({c:e.c,tf},a.taken.j)}`);
+ if(a.changed)w.push('the nearest gap is not what it was when you last looked');
+ if(a.inside)w.push(`price is sitting inside a ${r.near.up?'buying':'selling'} gap`);
+ if(r.mo.k!=='still')w.push(`price is ${r.mo.k==='strong'?'moving fast':'moving'} ${r.mo.up?'up':'down'}`);
+ return w.slice(0,2).join(', and ')}
+function chips(m){m.el.querySelectorAll('[data-tf]').forEach(x=>{const tf=+x.dataset.tf,e=m.rd[tf];x.classList.toggle('on',tf===m.tf);x.classList.toggle('hot',!!(e&&e.a.active));x.classList.toggle('unread',!e);x.title=!e?'Not read yet':e.a.active?why(m,tf):'Quiet'});const b=m.el.querySelector('[data-readall]');if(b)b.hidden=!cov(m).unread.length}
+function setScope(m){
+ if(!m.sc)return;const cv=cov(m),T=tfl(m.tf),cur=m.rd[m.tf],L=a=>a.map(tfl).join(', '),el=m.sc,hot=cv.read.filter(t=>m.rd[t].a.active&&t!==m.tf);let s='';
+ if(cur.a.active)s=(m.pinned?`On the ${T}: `:`Most is happening on the ${T}: `)+why(m,m.tf)+'.';
+ else if(cv.any)s=m.pinned?`Nothing on the ${T} itself.`:'';
+ else s=cv.full?'Read every timeframe, 1m to daily: all quiet.':`Read ${L(cv.read)}: quiet there.`;
+ if(hot.length)s+=` Also stirring: ${L(hot)}.`;
+ if(!cv.full&&cv.unread.length)s+=` Not read: ${L(cv.unread)}.`;
+ s=s.trim();if(el.textContent!==s){el.textContent=s;el.classList.remove('fresh');void el.offsetWidth;el.classList.add('fresh')}}
+function cachedTf(m,tf){try{if(tf===1440){const c=store.get('mb_d_'+m.k,null);return c&&c.day===new Date().toISOString().slice(0,10)?c.d:null}const c=JSON.parse(localStorage.getItem('mb_'+m.k+tf));return c&&Date.now()-c.at<9e5?c.d:null}catch(e){return null}}
+async function scan(m){
+ let err;
+ await Promise.all(TFS.map(t=>t[1]).map(async tf=>{try{const c=m.src==='b'||tf===HOME?await getCandles(m,tf):cachedTf(m,tf);if(c&&c.length)setRd(m,tf,c)}catch(e){if(tf===HOME)err=e}}));
+ if(!Object.keys(m.rd).length)return load(m,err||'feed');
+ use(m,m.pinned&&m.rd[m.tf]?m.tf:bestOf(m).tf);paint(m)}
+function switchTf(m,tf){use(m,tf);paint(m)}
+async function readAll(m){
+ const miss=cov(m).unread;if(!miss.length)return;
+ if(m.src==='t'&&!confirm(`This asks Twelve Data for ${miss.length} more timeframes, about ${miss.length} credits (the free plan allows about 8 a minute). Go ahead?`))return;
+ const b=m.el.querySelector('[data-readall]');b.disabled=true;b.textContent='Reading…';
+ for(const tf of miss){try{setRd(m,tf,await getCandles(m,tf))}catch(e){}}
+ b.disabled=false;b.textContent='Read the other timeframes';refreshSentences();chips(m);setScope(m)}
+function scopeFacts(m){const cv=cov(m);return cv.read.map(t=>tfl(t)+': '+(m.rd[t].a.active?why(m,t):'quiet')).join('; ')+(cv.unread.length?'. Not read: '+cv.unread.map(tfl).join(', '):'')}
+function openedWhy(m){const cv=cov(m),T=tfl(m.tf),e=m.rd[m.tf],hot=cv.read.filter(t=>m.rd[t].a.active&&t!==m.tf);let s;
+ if(m.pinned)s=`You chose the ${T}, so it stays there. `+(hot.length?'Elsewhere something is stirring: '+hot.map(tfl).join(', ')+'. ':'');
+ else if(e.a.active)s=`It opened on the ${T} because that is where the most is happening: ${why(m,m.tf)}. Each timeframe is judged against its own usual candle size, so the 1m does not win just for ticking constantly. `;
+ else s=`Nothing stood out on any timeframe read, so it opened on the ${tfl(HOME)}, your usual one. `;
+ return s+(cv.unread.length?`Not read: ${cv.unread.map(tfl).join(', ')}. `+(m.src==='t'?'Those cost data credits, so use "Read the other timeframes" if you want them counted.':'They could not be loaded.'):'All six timeframes were read.')}
+ 
 /* ---- Solana / Pump.fun discovery ----
    Discovery is intentionally separate from Binance candles. DEX Screener supplies discovery
    and pair statistics; GeckoTerminal supplies pool OHLCV. Neither source proves token safety.
@@ -595,10 +658,10 @@ app.appendChild(launch);
 const live=MARKETS.filter(m=>m.on!==false);let group='',n=0;
 for(const m of live){
  if(m.g!==group){group=m.g;app.insertAdjacentHTML('beforeend',`<h2 data-g="${group}">${group}</h2>`);}
- m.tf=15;m.show={gap:true,fib:true};m.lines=[];m.hist=[];m.big=new Set();
+ m.tf=15;m.rd={};m.pinned=false;m.show={gap:true,fib:true};m.lines=[];m.hist=[];m.big=new Set();
  const el=m.el=document.createElement('section');el.className='m';el.dataset.g=m.g;el.style.setProperty('--c',HUES[n++%HUES.length]);
- el.innerHTML=`<button aria-expanded="false"><div class="n"><i class="dot"></i>${m.k} · ${m.name}</div><div class="s w">Reading the last few hours…</div><span class="x">+</span></button><div class="p"><div>
- <div class="tf">${TFS.map(t=>`<button class="chip${t[1]===15?' on':''}" data-tf="${t[1]}">${t[0]}</button>`).join('')}</div>
+ el.innerHTML=`<button aria-expanded="false"><div class="n"><i class="dot"></i>${m.k} · ${m.name}</div><div class="s w">Reading the last few hours…</div><div class="sc"></div><span class="x">+</span></button><div class="p"><div>
+ <div class="tf">${TFS.map(t=>`<button class="chip${t[1]===15?' on':''}" data-tf="${t[1]}">${t[0]}</button>`).join('')}<button class="chip" data-readall hidden>Read the other timeframes</button></div>
  <div class="ch"></div><p class="rd"></p>
  <div class="tf"><button class="chip on" data-t="gap">Show the gap</button><button class="chip on" data-t="fib">Show the fib levels</button></div>
  <div class="dl">Ask ${m.k} anything</div><div class="th"></div>
@@ -608,7 +671,7 @@ for(const m of live){
  <div class="jr"><div class="dl">Journal</div><textarea placeholder="Write what you're seeing, or what you expect. No format."></textarea>
  <div class="tf" style="margin-top:10px"><input type="date"><button class="chip on" data-j="save">Save entry</button><button class="chip" data-j="cancel" hidden>Cancel</button></div><div class="el"></div></div>
  <div class="f"><a class="tv" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" target="_blank" rel="noopener">See it on TradingView</a></div></div></div>`;
- app.appendChild(el);m.s=el.querySelector('.s');m.fx=el.querySelector('.fx');m.asked=new Set();qdeal(m);qrender(m);
+ app.appendChild(el);m.s=el.querySelector('.s');m.sc=el.querySelector('.sc');m.fx=el.querySelector('.fx');m.asked=new Set();qdeal(m);qrender(m);
 }
 function say(m,who,text){const d=document.createElement('div');d.className='msg '+who;d.textContent=text;const th=m.el.querySelector('.th');th.appendChild(d);d.scrollIntoView({block:'nearest',behavior:'smooth'});return d}
 async function ask(m,q){
@@ -812,15 +875,13 @@ function paint(m){
  // every card's sentence is dealt together, so no two cards say the same thing
  refreshSentences();
  el.classList.toggle('up',mv&&mo.up);el.classList.toggle('dn',mv&&!mo.up);el.classList.toggle('strong',mo.k==='strong');
- const sk='mb_seen_'+m.k+'_'+m.tf;m.seen=m.seen||{};
- if(!(m.tf in m.seen)){const pv=store.get(sk,null);m.seen[m.tf]=pv;if(!pv||Date.now()-pv.at>12e5)store.set(sk,{at:Date.now(),price:m.res.last.c,g:m.res.near?{lo:m.res.near.lo,hi:m.res.near.hi,up:m.res.near.up}:null})}
- ctx(m);
+ ensureSeen(m,m.tf,m.res);chips(m);setScope(m);ctx(m);
 
  m.days=new Map();m.c.forEach(x=>{const d=day(x.t/1000);if(!m.days.has(d))m.days.set(d,x.t/1000)});
  if(m.chart){m.chart.applyOptions({timeScale:{timeVisible:m.tf<1440}});m.sr.setData(m.c.map(x=>({time:x.t/1000,open:x.o,high:x.h,low:x.l,close:x.c})));draw(m);jrender(m);m.chart.timeScale().setVisibleLogicalRange({from:Math.max(0,m.c.length-90),to:m.c.length+6});m.show_(m.c[m.c.length-1]);MB.touch(m);}
 }
-async function load(m){
- try{m.c=await getCandles(m,m.tf);m.res=read(m.c,m.tf);m.lastUpdated=Date.now();paint(m);}
+async function load(m,err){
+ try{if(err)throw err;setRd(m,m.tf,await getCandles(m,m.tf));use(m,m.tf);paint(m);}
  catch(e){m.s.classList.remove('w');m.s.classList.add('calm');m.s.textContent=e==='nokey'?'Add your Twelve Data key using the Data key button in the header.':m.src==='t'?'No data came back for this market. Check the key, or this market may need a paid Twelve Data plan.':'Couldn\'t reach the price feed. Try again in a moment.';}
 }
 function toggle(m,force){
@@ -844,7 +905,7 @@ for(const m of live){
  const el=m.el,ta=el.querySelector('textarea'),dt=el.querySelector('input[type=date]'),sv=el.querySelector('[data-j=save]'),cn=el.querySelector('[data-j=cancel]'),inp=el.querySelector('[data-ask]');
  dt.value=new Date().toISOString().slice(0,10);
  el.querySelector(':scope>button').onclick=()=>toggle(m);
- el.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{m.win=null;m.tf=+b.dataset.tf;el.querySelectorAll('[data-tf]').forEach(x=>x.classList.toggle('on',x===b));m.s.classList.add('w');load(m);});
+ el.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{m.win=null;m.pinned=true;m.tf=+b.dataset.tf;el.querySelectorAll('[data-tf]').forEach(x=>x.classList.toggle('on',x===b));m.s.classList.add('w');load(m);});
  el.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{m.show[b.dataset.t]=b.classList.toggle('on');draw(m);jrender(m);});
  el.querySelector('.qs').onclick=ev=>{const b=ev.target.closest('[data-qi]');if(!b||!m.res)return;if(b.dataset.qi==='s'){qdeal(m);qrender(m);return}const j=+b.dataset.qi,i=m.qs[j];m.asked.add(i);say(m,'u',QB[i][1]);say(m,'a',QB[i][2](m));const nx=qpick(m,QB[i][0],m.qs);if(nx!=null)m.qs[j]=nx;qrender(m)};
  // tiles: tap to grow, or send a tile to the assistant
@@ -862,7 +923,7 @@ for(const m of live){
  el.querySelector('.el').onclick=ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const e=J.find(x=>x.id===b.closest('.en').dataset.id);if(!e)return;
   if(b.dataset.a==='edit'){m.editing=e.id;ta.value=e.text;dt.value=e.date;m.sel=e.date;sv.textContent='Save changes';cn.hidden=false;jrender(m);ta.focus()}
   if(b.dataset.a==='del'&&confirm('Delete this entry?')){J=J.filter(x=>x!==e);saveJ();jrender(m)}};
- jrender(m);load(m);
+ el.querySelector('[data-readall]').onclick=()=>readAll(m);jrender(m);scan(m);
 }
 const groups=[...new Set(live.map(m=>m.g))];
 bar.insertAdjacentHTML('afterbegin',['All',...groups].map((g,i)=>`<button class="chip${i?'':' on'}" data-f="${g}">${g}</button>`).join('')+'<button class="go" id="go">Show me what\'s moving</button>');
@@ -874,15 +935,15 @@ bar.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{
 document.getElementById('go').onclick=()=>{
  const ready=live.filter(m=>m.res);
  if(!ready.length){note.textContent='Still reading the markets. Give it a second.';return;}
- const movers=ready.filter(m=>m.res.mo.k!=='still').sort((a,b)=>(b.res.mo.k==='strong')-(a.res.mo.k==='strong')||b.res.mo.pct-a.res.mo.pct);
- let pick=movers[0];
- if(pick)note.textContent=`${pick.k} is ${pick.res.mo.k==='strong'?'moving fast':'moving'} ${pick.res.mo.up?'up':'down'}.`;
+ const rk=ready.map(m=>({m,b:bestOf(m)})).filter(x=>x.b.active).sort((a,b)=>b.b.score-a.b.score);
+ let pick=rk[0]&&rk[0].m;
+ if(pick){const tf=rk[0].b.tf;if(pick.tf!==tf)switchTf(pick,tf);note.textContent=`${pick.k} on the ${tfl(tf)}: ${why(pick,tf)}.`}
  else{
   const g=ready.filter(m=>m.res.near);
   const ins=g.filter(m=>m.res.inside).sort((a,b)=>b.res.run*b.res.tfm-a.res.run*a.res.tfm)[0];
   pick=ins||g.sort((a,b)=>a.res.dist-b.res.dist)[0];
-  if(!pick){note.textContent='Everything is quiet right now.';return;}
-  note.textContent=ins?`Everything is quiet. ${pick.k} has been sitting in a gap the longest.`:`Everything is quiet. ${pick.k} is the closest to a gap.`;
+  if(!pick){note.textContent='Everything I read is quiet right now.';return;}
+  note.textContent=ins?`Everything I read is quiet. ${pick.k} has been sitting in a gap the longest.`:`Everything I read is quiet. ${pick.k} is the closest to a gap.`;
  }
  document.querySelectorAll('[data-f]')[0].click();
  toggle(pick,true);
