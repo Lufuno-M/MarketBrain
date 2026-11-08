@@ -12,11 +12,12 @@ It is one HTML file: `index.html`.
 - **Says when nothing happened.** A quiet market is reported as quiet.
 - **Shows its reasoning.** Each card lists what it knows, what it infers, and what it can't tell.
 - **Shows what's behind the market before you trade.** Opening a market puts a briefing above the chart: recent headlines for that market (GDELT) beside this week's scheduled economic releases (Forex Factory calendar). The only choices are to read on or go to trading. Headlines are what was reported, not proof of why price moved.
+- **News button** at the top: what is moving every market this week (headlines and high impact releases), in one place.
 - **Lets you mark the chart.** Levels, lines, zones and fibs, kept per market.
 - **Keeps a journal** per market, with dated entries marked on the chart.
 - **Answers questions** about the chart you're looking at, from quick questions with no key, or typed questions with an AI key.
-- **Paper trading** with a full-screen order view and a screen that changes colour with the position.
-- **Broker connection** (Alpaca first) so the same screen can respond to a real position. Read-only.
+- **Demo account** with R100,000 of pretend money against real prices. Buy and Sell open a full-screen order view, and the whole screen takes the colour of your position: green in profit, red in drawdown, faster and stronger near your stop or target. Balance, positions and orders are remembered in the browser.
+- **Broker shortcuts** with each broker's icon (TradingView, Exness, XM, Plus500) in the header and under every chart. They open the broker's own site after a confirmation.
 
 ## Markets
 
@@ -28,31 +29,14 @@ Crypto (BTC, ETH, SOL, BNB, XRP) from Binance, with no key needed. Forex, gold, 
 2. Footer, **Market data connection**: paste your Twelve Data key. It stays in your browser only.
 3. Footer, **AI connection** (optional): paste a Gemini, GitHub Models or Anthropic key for typed questions.
 
-## Connecting a broker
-
-MarketBrain sends you to the broker to sign in and approve access. The broker sends you back with a one-time code, and a small service swaps it for a token. That service exists because the swap needs a client secret, and a secret can't sit in a public page.
-
-1. **Register an app with Alpaca** and note its client ID and secret. The return address to register is the exact address of your MarketBrain page (the footer's **Broker connection** > Setup shows it).
-2. **Deploy `broker-worker.js`** as a Cloudflare Worker. Add `ALPACA_CLIENT_ID`, `ALPACA_CLIENT_SECRET` (secret) and `ALLOWED_ORIGIN` (for example `https://lufuno-m.github.io`).
-3. In MarketBrain, **Broker connection** > Setup: paste the client ID and the Worker's address, then Save.
-4. Choose **Continue to Alpaca (paper)** first. Try live only after paper works.
-
-What to know:
-- MarketBrain only **reads** the account and positions. It does not place orders. The service refuses anything except those two reads.
-- Alpaca's access scopes don't include a read-only trading option, so the token is broader than what MarketBrain uses. It lives in the browser tab only and disappears when the tab closes.
-- A real position makes the screen green (in profit) or red (in drawdown) while its market is open. MarketBrain doesn't read your stop or target from the broker, so there is no "near stop" state for real positions. Paper positions have it.
-- Exness, XM and Plus500 don't offer a sign-in connection a website like this can use. Their buttons open their sites.
-- Alpaca covers US stocks, ETFs and crypto. Check it's available where you live.
-
 ## What it deliberately doesn't do
 
 - No predictions, no trade calls, no win rates.
 - No sample or demo candles.
-- Paper fills use the latest loaded candle close. There's no slippage, commission or margin.
-- Stop-loss and take-profit levels on paper positions are watched visually. They don't close anything.
+- Demo fills use the latest loaded candle close. There's no slippage, commission or margin, and sizes convert to rand at a fixed demo rate (R18 to US$1).
+- Stop-loss and take-profit levels on demo positions are watched visually. They don't close anything.
 
 ## Files
 
 - `index.html`: the app.
-- `broker-worker.js`: the small connection service for broker sign-in. Only needed if you want the broker connection.
 - `model/`: the core model.
