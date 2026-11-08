@@ -300,6 +300,25 @@ body.trade-near-tp #trade-atmosphere{opacity:.85;animation-duration:3s;backgroun
 @media(max-width:640px){#mb-settings{padding:16px;align-items:flex-start;flex-direction:column}.market-news-dock{padding:9px}.market-news-dock .market-news-item{flex-basis:82vw}.trade-actions button{min-height:68px}.paper-panel{padding:22px 18px}.paper-panel .paper-close{right:16px}.paper-side-switch button{min-height:72px}}
 @media(prefers-reduced-motion:reduce){.paper-panel::before,#trade-atmosphere{animation:none!important}}
 
+/* Before you trade: half-width briefing, always visible once a market is open */
+.market-news-dock.nb{padding:16px 18px 14px;border-radius:22px;margin:4px 0 16px}
+.nb-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.nb-title{font-size:17px;font-weight:600;letter-spacing:-.01em;color:var(--ink)}
+.nb-actions{display:flex;gap:8px;flex-wrap:wrap}
+.nb-actions button{font:inherit;font-size:14px;padding:9px 17px;border-radius:99px;border:1px solid #ffffffc0;background:#ffffff78;color:var(--ink);cursor:pointer;box-shadow:inset 0 1px 0 #fff;transition:transform .25s,box-shadow .25s}
+.nb-actions button:hover{transform:translateY(-1px);box-shadow:0 8px 22px #ff5fa826}
+.nb-actions button.primary{background:linear-gradient(90deg,#ffd7ea,#fff0a8);font-weight:600}
+.nb-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.nb-grid h4{margin:0 0 4px;font-size:14px;font-weight:600;color:var(--mute)}
+.nb-item{display:block;padding:10px 0;border-top:1px solid #ffffffa8;color:var(--ink);text-decoration:none;font-size:15px;line-height:1.4}
+a.nb-item:hover{background:#ffffff40}
+.nb-item small{display:block;color:var(--mute);font-size:12px;margin-top:3px;line-height:1.4}
+.nb-grid p.muted{font-size:13px;margin:8px 0}
+.nb-src{margin:12px 0 0;font-size:12px;color:var(--mute)}
+@media(max-width:700px){.nb-grid{grid-template-columns:1fr;gap:14px}.nb-title{font-size:16px}}
+#nw-modal{position:fixed;inset:0;z-index:112;background:#24152a55;display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#nw-modal.show{display:flex}
+#nw-modal .nw-panel{width:min(100%,880px);max-height:90vh;overflow:auto}
 </style></head><body class="v-cards">
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div><div id="trade-atmosphere" aria-hidden="true"></div>
 <header>
@@ -308,9 +327,7 @@ body.trade-near-tp #trade-atmosphere{opacity:.85;animation-duration:3s;backgroun
 <div class="bar" id="bar" aria-hidden="true"></div>
 <div class="vb" id="vb" hidden><button class="chip" id="pv" type="button">Previous</button><span id="lb"></span><button class="chip" id="nx" type="button">Next</button><button class="chip" id="tour" type="button">Walk me through</button><button class="go" id="go" type="button">Where was I?</button></div>
 <p id="note"></p>
-<div class="market-search" id="market-search">
- <input id="market-filter" type="search" placeholder="Find a market — BTC, EURUSD, US30, Apple…" aria-label="Search markets">
-</div>
+<div class="market-search" id="market-search"><button class="chip" id="nwopen" type="button">News</button></div>
 
 </header>
 <main id="app"></main>
@@ -640,7 +657,7 @@ const QB=[
  [2,'What has not changed since I last looked?',m=>seen(m)||'You looked only a few minutes ago, which is too soon for a fair comparison.'],
  [2,'What would close this gap, by the rule on this page?',m=>{const n=m.res.near,l=m.res.last.c;if(!n)return 'There is no open gap to close.';return `A ${n.up?'buying':'selling'} gap counts as closed when one candle trades ${n.up?`down to ${fmt(n.lo)}`:`up to ${fmt(n.hi)}`}. From ${fmt(l)} that is ${dst(m,n.up?l-n.lo:n.hi-l)}. Whether a closed gap stops mattering to you is your call. The page only keeps the rule.`}],
  [2,'What is one candle on this chart made of?',m=>m.tf===1?'A 1-minute candle is the smallest this page loads. It is also made of smaller moves it cannot see.':`One ${tfl(m.tf)} candle is ${m.tf>=1440?'1,440':m.tf} one-minute candles squeezed into a single body and two wicks. Flip to 1m and 5m and see whether the picture you are reading survives being unpacked.`],
- [2,'What is coming up on the clock?',m=>clock(m,true)+' This page has no news feed, so scheduled releases (rate decisions, jobs data) are not here. A quiet chart before one is not the same as a quiet market.'],
+ [2,'What is coming up on the clock?',m=>clock(m,true)+' The briefing above the chart lists the scheduled releases for this week (rate decisions, jobs data) when its calendar loads. A quiet chart before one is not the same as a quiet market.'],
  [2,'What do I think this is, before price answers?',m=>{const k=J.filter(e=>e.k===m.k).length;return `What the page can state: ${sentence(m.res)} What it cannot: why. If you have a read, write it in the journal before you see what price does, so later you can study your reasoning, not just the result. You have ${k} journal ${k===1?'entry':'entries'} on ${m.k}.`}],
  [2,'Which levels here are still untouched?',m=>{const{near:n,sh,sl}=m.res,c=m.c,t=[];if(n)t.push(`the ${n.up?'buying':'selling'} gap at ${fmt(n.lo)} to ${fmt(n.hi)} is ${n.entered?'overlapped but not fully traded through':'untouched'}`);if(sh)t.push(`the swing high at ${fmt(sh.p)} has ${c.slice(sh.i+1).some(x=>x.h>sh.p)?'been taken out':'not been taken out'}`);if(sl)t.push(`the swing low at ${fmt(sl.p)} has ${c.slice(sl.i+1).some(x=>x.l<sl.p)?'been taken out':'not been taken out'}`);return t.length?'In the loaded candles: '+t.join('; ')+'. That is the state of the chart, not a list of places to act.':'No clear gap or swing in these candles yet.'}],
  [2,'Where is price trying to go?',m=>{const a=around(m);return `Nothing on this chart shows intent, only motion and unfinished business. Motion: ${sentence(m.res)} Above price: ${a.above}. Below price: ${a.below}. Those are the places price has left open, not places it is heading.`}],
@@ -1266,20 +1283,102 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
    <a href="https://www.plus500.com/" data-broker="Plus500" data-url="https://www.plus500.com/">Plus500</a>
   </div><p class="muted" style="margin-top:9px">You'll leave MarketBrain and sign in directly with the provider. MarketBrain does not receive your broker password.</p>
  </div>`;
- async function loadAssetNews(m,box){
-   const status=$('.news-status',box),list=$('.market-news-list',box);
-   status.textContent='Looking for recent coverage…';list.innerHTML='';
-   const q=encodeURIComponent('"'+m.name+'" '+m.k+' markets');
-   const feed='https://news.google.com/rss/search?q='+q+'&hl=en-US&gl=US&ceid=US:en';
-   try{
-     const url='https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(feed);
-     const r=await fetch(url);if(!r.ok)throw Error('news feed');
-     const j=await r.json(),items=(j.items||[]).slice(0,5);
-     if(!items.length){status.textContent='No recent matching headlines were returned.';return}
-     status.textContent='Recent coverage · Google News RSS';
-     list.innerHTML=items.map(x=>`<a class="market-news-item" href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.title)}<small>${esc(x.author||x.source||'News source')} · ${x.pubDate?new Date(x.pubDate).toLocaleString():''}</small></a>`).join('');
-   }catch(e){status.textContent='News is temporarily unavailable. Use the search link below to inspect current coverage.'}
+ /* ---- Before you trade: what's behind the market ----
+    Headlines come from GDELT (open, no key, browser-readable). Scheduled releases come from the free
+    Forex Factory weekly feed. Both are shown as published: a headline is what was reported, not proof of why price moved. */
+ const NEWSQ={BTC:'("Bitcoin" OR BTC) (price OR market OR crypto)',ETH:'("Ethereum" OR ETH) (price OR market OR crypto)',SOL:'("Solana" OR SOL) (price OR market OR crypto)',BNB:'("BNB" OR "Binance Coin") (price OR market OR crypto)',XRP:'(XRP OR Ripple) (price OR market OR crypto)',
+  GBPUSD:'("pound sterling" OR "Bank of England" OR "US dollar")',EURUSD:'(euro OR ECB OR "US dollar")',USDJPY:'(yen OR "Bank of Japan" OR "US dollar")',XAUUSD:'("gold price" OR "gold futures")',XAGUSD:'("silver price" OR "silver futures")',UUP:'("US dollar" OR "dollar index")',
+  SPX500:'("S&P 500" OR "Wall Street")',US30:'("Dow Jones" OR "Wall Street")',NAS100:'(Nasdaq OR "tech stocks")'};
+ const CURS={GBPUSD:['GBP','USD'],EURUSD:['EUR','USD'],USDJPY:['USD','JPY'],AUDUSD:['AUD','USD'],USDCAD:['USD','CAD'],USDCHF:['USD','CHF'],NZDUSD:['NZD','USD'],EURGBP:['EUR','GBP'],GBPJPY:['GBP','JPY']};
+ const newsQuery=m=>(NEWSQ[m.k]||(m.g==='Equities'?'"'+m.name+'" (stock OR shares OR earnings)':'"'+m.name+'" markets'))+' sourcelang:english';
+ const cursOf=m=>CURS[m.k]||['USD'];
+ const NB_KEEP=600000;
+ const cache={get(k){try{const v=JSON.parse(sessionStorage.getItem(k));return v&&Date.now()-v.t<(v.ttl||NB_KEEP)?v.d:null}catch(e){return null}},set(k,d,ttl){try{sessionStorage.setItem(k,JSON.stringify({t:Date.now(),ttl,d}))}catch(e){}}};
+ /* GDELT asks for roughly one request every five seconds, so searches queue. */
+ const GD={last:0,chain:Promise.resolve()};
+ function gdelt(q){
+   const run=async()=>{
+     const wait=Math.max(0,GD.last+5300-Date.now());if(wait)await new Promise(r=>setTimeout(r,wait));
+     GD.last=Date.now();
+     const r=await fetch('https://api.gdeltproject.org/api/v2/doc/doc?'+new URLSearchParams({query:q,mode:'ArtList',format:'json',maxrecords:'20',sort:'DateDesc',timespan:'3d'}));
+     const t=await r.text();let j;try{j=JSON.parse(t)}catch(e){throw Error('busy')}
+     return j.articles||[];
+   };
+   const p=GD.chain.then(run,run);GD.chain=p.catch(()=>{});return p;
  }
+ async function headlines(m){
+   const key='mb_gd_'+m.k,hit=cache.get(key);if(hit)return hit;
+   let a;try{a=await gdelt(newsQuery(m))}catch(e){if(e.message!=='busy')throw e;a=await gdelt(newsQuery(m))}
+   const seen=new Set(),out=[];
+   for(const x of a){const t=String(x.title||'').trim(),k=t.toLowerCase().slice(0,60);if(!t||seen.has(k)||!/^https?:/.test(x.url||''))continue;seen.add(k);
+     const d=String(x.seendate||''),when=d.length>=15?Date.parse(d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8)+'T'+d.slice(9,11)+':'+d.slice(11,13)+':'+d.slice(13,15)+'Z'):NaN;
+     out.push({title:t,url:x.url,domain:x.domain||'',when});}
+   cache.set(key,out);return out;
+ }
+ let econP=null;
+ function econ(){
+   if(econP)return econP;
+   const hit=cache.get('mb_ff');if(hit)return econP=Promise.resolve(hit);
+   econP=fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json').then(r=>{if(!r.ok)throw Error('calendar '+r.status);return r.json()}).then(d=>{if(!Array.isArray(d))throw Error('calendar');cache.set('mb_ff',d,1800000);return d});
+   econP.catch(()=>{econP=null});return econP;
+ }
+ const ago=t=>{if(!isFinite(t))return '';const h=(Date.now()-t)/36e5;return h<1?Math.max(1,Math.round(h*60))+' min ago':h<24?Math.round(h)+' hours ago':Math.round(h/24)+' days ago'};
+ const nbItems=(list,more,fn)=>list.slice(0,more?list.length:4).map(fn).join('');
+ function drawNB(m,box){
+   const st=m._nb||{};const more=!!st.more;
+   const n=$('.nb-news',box),e=$('.nb-econ',box);
+   n.innerHTML=st.newsErr?`<p class="muted">${esc(st.newsErr)}</p>`:!st.news?'<p class="muted">Looking for recent headlines…</p>':!st.news.length?'<p class="muted">No matching headlines in the last three days.</p>':nbItems(st.news,more,x=>`<a class="nb-item" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}<small>${esc(x.domain)}${x.domain&&isFinite(x.when)?' · ':''}${esc(ago(x.when))}</small></a>`);
+   const cs=cursOf(m);
+   if(st.econErr)e.innerHTML=`<p class="muted">${esc(st.econErr)}</p>`;
+   else if(!st.econ)e.innerHTML='<p class="muted">Loading this week\'s releases…</p>';
+   else{
+     const now=Date.now(),all=st.econ.filter(x=>cs.includes(x.country)&&(x.impact==='High'||x.impact==='Medium')).map(x=>({...x,t:Date.parse(x.date)})).filter(x=>isFinite(x.t)).sort((a,b)=>a.t-b.t);
+     const next=all.filter(x=>x.t>=now),done=all.filter(x=>x.t<now&&now-x.t<864e5).reverse();
+     const row=(x,past)=>`<div class="nb-item"><span><b>${esc(x.country)}</b> ${esc(x.title)}</span><small>${esc(ny24(x.t))} NY · ${esc(x.impact.toLowerCase())} impact${past?' · released':''}${x.actual?' · actual '+esc(x.actual):''}${x.forecast?' · forecast '+esc(x.forecast):''}${x.previous?' · previous '+esc(x.previous):''}</small></div>`;
+     const items=[...done.slice(0,more?done.length:2).map(x=>row(x,true)),...next.slice(0,more?next.length:Math.max(2,4-Math.min(2,done.length))).map(x=>row(x,false))].join('');
+     e.innerHTML=items||`<p class="muted">No high or medium impact ${esc(cs.join('/'))} releases are listed for the rest of this week.</p>`;
+   }
+   const b=$('[data-nb="more"]',box);if(b)b.textContent=more?'Show fewer':'Show all';
+ }
+ async function loadAssetNews(m,box){
+   m._nb={more:false};
+   if(!box._wired){box._wired=true;box.addEventListener('click',ev=>{const b=ev.target.closest('[data-nb]');if(!b)return;
+     if(b.dataset.nb==='more'){m._nb.more=!m._nb.more;drawNB(m,box)}
+     else if(b.dataset.nb==='trade'){const t=m.el.querySelector('.trade-actions');if(t)t.scrollIntoView({behavior:'smooth',block:'center'})}})}
+   drawNB(m,box);
+   headlines(m).then(v=>{m._nb.news=v},e=>{m._nb.newsErr=e instanceof TypeError?"The headline service couldn't be reached from this browser.":'Headlines are unavailable right now.'}).then(()=>drawNB(m,box));
+   econ().then(v=>{m._nb.econ=v},e=>{m._nb.econErr=e instanceof TypeError?"The economic calendar couldn't be reached from this browser.":'The economic calendar is unavailable right now.'}).then(()=>drawNB(m,box));
+ }
+ /* ---- News button: what is moving every market this week ---- */
+ NEWSQ._ALL='("stock market" OR "Federal Reserve" OR inflation OR "interest rates" OR "oil prices" OR "jobs report")';
+ const nw=document.createElement('div');nw.id='nw-modal';document.body.appendChild(nw);
+ const NW={more:false,news:null,econ:null,newsErr:'',econErr:'',started:false};
+ const nwClose=()=>nw.classList.remove('show');
+ function nwDraw(){
+   const more=NW.more;
+   const nHtml=NW.newsErr?`<p class="muted">${esc(NW.newsErr)}</p>`:!NW.news?'<p class="muted">Looking for headlines…</p>':!NW.news.length?'<p class="muted">No matching headlines in the last three days.</p>':NW.news.slice(0,more?NW.news.length:6).map(x=>`<a class="nb-item" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)}<small>${esc(x.domain)}${x.domain&&isFinite(x.when)?' · ':''}${esc(ago(x.when))}</small></a>`).join('');
+   let eHtml;
+   if(NW.econErr)eHtml=`<p class="muted">${esc(NW.econErr)}</p>`;
+   else if(!NW.econ)eHtml='<p class="muted">Loading this week\'s releases…</p>';
+   else{
+     const now=Date.now(),all=NW.econ.filter(x=>x.impact==='High').map(x=>({...x,t:Date.parse(x.date)})).filter(x=>isFinite(x.t)).sort((a,b)=>a.t-b.t);
+     const next=all.filter(x=>x.t>=now),done=all.filter(x=>x.t<now&&now-x.t<864e5).reverse();
+     const row=(x,past)=>`<div class="nb-item"><span><b>${esc(x.country)}</b> ${esc(x.title)}</span><small>${esc(ny24(x.t))} NY${past?' · released':''}${x.actual?' · actual '+esc(x.actual):''}${x.forecast?' · forecast '+esc(x.forecast):''}${x.previous?' · previous '+esc(x.previous):''}</small></div>`;
+     eHtml=[...done.slice(0,more?done.length:2).map(x=>row(x,true)),...next.slice(0,more?next.length:6).map(x=>row(x,false))].join('')||'<p class="muted">No high impact releases are listed for the rest of this week.</p>';
+   }
+   nw.innerHTML=`<div class="broker-panel nw-panel" role="dialog" aria-modal="true" aria-labelledby="nw-title"><div class="nb-head"><span class="nb-title" id="nw-title">What is moving markets</span><div class="nb-actions"><button type="button" data-nw="more">${more?'Show fewer':'Show all'}</button><button type="button" class="primary" data-nw="close">Close</button></div></div>
+    <div class="nb-grid"><section><h4>Headlines, last three days</h4>${nHtml}</section><section><h4>High impact releases this week</h4>${eHtml}</section></div>
+    <p class="nb-src">Headlines from GDELT, releases from the Forex Factory calendar. Each market's own briefing sits above its chart. A headline is what was reported, not proof of why price moved.</p></div>`;
+ }
+ function nwOpen(){
+   nw.classList.add('show');nwDraw();
+   if(NW.started)return;NW.started=true;
+   headlines({k:'_ALL',name:'markets',g:'All'}).then(v=>{NW.news=v},e=>{NW.newsErr=e instanceof TypeError?"The headline service couldn't be reached from this browser.":'Headlines are unavailable right now.';NW.started=false}).then(nwDraw);
+   econ().then(v=>{NW.econ=v},e=>{NW.econErr=e instanceof TypeError?"The economic calendar couldn't be reached from this browser.":'The economic calendar is unavailable right now.';NW.started=false}).then(nwDraw);
+ }
+ nw.addEventListener('click',ev=>{if(ev.target===nw)return nwClose();const b=ev.target.closest('[data-nw]');if(!b)return;if(b.dataset.nw==='close')nwClose();else if(b.dataset.nw==='more'){NW.more=!NW.more;nwDraw()}});
+ addEventListener('keydown',ev=>{if(ev.key==='Escape')nwClose()});
+ const nwBtn=document.getElementById('nwopen');if(nwBtn)nwBtn.onclick=nwOpen;
  // Add a quiet instrument dashboard extension to every chart panel.
  live.forEach(m=>{
    const panel=m.el.querySelector('.p>div');
@@ -1294,9 +1393,10 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
     <div class="paper-stats paper-summary" data-market="${esc(m.k)}"></div>
     <div class="muted" style="margin-top:8px">Paper orders use the latest loaded candle close as the simulated fill price. They do not represent executable live quotes.</div>`;
    const news=document.createElement('div');
-   news.className='market-news-dock';
-   news.innerHTML=`<div class="market-extra-head"><span class="market-extra-title">News & developments · ${esc(m.k)}</span><a href="https://news.google.com/search?q=${encodeURIComponent(m.name+' '+m.k+' markets')}" target="_blank" rel="noopener">Search coverage</a></div>
-    <p class="muted news-status" style="margin-top:8px">Open this instrument to load recent matching headlines.</p><div class="market-news-list"></div>`;
+   news.className='market-news-dock nb';
+   news.innerHTML=`<div class="nb-head"><span class="nb-title">Before you trade: what's behind ${esc(m.k)}</span><div class="nb-actions"><button type="button" data-nb="more">Show all</button><button type="button" class="primary" data-nb="trade">Go to trading</button></div></div>
+    <div class="nb-grid"><section><h4>Headlines, last three days</h4><div class="nb-news"><p class="muted">Open this market to load them.</p></div></section><section><h4>Scheduled releases this week</h4><div class="nb-econ"></div></section></div>
+    <p class="nb-src">Headlines from GDELT, releases from the Forex Factory calendar. A headline is what was reported, not proof of why price moved.</p>`;
    function brokerHolder(){const d=document.createElement('div');d.innerHTML=brokerMarkup(m);return d.firstElementChild}
    const f=panel.querySelector('.f');
    const timeframe=panel.querySelector('.tf');
@@ -1308,19 +1408,6 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
    tools.insertAdjacentElement('afterend',brokerHolder());
    const broker=tools.nextElementSibling;
    m._newsBox=news;m._newsLoaded=false;
- });
- // Asset search filters the instrument list without turning every instrument into a dashboard card.
- const search=$('#market-filter');
- if(search)search.addEventListener('input',()=>{
-   const q=search.value.trim().toLowerCase();
-   live.forEach(m=>{
-     const match=!q||[m.k,m.name,m.g,m.sym].some(v=>String(v||'').toLowerCase().includes(q));
-     m.el.style.display=match?'':'none';
-   });
-   document.querySelectorAll('#app>h2[data-g]').forEach(h=>{
-     const any=[...h.parentElement.querySelectorAll('.m')].some(m=>m.dataset.g===h.dataset.g&&m.style.display!=='none');
-     h.style.display=any?'':'none';
-   });
  });
  // Load per-instrument news when its dashboard is opened.
  const oldToggle=toggle;
