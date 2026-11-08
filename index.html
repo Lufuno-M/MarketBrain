@@ -151,19 +151,99 @@ body.v-focus #dock .lbl{display:block;font-size:14px;color:var(--mute);padding:0
 .sc{grid-column:1;font-size:15px;line-height:1.4;color:var(--mute);letter-spacing:-.01em;max-width:44em}.sc:empty{display:none}
 .tf .chip.hot{position:relative}.tf .chip.hot::after{content:"";position:absolute;top:5px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--c);box-shadow:0 0 8px 2px var(--c)}.tf .chip.unread{opacity:.55}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* MarketBrain workspace refinements — keep the original pink / yellow glass language. */
+#tagline{transition:opacity .45s ease,transform .45s ease}#tagline.fresh{animation:mb-tagline-in .65s ease both}@keyframes mb-tagline-in{from{opacity:.35;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.market-search{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:16px 0 4px}
+.market-search input{min-width:220px;max-width:440px;flex:1;padding:12px 16px;border-radius:99px;border:1px solid #ffffffc0;background:#ffffff70;color:var(--ink);font:inherit;box-shadow:inset 0 1px 0 #fff;backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4)}
+.market-search .hint{font-size:12px;color:var(--mute)}
+.market-extra{margin:22px 0 26px;padding:18px 0;border-top:1px solid #ffffffa8;border-bottom:1px solid #ffffffa8;background:transparent}
+.market-extra-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.market-extra-title{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.trade-actions,.broker-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.trade-actions button,.market-extra button,.market-extra a,.broker-links a{border:1px solid #ffffffc0;border-radius:99px;padding:9px 16px;color:var(--ink);background:#ffffff78;box-shadow:inset 0 1px 0 #fff;font:inherit;font-size:13px;text-decoration:none;cursor:pointer;backdrop-filter:blur(16px) saturate(1.35);-webkit-backdrop-filter:blur(16px) saturate(1.35);transition:transform .2s,background .2s,box-shadow .2s}
+.trade-actions button:hover,.market-extra button:hover,.market-extra a:hover,.broker-links a:hover{transform:translateY(-1px);background:#ffffffb0;box-shadow:0 8px 22px #ff5fa826}
+.trade-actions .buy{border-color:#73c99b;color:#267d50}.trade-actions .sell{border-color:#e58a91;color:#a83e49}
+.market-extra .muted{color:var(--mute);font-size:12px}
+.market-news-list{display:grid;gap:0;margin-top:12px}
+.market-news-item{display:block;padding:12px 0;border-top:1px solid #ffffffa8;color:var(--ink);font-size:14px;line-height:1.45}
+.market-news-item small{display:block;color:var(--mute);margin-top:4px;font-size:11px}
+/* Instrument index: compact rows with a quiet selected state, not a stack of cards. */
+body.v-cards .m{margin:0;padding:0 12px;border:0;border-bottom:1px solid #ffffffa8;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+body.v-cards .m:hover{background:#ffffff30;box-shadow:none}
+body.v-cards .m.up,body.v-cards .m.dn,body.v-cards .m.up.strong,body.v-cards .m.dn.strong{background:transparent;box-shadow:none}
+body.v-cards .m.open{margin:5px 0 12px;padding:0 16px;border:1px solid #ffffffb8;border-radius:20px;background:#ffffff50;box-shadow:inset 0 1px 0 #fff,0 12px 34px #3b1d5a14}
+body.v-cards .m>button{display:grid;grid-template-columns:minmax(125px,170px) minmax(0,1fr) 34px;grid-template-rows:auto auto;align-items:center;gap:3px 16px;padding:14px 0}
+body.v-cards .m .n{grid-column:1;grid-row:1/3;font-size:13px;white-space:nowrap;color:var(--mute)}
+body.v-cards .m .s{grid-column:2;grid-row:1;font-size:18px;line-height:1.25;font-weight:600;letter-spacing:-.025em}
+body.v-cards .m .sc{grid-column:2;grid-row:2;font-size:12px;line-height:1.35;color:var(--mute);max-width:none}
+body.v-cards .m .x{grid-column:3;grid-row:1/3;width:32px;height:32px;font-size:19px}
+body.v-cards .m.open .s{font-size:19px}
+body.v-cards .m.open .s.calm{font-size:17px}
+#dock .ask{background:linear-gradient(115deg,#ffffffc9,#fff0f7b8 55%,#fff4d9b8);border:1px solid #ffffffdf;color:var(--ink);box-shadow:inset 0 1px 0 #fff,0 7px 22px #ff5fa826;backdrop-filter:blur(22px) saturate(1.35);-webkit-backdrop-filter:blur(22px) saturate(1.35)}
+#dock .ask:hover{background:linear-gradient(115deg,#fff,#fff3f9 55%,#fff8e8);box-shadow:inset 0 1px 0 #fff,0 10px 26px #ff5fa82e}
+@media(max-width:640px){body.v-cards .m>button{grid-template-columns:105px minmax(0,1fr) 30px;gap:3px 10px;padding:12px 0}body.v-cards .m .n{font-size:11px;white-space:normal}body.v-cards .m .s,body.v-cards .m.up .s,body.v-cards .m.dn .s{font-size:15px}body.v-cards .m .sc{font-size:10px}body.v-cards .m .x{width:27px;height:27px;font-size:17px}}
+/* The chart's accompanying evidence is a reading list, not a second wall of cards. */
+.fx{list-style:none;margin:22px 0 12px;padding:0;display:block;border-top:1px solid #ffffffa8}
+.fx-row{display:grid;grid-template-columns:minmax(125px,170px) minmax(0,1fr) auto;align-items:start;gap:10px 18px;padding:15px 0;border-bottom:1px solid #ffffffa8;color:var(--mute);font-size:15px;line-height:1.5;cursor:default}
+.fx-row>b{font-size:12px;letter-spacing:.11em;text-transform:uppercase;color:var(--mute);font-weight:700;padding-top:2px}
+.fx-row .lead{color:var(--ink);font-weight:600}
+.fx-row .rest{grid-column:2;display:block;margin-top:3px;color:var(--mute)}
+.fx-row .ak{grid-column:3;grid-row:1/3;align-self:center;font-size:12px;padding:7px 12px;white-space:nowrap}
+.fx-row.expanded{background:#ffffff36;padding-inline:12px;border-radius:12px}
+.fx-row.expanded .lead{font-size:17px}
+.fx-row .ak:hover{background:linear-gradient(90deg,#ffd7ea,#fff0a8)}
+.market-extra-title{color:var(--mute)}
+#launches{display:none!important}
+#paper-modal{position:fixed;inset:0;z-index:100;background:#24152a55;display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#paper-modal.show{display:flex}
+.paper-panel{width:min(100%,440px);padding:24px;border-radius:24px;border:1px solid #ffffffd0;background:#fff9fded;color:var(--ink);box-shadow:0 24px 80px #3b1d5a30;backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4)}
+.paper-panel h3{font-size:25px;margin:0 0 6px;color:var(--ink)}
+.paper-panel p{color:var(--mute);font-size:13px;margin-bottom:16px}
+.paper-panel label{display:block;color:var(--mute);font-size:12px;margin:12px 0 6px}
+.paper-panel input,.paper-panel select{width:100%;padding:12px;border-radius:12px;border:1px solid #ffffffc0;background:#ffffffa8;color:var(--ink);font:inherit}
+.paper-panel .paper-submit{width:100%;margin-top:18px;background:linear-gradient(90deg,#ffd7ea,#fff0a8);color:var(--ink);border:0;font-weight:700}
+.paper-panel .paper-close{float:right;background:transparent;border:0;color:var(--mute);font-size:22px}
+.paper-stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;color:var(--mute);font-size:12px}
+.paper-stats strong{display:block;color:var(--ink);font-size:16px;margin-top:3px}
+.paper-status{font-size:12px;color:var(--mute);margin-top:10px;min-height:1.4em}
+#broker-consent{position:fixed;inset:0;z-index:110;background:#24152a55;display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#broker-consent.show{display:flex}
+.broker-panel{width:min(100%,430px);padding:24px;border-radius:24px;background:#fff9fded;color:var(--ink);border:1px solid #ffffffd0;box-shadow:0 24px 80px #3b1d5a30}
+.broker-panel h3{font-size:23px;margin:0 0 8px}.broker-panel p{color:var(--mute);font-size:14px;line-height:1.5}
+.broker-panel .broker-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:20px}
+.broker-panel button{border:1px solid #ffffffc0;border-radius:99px;padding:10px 16px;background:#ffffff90;color:var(--ink);font:inherit;cursor:pointer}
+.broker-panel .continue{background:linear-gradient(90deg,#ffd7ea,#fff0a8);border-color:transparent;font-weight:600}
+@media(max-width:640px){.market-extra{padding:14px 0}.paper-panel,.broker-panel{padding:19px}.fx-row{grid-template-columns:1fr auto;gap:5px 12px;padding:13px 0}.fx-row>b{grid-column:1}.fx-row .lead,.fx-row .rest{grid-column:1}.fx-row .ak{grid-column:2;grid-row:1/4;align-self:center}.market-search .hint{width:100%}}
+@media(prefers-reduced-motion:reduce){.b,#lamp{animation:none!important;transition:none!important}}
 </style></head><body class="v-cards">
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div>
 <header>
 <h1>MarketBrain</h1>
-<p>What the market did while you weren't looking, in plain words. Tap a market to open it, then ask it a question.</p>
+<p id="tagline">What the market did while you weren't looking, in plain words. Tap a market to open it, then ask it a question.</p>
 <div class="bar" id="bar"><a class="tv" href="https://www.tradingview.com/" target="_blank" rel="noopener">Open TradingView</a><button class="tv" id="tdkey">Data key</button><button class="tv" id="aikey">AI key</button></div>
-<div class="vb" id="vb"><button class="chip on" data-v="cards">Cards</button><button class="chip" data-v="wall">Wall</button><button class="chip" data-v="focus">Focus</button><button class="go" id="tour">Walk me through</button></div>
+<div class="vb" id="vb"><button class="chip on" data-v="cards">Markets</button><button class="chip" data-v="wall">Wall</button><button class="chip" data-v="focus">Focus</button><button class="go" id="tour">Walk me through</button></div>
 <p id="note"></p>
+<div class="market-search" id="market-search">
+ <input id="market-filter" type="search" placeholder="Find a market — BTC, EURUSD, US30, Apple…" aria-label="Search markets">
+ <span class="hint">Search the instruments currently available in MarketBrain</span>
+</div>
+
 </header>
 <main id="app"></main>
 <div id="dock"><button class="nv" id="pv" aria-label="Previous market">‹</button><span class="lbl" id="lb"></span><button class="ask" id="dk">Ask MarketBrain</button><button class="nv" id="nx" aria-label="Next market">›</button></div>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
+const TAGLINES=[
+ "What the market did while you weren't looking, in plain words. Tap a market to open it, then ask it a question.",
+ "The market kept moving. Here's what happened while you were away.",
+ "A little context for the markets you haven't checked yet. Open one, and ask away.",
+ "Catch up with the market, without having to catch every candle.",
+ "What changed since your last look? Open a market and find out.",
+ "Markets don't wait. Your context can.",
+ "A clearer look at what happened, what's still unfolding, and what you might have missed."
+];
+(function rotateTagline(){const el=document.getElementById('tagline');if(!el)return;let last=-1;const pick=()=>{let n=Math.floor(Math.random()*TAGLINES.length);if(TAGLINES.length>1&&n===last)n=(n+1)%TAGLINES.length;last=n;el.classList.remove('fresh');void el.offsetWidth;el.textContent=TAGLINES[n];el.classList.add('fresh')};pick();setInterval(()=>{if(!document.hidden)pick()},45000)})();
 const TWELVE_KEY=localStorage.getItem('mb_td_key')||'';
 const AI_MODEL='claude-sonnet-5-5',GH_MODEL='openai/gpt-4.1',GEMINI_MODEL='gemini-3.6-flash';
 // Add or remove markets here. on:false hides one until you switch it on (change it to true or delete it).
@@ -175,22 +255,6 @@ const MARKETS=[
  {g:'Crypto',k:'SOL',name:'Solana',src:'b',sym:'SOLUSDT',tv:'BINANCE:SOLUSDT'},
  {g:'Crypto',k:'BNB',name:'BNB',src:'b',sym:'BNBUSDT',tv:'BINANCE:BNBUSDT'},
  {g:'Crypto',k:'XRP',name:'XRP',src:'b',sym:'XRPUSDT',tv:'BINANCE:XRPUSDT'},
- {g:'Crypto',k:'DOGE',name:'Dogecoin',src:'b',sym:'DOGEUSDT',tv:'BINANCE:DOGEUSDT'},
- {g:'Crypto',k:'PEPE',name:'Pepe',src:'b',sym:'PEPEUSDT',tv:'BINANCE:PEPEUSDT'},
- {g:'Crypto',k:'SHIB',name:'Shiba Inu',src:'b',sym:'SHIBUSDT',tv:'BINANCE:SHIBUSDT'},
- {g:'Crypto',k:'BONK',name:'Bonk',src:'b',sym:'BONKUSDT',tv:'BINANCE:BONKUSDT'},
- {g:'Crypto',k:'FLOKI',name:'Floki',src:'b',sym:'FLOKIUSDT',tv:'BINANCE:FLOKIUSDT'},
- {g:'Crypto',k:'WIF',name:'dogwifhat',src:'b',sym:'WIFUSDT',tv:'BINANCE:WIFUSDT'},
- {g:'Crypto',k:'POPCAT',name:'Popcat',src:'b',sym:'POPCATUSDT',tv:'BINANCE:POPCATUSDT',on:false},
- {g:'Crypto',k:'JUP',name:'Jupiter',src:'b',sym:'JUPUSDT',tv:'BINANCE:JUPUSDT',on:false},
- {g:'Crypto',k:'RAY',name:'Raydium',src:'b',sym:'RAYUSDT',tv:'BINANCE:RAYUSDT',on:false},
- {g:'Crypto',k:'SUI',name:'Sui',src:'b',sym:'SUIUSDT',tv:'BINANCE:SUIUSDT',on:false},
- {g:'Crypto',k:'AVAX',name:'Avalanche',src:'b',sym:'AVAXUSDT',tv:'BINANCE:AVAXUSDT',on:false},
- {g:'Crypto',k:'LINK',name:'Chainlink',src:'b',sym:'LINKUSDT',tv:'BINANCE:LINKUSDT',on:false},
- {g:'Crypto',k:'DOT',name:'Polkadot',src:'b',sym:'DOTUSDT',tv:'BINANCE:DOTUSDT',on:false},
- {g:'Crypto',k:'ADA',name:'Cardano',src:'b',sym:'ADAUSDT',tv:'BINANCE:ADAUSDT',on:false},
- {g:'Crypto',k:'AVAX',name:'Avalanche',src:'b',sym:'AVAXUSDT',tv:'BINANCE:AVAXUSDT',on:false},
- {g:'Crypto',k:'LINK',name:'Chainlink',src:'b',sym:'LINKUSDT',tv:'BINANCE:LINKUSDT',on:false},
  {g:'Forex and gold',k:'GBPUSD',name:'Pound / Dollar',src:'t',sym:'GBP/USD',tv:'FX:GBPUSD'},
  {g:'Forex and gold',k:'EURUSD',name:'Euro / Dollar',src:'t',sym:'EUR/USD',tv:'FX:EURUSD'},
  {g:'Forex and gold',k:'USDJPY',name:'Dollar / Yen',src:'t',sym:'USD/JPY',tv:'FX:USDJPY'},
@@ -203,9 +267,14 @@ const MARKETS=[
  {g:'Forex and gold',k:'NZDUSD',name:'Kiwi / Dollar',src:'t',sym:'NZD/USD',tv:'FX:NZDUSD',on:false},
  {g:'Forex and gold',k:'EURGBP',name:'Euro / Pound',src:'t',sym:'EUR/GBP',tv:'FX:EURGBP',on:false},
  {g:'Forex and gold',k:'GBPJPY',name:'Pound / Yen',src:'t',sym:'GBP/JPY',tv:'FX:GBPJPY',on:false},
- {g:'Indices',k:'SPX500',name:'S&P 500',src:'t',sym:'SPX',tv:'OANDA:SPX500USD',on:false},
- {g:'Indices',k:'US30',name:'Dow Jones',src:'t',sym:'DJI',tv:'OANDA:US30USD',on:false},
- {g:'Indices',k:'NAS100',name:'Nasdaq 100',src:'t',sym:'IXIC',tv:'OANDA:NAS100USD',on:false},
+ {g:'Indices',k:'SPX500',name:'S&P 500',src:'t',sym:'SPX',tv:'OANDA:SPX500USD'},
+ {g:'Indices',k:'US30',name:'Dow Jones',src:'t',sym:'DJI',tv:'OANDA:US30USD'},
+ {g:'Indices',k:'NAS100',name:'Nasdaq 100',src:'t',sym:'IXIC',tv:'OANDA:NAS100USD'},
+ {g:'Equities',k:'AAPL',name:'Apple',src:'t',sym:'AAPL',tv:'NASDAQ:AAPL',etf:true},
+ {g:'Equities',k:'TSLA',name:'Tesla',src:'t',sym:'TSLA',tv:'NASDAQ:TSLA',etf:true},
+ {g:'Equities',k:'NVDA',name:'NVIDIA',src:'t',sym:'NVDA',tv:'NASDAQ:NVDA',etf:true},
+ {g:'Equities',k:'MSFT',name:'Microsoft',src:'t',sym:'MSFT',tv:'NASDAQ:MSFT',etf:true},
+ {g:'Equities',k:'AMZN',name:'Amazon',src:'t',sym:'AMZN',tv:'NASDAQ:AMZN',etf:true},
  {g:'Indices',k:'SPY',name:'S&P 500 (SPY fund)',src:'t',sym:'SPY',tv:'AMEX:SPY',etf:true,on:false},
  {g:'Indices',k:'QQQ',name:'Nasdaq 100 (QQQ fund)',src:'t',sym:'QQQ',tv:'NASDAQ:QQQ',etf:true,on:false},
  {g:'Indices',k:'TLT',name:'Long US bonds (TLT fund)',src:'t',sym:'TLT',tv:'NASDAQ:TLT',etf:true,on:false}
@@ -449,7 +518,7 @@ function ctx(m){
  L.push(['The gap',n?`The nearest open ${n.up?'buying':'selling'} gap runs ${fmt(n.lo)} to ${fmt(n.hi)} (${dst(m,n.hi-n.lo)} wide) and formed ${ago(m,n.i)}. ${r.inside?'Price is inside it now.':`Price is ${dst(m,n.lo>last.c?n.lo-last.c:last.c-n.hi)} away.`}`:'No open gap in the loaded candles. Nothing here is waiting to be revisited.']);
  const lt=c[c.length-1].t,late=m.tf<1440&&!m.etf&&!closedNow(m)&&Date.now()-lt>m.tf*18e4;
  L.push(['The data',`Latest candle opened ${m.tf===1440?new Date(lt).toISOString().slice(0,10)+' (daily, UTC)':ny(lt)}. ${marketBrainUpdatedLabel(m)}. Source: ${m.src==='b'?'Binance':'Twelve Data'} ${m.sym}, ${c.length} ${tfl(m.tf)} candles covering ${span(c.length*m.tf)}.`+(late?' That candle is more than three candles old, so either the feed is late or the market has gone quiet. The page cannot tell which.':'')]);
- m.fx.innerHTML=L.filter(x=>x[1]).map(x=>{const[a,b]=sp(x[1]);return `<li data-key="${x[0]}"${m.big.has(x[0])?' class="big"':''}><b>${x[0]}</b><span class="lead">${esc(a)}</span>${b?`<span class="rest">${esc(b)}</span>`:''}<button class="chip ak" data-ak>Ask about this</button></li>`}).join('');
+ m.fx.innerHTML=L.filter(x=>x[1]).map(x=>{const[a,b]=sp(x[1]);return `<div class="fx-row${m.big.has(x[0])?' expanded':''}" data-key="${x[0]}"><b>${x[0]}</b><span><span class="lead">${esc(a)}</span>${b?`<span class="rest">${esc(b)}</span>`:''}</span><button class="chip ak" data-ak>Ask about this</button></div>`}).join('');
 }
 
 /* ---- interpretation without prediction: what is unfinished above and below, and where a reading would break ---- */
@@ -632,7 +701,7 @@ const dexStyle=document.createElement('style');dexStyle.textContent=`
 .dexgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:14px 0}.dexcard{border:1px solid var(--line);border-radius:13px;padding:12px;min-width:0}.dexcard .top{display:flex;justify-content:space-between;gap:8px}.dexcard strong{font-size:14px}.dexcard small{color:var(--mute)}.dexstats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:12px 0;font-size:12px}.dexstats span{color:var(--mute)}.dexstats b{display:block;color:var(--ink,inherit);font-weight:600;margin-top:2px}.dexcard button{font-size:12px}.dexdetail{border-top:1px solid var(--line);padding-top:14px;margin-top:14px}.dexchart{height:300px;width:100%;margin-top:12px}.dexstatus{font-size:12px;color:var(--mute);min-height:18px}.dexlinks{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin-top:8px}.dexlinks a{color:inherit}
 @media(max-width:560px){#launches{padding:14px}.dexchart{height:240px}}
 `;document.head.appendChild(dexStyle);
-const launch=document.createElement('section');launch.id='launches';launch.innerHTML=`<h2>New launches & Solana tokens</h2><p class="sub">Discover recently listed Solana pools, inspect market activity, or open a token by its mint address. Discovery data is not a safety rating or a buy signal.</p><div class="dexbar"><button id="dexnew">New Solana pools</button><button id="dextrend">Trending Solana pools</button><button id="dexboost">Recently boosted</button></div><div class="dexbar"><input id="mintInput" placeholder="Paste a Solana token mint address" autocomplete="off"><button id="mintAdd">Open token</button></div><div class="dexstatus" id="dexStatus" aria-live="polite">Ready. Choose a discovery feed or paste a mint address.</div><div class="dexgrid" id="dexGrid"></div><div class="dexdetail" id="dexDetail" hidden><div id="dexTitle"></div><div class="dexlinks" id="dexLinks"></div><div class="dexchart" id="dexChart"></div><div class="dexstatus" id="dexChartStatus"></div></div>`;
+const launch=document.createElement('section');launch.id='launches';launch.innerHTML=`<h2>Solana token discovery</h2><p class="sub">Discover recently listed Solana pools, inspect market activity, or open a token by its mint address. Discovery data is not a safety rating or a buy signal.</p><div class="dexbar"><button id="dexnew">New Solana pools</button><button id="dextrend">Trending Solana pools</button><button id="dexboost">Recently boosted</button></div><div class="dexbar"><input id="mintInput" placeholder="Paste a Solana token mint address" autocomplete="off"><button id="mintAdd">Open token</button></div><div class="dexstatus" id="dexStatus" aria-live="polite">Ready. Choose a discovery feed or paste a mint address.</div><div class="dexgrid" id="dexGrid"></div><div class="dexdetail" id="dexDetail" hidden><div id="dexTitle"></div><div class="dexlinks" id="dexLinks"></div><div class="dexchart" id="dexChart"></div><div class="dexstatus" id="dexChartStatus"></div></div>`;
 // Mount the section before querying elements inside it.
 document.getElementById('app').appendChild(launch);
 const dexStatus=document.getElementById('dexStatus'),dexGrid=document.getElementById('dexGrid');let dexItems=[],dexChart=null,dexSeries=null;
@@ -664,10 +733,10 @@ for(const m of live){
  <div class="tf">${TFS.map(t=>`<button class="chip${t[1]===15?' on':''}" data-tf="${t[1]}">${t[0]}</button>`).join('')}<button class="chip" data-readall hidden>Read the other timeframes</button></div>
  <div class="ch"></div><p class="rd"></p>
  <div class="tf"><button class="chip on" data-t="gap">Show the gap</button><button class="chip on" data-t="fib">Show the fib levels</button></div>
+ <div class="dl">What the chart is telling us</div><div class="fx" aria-label="Market context and evidence"></div>
  <div class="dl">Ask ${m.k} anything</div><div class="th"></div>
  <div class="tf qs"></div>
  <div class="ar"><input data-ask type="text" placeholder="Ask about this chart…" aria-label="Ask about this chart"><button class="chip on" data-send>Ask</button></div>
- <ul class="fx"></ul>
  <div class="jr"><div class="dl">Journal</div><textarea placeholder="Write what you're seeing, or what you expect. No format."></textarea>
  <div class="tf" style="margin-top:10px"><input type="date"><button class="chip on" data-j="save">Save entry</button><button class="chip" data-j="cancel" hidden>Cancel</button></div><div class="el"></div></div>
  <div class="f"><a class="tv" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" target="_blank" rel="noopener">See it on TradingView</a></div></div></div>`;
@@ -892,8 +961,8 @@ function toggle(m,force){
   // The library's crosshair only feeds the readout below. The visible crosshair, the magnet and the drawings are the page's own overlay (MB).
   const pr=m.res.last.c<10?5:m.res.last.c<1000?3:2,CM=LightweightCharts.CrosshairMode.Normal,ln={visible:false,labelVisible:false};
   const nyd=(t,o)=>new Date(t*1000).toLocaleString('en-US',Object.assign({timeZone:'America/New_York'},o));
-  m.chart=LightweightCharts.createChart(m.el.querySelector('.ch'),{autoSize:true,layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479',fontSize:12},grid:{vertLines:{color:'#ffffff55'},horzLines:{color:'#ffffffa0'}},crosshair:{mode:CM,vertLine:ln,horzLine:ln},rightPriceScale:{borderVisible:false,scaleMargins:{top:.12,bottom:.12}},timeScale:{timeVisible:m.tf<1440,borderVisible:false,rightOffset:6,tickMarkFormatter:(t,ty)=>m.tf===1440?new Date(t*1000).toLocaleDateString('en-US',{timeZone:'UTC',day:'numeric',month:'short'}):ty<3?nyd(t,{day:'numeric',month:'short'}):nyd(t,{hour:'2-digit',minute:'2-digit',hour12:false})},localization:{timeFormatter:t=>m.tf===1440?nice(day(t)):nyd(t,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})+' NY'}});
-  m.sr=m.chart.addCandlestickSeries({upColor:'#ff5fa8',downColor:'#ffc400',borderVisible:false,wickUpColor:'#ff5fa8',wickDownColor:'#e0a800',priceFormat:{type:'price',precision:pr,minMove:1/10**pr},priceLineColor:'#1a1325',priceLineStyle:0});
+  m.chart=LightweightCharts.createChart(m.el.querySelector('.ch'),{autoSize:true,layout:{background:{color:'rgba(255,255,255,0)'},textColor:'#6f6479',fontSize:12},grid:{vertLines:{color:'rgba(255,255,255,.045)'},horzLines:{color:'rgba(255,255,255,.06)'}},crosshair:{mode:CM,vertLine:ln,horzLine:ln},rightPriceScale:{borderVisible:false,scaleMargins:{top:.12,bottom:.12}},timeScale:{timeVisible:m.tf<1440,borderVisible:false,rightOffset:6,tickMarkFormatter:(t,ty)=>m.tf===1440?new Date(t*1000).toLocaleDateString('en-US',{timeZone:'UTC',day:'numeric',month:'short'}):ty<3?nyd(t,{day:'numeric',month:'short'}):nyd(t,{hour:'2-digit',minute:'2-digit',hour12:false})},localization:{timeFormatter:t=>m.tf===1440?nice(day(t)):nyd(t,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:false})+' NY'}});
+  m.sr=m.chart.addCandlestickSeries({upColor:'#45b889',downColor:'#df6b73',borderVisible:false,wickUpColor:'#45b889',wickDownColor:'#df6b73',priceFormat:{type:'price',precision:pr,minMove:1/10**pr},priceLineColor:'#aeb7c4',priceLineStyle:0});
   m.show_=b=>{if(!b)return;const t=b.t||b.time*1000,o=b.o??b.open,h=b.h??b.high,l=b.l??b.low,c=b.c??b.close,Z=m.c[m.c.length-1].c;rd.innerHTML=`<b>${m.tf===1440?nice(day(t/1000)):ny(t)}</b> · open ${fmt(o)} · high ${fmt(h)} · low ${fmt(l)} · close ${fmt(c)} · body ${c>=o?'up':'down'} ${dst(m,c-o)} · range ${dst(m,h-l)} · ${same(Z,c)?'this is the latest close':'close is '+dst(m,Z-c)+(c<Z?' below':' above')+' the latest close'}`};
   m.chart.subscribeCrosshairMove(p=>{const b=p.time&&p.seriesData.get(m.sr);m.show_(b||m.c[m.c.length-1])});
   MB.attach(m);
@@ -908,10 +977,10 @@ for(const m of live){
  el.querySelectorAll('[data-tf]').forEach(b=>b.onclick=()=>{m.win=null;m.pinned=true;m.tf=+b.dataset.tf;el.querySelectorAll('[data-tf]').forEach(x=>x.classList.toggle('on',x===b));m.s.classList.add('w');load(m);});
  el.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{m.show[b.dataset.t]=b.classList.toggle('on');draw(m);jrender(m);});
  el.querySelector('.qs').onclick=ev=>{const b=ev.target.closest('[data-qi]');if(!b||!m.res)return;if(b.dataset.qi==='s'){qdeal(m);qrender(m);return}const j=+b.dataset.qi,i=m.qs[j];m.asked.add(i);say(m,'u',QB[i][1]);say(m,'a',QB[i][2](m));const nx=qpick(m,QB[i][0],m.qs);if(nx!=null)m.qs[j]=nx;qrender(m)};
- // tiles: tap to grow, or send a tile to the assistant
- m.fx.onclick=ev=>{const li=ev.target.closest('li');if(!li)return;
-  if(ev.target.closest('[data-ak]')){inp.value='Tell me more about this, in plain words: '+li.querySelector('.lead').textContent;go();return}
-  const key=li.dataset.key;li.classList.toggle('big');li.classList.contains('big')?m.big.add(key):m.big.delete(key)};
+ // Context rows stay compact; the explicit action asks the assistant about that evidence.
+ m.fx.onclick=ev=>{const row=ev.target.closest('.fx-row');if(!row)return;
+  if(ev.target.closest('[data-ak]')){inp.value='Tell me more about this, in plain words: '+row.querySelector('.lead').textContent;go();return}
+  const key=row.dataset.key;row.classList.toggle('expanded');row.classList.contains('expanded')?m.big.add(key):m.big.delete(key)};
  const go=()=>{const q=inp.value;inp.value='';ask(m,q)};
  el.querySelector('[data-send]').onclick=go;inp.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing)go()};
  const reset=()=>{m.editing=null;ta.value='';sv.textContent='Save entry';cn.hidden=true};
@@ -1003,4 +1072,156 @@ document.getElementById('tour').onclick=()=>{
  setTimeout(step,1200);tid=setInterval(step,8000);
 };
 const v0=store.get('mb_view','cards');if(v0!=='cards')setView(['wall','focus'].includes(v0)?v0:'cards');
+
+/* =========================================================================
+   WORKSPACE LAYER
+   Paper trading is local simulation only. Broker links are destinations,
+   not authenticated live integrations. Instrument news is queried per asset.
+   ========================================================================= */
+(function(){
+ const $=(s,r=document)=>r.querySelector(s);
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const PAPER_KEY='mb_paper_account_v1';
+ const readPaper=()=>{try{return JSON.parse(localStorage.getItem(PAPER_KEY))||{cash:100000,positions:{},orders:[]}}catch(e){return{cash:100000,positions:{},orders:[]}}};
+ let paper=readPaper(), pendingMarket=null, pendingSide='buy';
+ const persistPaper=()=>{try{localStorage.setItem(PAPER_KEY,JSON.stringify(paper))}catch(e){}};
+ const money=n=>Number(n||0).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2});
+ const priceOf=m=>m.res?.last?.c||m.c?.[m.c.length-1]?.c||null;
+ const positionQty=k=>Number(paper.positions[k]?.qty||0);
+ const modal=document.createElement('div');
+ modal.id='paper-modal';
+ modal.innerHTML=`<div class="paper-panel" role="dialog" aria-modal="true" aria-labelledby="paper-title">
+  <button class="paper-close" type="button" aria-label="Close">×</button>
+  <h3 id="paper-title">Paper order</h3><p id="paper-sub">Simulated execution. No real money or broker account is involved.</p>
+  <div class="paper-stats"><span>Available cash<strong id="paper-cash">$100,000.00</strong></span><span>Position<strong id="paper-position">0</strong></span></div>
+  <label for="paper-side">Side</label><select id="paper-side"><option value="buy">Buy</option><option value="sell">Sell</option></select>
+  <label for="paper-qty">Quantity</label><input id="paper-qty" type="number" min="0.000001" step="any" value="1">
+  <label>Estimated fill price</label><input id="paper-price" readonly>
+  <div class="paper-status" id="paper-status"></div>
+  <button class="paper-submit" id="paper-submit" type="button">Place simulated order</button>
+ </div>`;
+ document.body.appendChild(modal);
+ const close=()=>modal.classList.remove('show');
+ $('.paper-close',modal).onclick=close;
+ modal.addEventListener('click',e=>{if(e.target===modal)close()});
+ addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+ function refreshPaperStats(){
+   $('#paper-cash',modal).textContent=money(paper.cash);
+   $('#paper-position',modal).textContent=pendingMarket?positionQty(pendingMarket.k).toLocaleString()+' '+pendingMarket.k:'—';
+ }
+ function openPaper(m,side){
+   pendingMarket=m;pendingSide=side;
+   const p=priceOf(m);
+   $('#paper-title',modal).textContent=(side==='buy'?'Buy ':'Sell ')+m.k;
+   $('#paper-sub',modal).textContent=m.name+' · Paper Trading · Simulated only';
+   $('#paper-side',modal).value=side;
+   $('#paper-price',modal).value=p?money(p):'Waiting for market data';
+   $('#paper-qty',modal).value='1';
+   $('#paper-status',modal).textContent=p?'Order will be simulated at the latest loaded candle close.':'No price available yet. Load chart data first.';
+   $('#paper-submit',modal).disabled=!p;
+   refreshPaperStats();modal.classList.add('show');
+ }
+ $('#paper-side',modal).onchange=e=>{pendingSide=e.target.value;$('#paper-title',modal).textContent=(pendingSide==='buy'?'Buy ':'Sell ')+(pendingMarket?.k||'')};
+ $('#paper-submit',modal).onclick=()=>{
+   const m=pendingMarket,p=priceOf(m),qty=Number($('#paper-qty',modal).value),side=$('#paper-side',modal).value;
+   if(!m||!p||!Number.isFinite(qty)||qty<=0){$('#paper-status',modal).textContent='Enter a valid quantity and wait for a market price.';return}
+   const value=p*qty,pos=paper.positions[m.k]||{qty:0,avg:0};
+   if(side==='buy'){
+     if(value>paper.cash){$('#paper-status',modal).textContent='Insufficient simulated cash for this order.';return}
+     const nextQty=pos.qty+qty;pos.avg=((pos.qty*pos.avg)+(qty*p))/nextQty;pos.qty=nextQty;paper.cash-=value;
+   }else{
+     if(qty>pos.qty){$('#paper-status',modal).textContent='You cannot sell more than your current paper position.';return}
+     pos.qty-=qty;paper.cash+=value;if(pos.qty<=1e-10){delete paper.positions[m.k]}else paper.positions[m.k]=pos;
+   }
+   if(side==='buy')paper.positions[m.k]=pos;
+   const order={id:Date.now(),symbol:m.k,name:m.name,side,qty,price:p,value,at:new Date().toISOString(),mode:'paper'};
+   paper.orders.unshift(order);paper.orders=paper.orders.slice(0,200);persistPaper();refreshPaperStats();
+   $('#paper-status',modal).textContent=`Simulated ${side.toUpperCase()} filled: ${qty} ${m.k} at ${money(p)}.`;
+   renderPaperSummary();
+ };
+ function renderPaperSummary(){
+   document.querySelectorAll('.paper-summary').forEach(el=>{
+     const k=el.dataset.market,pos=paper.positions[k]||{qty:0,avg:0};
+     el.innerHTML=`Paper position: <strong>${Number(pos.qty||0).toLocaleString()} ${esc(k)}</strong> <span class="muted">· Avg. ${pos.avg?money(pos.avg):'—'} · Cash ${money(paper.cash)}</span>`;
+   });
+ }
+ const consent=document.createElement('div');consent.id='broker-consent';consent.innerHTML=`<div class="broker-panel" role="dialog" aria-modal="true" aria-labelledby="broker-consent-title"><h3 id="broker-consent-title">Continue to broker</h3><p class="broker-copy">You'll open the provider's website in a new tab. Sign in and review any permissions or account authorisations on the provider's own secure page. MarketBrain will not ask for or store your broker password.</p><div class="broker-actions"><button type="button" data-cancel>Cancel</button><button type="button" class="continue" data-continue>Continue</button></div></div>`;
+ document.body.appendChild(consent);let brokerTarget=null;
+ const closeConsent=()=>{consent.classList.remove('show');brokerTarget=null};
+ consent.querySelector('[data-cancel]').onclick=closeConsent;
+ consent.addEventListener('click',e=>{if(e.target===consent)closeConsent()});
+ consent.querySelector('[data-continue]').onclick=()=>{if(brokerTarget)window.open(brokerTarget,'_blank','noopener');closeConsent()};
+ document.addEventListener('click',e=>{const a=e.target.closest('[data-broker][data-url]');if(!a)return;e.preventDefault();brokerTarget=a.dataset.url;consent.querySelector('#broker-consent-title').textContent='Continue to '+a.dataset.broker;consent.classList.add('show')});
+ const brokerMarkup=m=>`<div class="market-extra">
+  <div class="market-extra-head"><span class="market-extra-title">Connect a trading destination</span><span class="muted">Sign in with the provider</span></div>
+  <div class="broker-links">
+   <a href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" data-broker="TradingView" data-url="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}">TradingView</a>
+   <a href="https://www.exness.com/" data-broker="Exness" data-url="https://www.exness.com/">Exness</a>
+   <a href="https://www.xm.com/" data-broker="XM" data-url="https://www.xm.com/">XM</a>
+   <a href="https://www.plus500.com/" data-broker="Plus500" data-url="https://www.plus500.com/">Plus500</a>
+  </div><p class="muted" style="margin-top:9px">You'll leave MarketBrain and sign in directly with the provider. MarketBrain does not receive your broker password.</p>
+ </div>`;
+ async function loadAssetNews(m,box){
+   const status=$('.news-status',box),list=$('.market-news-list',box);
+   status.textContent='Looking for recent coverage…';list.innerHTML='';
+   const q=encodeURIComponent('"'+m.name+'" '+m.k+' markets');
+   const feed='https://news.google.com/rss/search?q='+q+'&hl=en-US&gl=US&ceid=US:en';
+   try{
+     const url='https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(feed);
+     const r=await fetch(url);if(!r.ok)throw Error('news feed');
+     const j=await r.json(),items=(j.items||[]).slice(0,5);
+     if(!items.length){status.textContent='No recent matching headlines were returned.';return}
+     status.textContent='Recent coverage · Google News RSS';
+     list.innerHTML=items.map(x=>`<a class="market-news-item" href="${esc(x.link)}" target="_blank" rel="noopener">${esc(x.title)}<small>${esc(x.author||x.source||'News source')} · ${x.pubDate?new Date(x.pubDate).toLocaleString():''}</small></a>`).join('');
+   }catch(e){status.textContent='News is temporarily unavailable. Use the search link below to inspect current coverage.'}
+ }
+ // Add a quiet instrument dashboard extension to every chart panel.
+ live.forEach(m=>{
+   const panel=m.el.querySelector('.p>div');
+   if(!panel)return;
+   const tools=document.createElement('div');
+   tools.className='market-extra';
+   tools.innerHTML=`<div class="market-extra-head"><span class="market-extra-title">Paper Trading</span><span class="muted">Default · simulated account</span></div>
+    <div class="trade-actions">
+     <button class="buy" data-paper="buy" type="button">Buy</button>
+     <button class="sell" data-paper="sell" type="button">Sell</button>
+     <a href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" target="_blank" rel="noopener">Open full TradingView chart</a>
+    </div>
+    <div class="paper-stats paper-summary" data-market="${esc(m.k)}"></div>
+    <div class="muted" style="margin-top:8px">Paper orders use the latest loaded candle close as the simulated fill price. They do not represent executable live quotes.</div>`;
+   const news=document.createElement('div');
+   news.className='market-extra';
+   news.innerHTML=`<div class="market-extra-head"><span class="market-extra-title">News & developments · ${esc(m.k)}</span><a href="https://news.google.com/search?q=${encodeURIComponent(m.name+' '+m.k+' markets')}" target="_blank" rel="noopener">Search coverage</a></div>
+    <p class="muted news-status" style="margin-top:8px">Open this instrument to load recent matching headlines.</p><div class="market-news-list"></div>`;
+   const tradingView=panel.querySelector('.f');
+   function brokerHolder(){const d=document.createElement('div');d.innerHTML=brokerMarkup(m);return d.firstElementChild}
+   const f=panel.querySelector('.f');
+   if(f)f.insertAdjacentElement('afterend',tools);else panel.appendChild(tools);
+   tools.querySelectorAll('[data-paper]').forEach(b=>b.addEventListener('click',()=>openPaper(m,b.dataset.paper)));
+   tools.insertAdjacentElement('afterend',brokerHolder());
+   const broker=tools.nextElementSibling;broker.insertAdjacentElement('afterend',news);
+   m._newsBox=news;m._newsLoaded=false;
+ });
+ // Asset search filters the instrument list without turning every instrument into a dashboard card.
+ const search=$('#market-filter');
+ if(search)search.addEventListener('input',()=>{
+   const q=search.value.trim().toLowerCase();
+   live.forEach(m=>{
+     const match=!q||[m.k,m.name,m.g,m.sym].some(v=>String(v||'').toLowerCase().includes(q));
+     m.el.style.display=match?'':'none';
+   });
+   document.querySelectorAll('#app>h2[data-g]').forEach(h=>{
+     const any=[...h.parentElement.querySelectorAll('.m')].some(m=>m.dataset.g===h.dataset.g&&m.style.display!=='none');
+     h.style.display=any?'':'none';
+   });
+ });
+ // Load per-instrument news when its dashboard is opened.
+ const oldToggle=toggle;
+ toggle=function(m,force){
+   oldToggle(m,force);
+   if(m.el.classList.contains('open')&&m._newsBox&&!m._newsLoaded){m._newsLoaded=true;loadAssetNews(m,m._newsBox)}
+ };
+ renderPaperSummary();
+})();
+
 </script></body></html>
