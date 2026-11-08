@@ -216,13 +216,81 @@ body.v-cards .m.open .s.calm{font-size:17px}
 .broker-panel .continue{background:linear-gradient(90deg,#ffd7ea,#fff0a8);border-color:transparent;font-weight:600}
 @media(max-width:640px){.market-extra{padding:14px 0}.paper-panel,.broker-panel{padding:19px}.fx-row{grid-template-columns:1fr auto;gap:5px 12px;padding:13px 0}.fx-row>b{grid-column:1}.fx-row .lead,.fx-row .rest{grid-column:1}.fx-row .ak{grid-column:2;grid-row:1/4;align-self:center}.market-search .hint{width:100%}}
 @media(prefers-reduced-motion:reduce){.b,#lamp{animation:none!important;transition:none!important}}
+
+/* Market cards return as real, generously sized cards on the opening screen. */
+body.v-cards main#app{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-content:start}
+body.v-cards main#app>h2{grid-column:1/-1;margin:34px 0 2px}
+body.v-cards .m{margin:0;padding:0 22px;border:1px solid #ffffffb8;border-radius:24px;background:#ffffff48;box-shadow:inset 0 1px 0 #ffffffed,0 10px 30px #3b1d5a12;backdrop-filter:blur(22px) saturate(1.35);-webkit-backdrop-filter:blur(22px) saturate(1.35)}
+body.v-cards .m:hover{background:#ffffff70;box-shadow:inset 0 1px 0 #fff,0 16px 38px #ff5fa822}
+body.v-cards .m.up,body.v-cards .m.dn{background:linear-gradient(125deg,#ffffff70,#ffffff42)}
+body.v-cards .m.open{grid-column:1/-1;margin:4px 0 16px;padding:0 24px;background:#ffffff70;border-color:#ffffffdf;box-shadow:inset 0 1px 0 #fff,0 20px 55px #3b1d5a20}
+body.v-cards .m>button{grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:8px 14px;padding:24px 0}
+body.v-cards .m .n{grid-column:1;grid-row:1;font-size:14px;color:var(--mute)}
+body.v-cards .m .s{grid-column:1;grid-row:2;font-size:clamp(22px,2.8vw,32px);line-height:1.18;font-weight:700;max-width:24em}
+body.v-cards .m .sc{grid-column:1;grid-row:3;font-size:13px;line-height:1.4;max-width:44em}
+body.v-cards .m .x{grid-column:2;grid-row:1/4;width:42px;height:42px}
+body.v-cards .m.open .s{font-size:clamp(34px,5vw,60px)}
+body.v-cards .m.open .s.calm{font-size:clamp(25px,3.5vw,42px)}
+@media(max-width:640px){body.v-cards main#app{grid-template-columns:1fr;gap:12px}body.v-cards .m{padding:0 18px}body.v-cards .m>button{padding:20px 0}body.v-cards .m .s{font-size:23px}body.v-cards .m.open .s{font-size:32px}}
+/* Screen-first instrument workspace: keep the original colour, glow and type. */
+#vb,#bar{display:none!important}
+#mb-settings{max-width:1180px;margin:0 auto 100px;padding:18px 28px 28px;display:flex;justify-content:space-between;align-items:center;gap:14px;color:var(--mute);font-size:12px;border-top:1px solid #ffffff8a}
+#mb-settings-actions{display:flex;gap:8px;flex-wrap:wrap}
+#mb-settings-actions button{font:inherit;color:var(--mute);font-size:12px;border:1px solid #ffffffa8;background:#ffffff50;border-radius:99px;padding:7px 12px;cursor:pointer;backdrop-filter:blur(14px)}
+/* News is a compact on-screen ribbon above the chart, never a second page section. */
+.m .f{display:none!important}
+.market-news-dock{margin:2px 0 12px;padding:10px 13px 11px;border:1px solid #ffffffb8;border-radius:16px;background:#ffffff48;box-shadow:inset 0 1px 0 #ffffffd9;backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3)}
+.market-news-dock .market-extra-head{margin-bottom:5px}
+.market-news-dock .market-extra-title{font-size:10px;letter-spacing:.12em}
+.market-news-dock .news-status{font-size:11px;margin:2px 0 5px!important}
+.market-news-dock .market-news-list{display:flex;gap:8px;overflow-x:auto;scrollbar-width:thin;margin:0;padding:0 0 3px;scroll-snap-type:x proximity}
+.market-news-dock .market-news-item{flex:0 0 min(360px,78vw);min-width:0;padding:5px 10px;border:0;border-left:2px solid #ffb4d2;background:#ffffff50;border-radius:7px;font-size:12px;line-height:1.3;scroll-snap-align:start}
+.market-news-dock .market-news-item small{font-size:10px;margin-top:3px}
+.market-news-dock .market-news-item:hover{background:#ffffffa0}
+/* Trade actions are the strongest controls in the instrument, not small utility pills. */
+.trade-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 10px}
+.trade-actions button{min-height:76px;border-radius:19px;font-size:clamp(20px,3vw,27px);font-weight:800;letter-spacing:.02em;border:1px solid #ffffffd9;box-shadow:inset 0 1px 0 #ffffffd9,0 12px 30px #3b1d5a18;transition:transform .25s,filter .25s,box-shadow .25s;backdrop-filter:blur(20px) saturate(1.45)}
+.trade-actions .buy{color:#075b35;background:linear-gradient(125deg,#a9f0c9e8,#48c98aeb 55%,#baf4d7e8);box-shadow:inset 0 1px 0 #ffffffed,0 12px 34px #36b87935}
+.trade-actions .sell{color:#7d1728;background:linear-gradient(125deg,#ffd0d2ed,#ef6878eb 55%,#ffb8b8e8);box-shadow:inset 0 1px 0 #ffffffed,0 12px 34px #e5485d30}
+.trade-actions button:hover{transform:translateY(-3px) scale(1.012);filter:saturate(1.12);box-shadow:0 18px 42px #3b1d5a26}
+.trade-actions button:active{transform:scale(.985)}
+.trade-actions a{grid-column:1/-1;justify-self:start}
+/* Full-screen paper order: colour becomes an environment, while the chart remains untouched. */
+#paper-modal{padding:0;background:#24152a66;backdrop-filter:blur(20px) saturate(1.2);-webkit-backdrop-filter:blur(20px) saturate(1.2)}
+.paper-panel{position:relative;isolation:isolate;overflow:hidden;width:100%;height:100%;max-width:none;border:0;border-radius:0;padding:clamp(24px,5vw,64px);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(135deg,#fff9fdeb,#fff0f8df 52%,#fff7e6e8)}
+.paper-panel::before{content:"";position:absolute;inset:-20%;z-index:-1;pointer-events:none;filter:blur(38px);opacity:.8;animation:trade-breathe 5s ease-in-out infinite alternate;background:radial-gradient(ellipse at 20% 25%,#78e4aa8c,transparent 42%),radial-gradient(ellipse at 82% 75%,#ffd0d48c,transparent 45%)}
+#paper-modal.mode-buy .paper-panel::before{background:radial-gradient(ellipse at 18% 25%,#48d78bba,transparent 48%),radial-gradient(ellipse at 85% 78%,#a5f0c888,transparent 48%)}
+#paper-modal.mode-sell .paper-panel::before{background:radial-gradient(ellipse at 18% 25%,#f15b70b8,transparent 48%),radial-gradient(ellipse at 85% 78%,#ffb3b9a8,transparent 48%)}
+@keyframes trade-breathe{from{transform:scale(.96);opacity:.55}to{transform:scale(1.08);opacity:.95}}
+.paper-panel h3{font-size:clamp(42px,8vw,88px);font-weight:800;letter-spacing:-.055em;margin:0;line-height:1}
+.paper-panel>p{font-size:clamp(14px,2vw,18px);margin:14px 0 24px;max-width:560px}
+.paper-panel .paper-close{position:absolute;top:max(18px,env(safe-area-inset-top));right:24px;width:48px;height:48px;border:1px solid #ffffffc9;border-radius:50%;background:#ffffff85;font-size:30px}
+.paper-panel .paper-stats{justify-content:center;gap:clamp(22px,6vw,70px);font-size:13px;margin:12px 0 24px}
+.paper-panel .paper-stats strong{font-size:clamp(19px,3vw,28px)}
+.paper-panel label{width:min(100%,420px);text-align:left;font-size:12px}
+.paper-panel input,.paper-panel select{width:min(100%,420px);font-size:18px;padding:15px 17px;border-radius:14px;background:#ffffffb8}
+.paper-panel .paper-submit{width:min(100%,420px);min-height:58px;border-radius:16px;font-size:17px}
+.paper-panel .paper-status{font-size:14px;max-width:520px;margin:14px auto;min-height:1.5em}
+.paper-side-switch{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(100%,640px);margin:4px 0 20px}
+.paper-side-switch button{min-height:86px;border-radius:20px;font-size:clamp(24px,4vw,38px);font-weight:850;border:1px solid #ffffffdf;cursor:pointer;box-shadow:inset 0 1px 0 #ffffffed,0 12px 32px #3b1d5a1c;transition:transform .25s,filter .25s}
+.paper-side-switch button[data-side=buy]{background:linear-gradient(130deg,#b9f4d4,#36c17b);color:#075b35}
+.paper-side-switch button[data-side=sell]{background:linear-gradient(130deg,#ffd0d4,#ed6274);color:#7d1728}
+.paper-side-switch button.active{transform:translateY(-3px) scale(1.025);filter:saturate(1.2);outline:3px solid #ffffffc9;outline-offset:3px}
+body.trade-profit #trade-atmosphere,body.trade-drawdown #trade-atmosphere,body.trade-near-sl #trade-atmosphere,body.trade-near-tp #trade-atmosphere{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.65;animation:trade-breathe 5s ease-in-out infinite alternate;transition:opacity 1s,background 1s}
+body.trade-profit #trade-atmosphere{background:radial-gradient(ellipse at 78% 20%,#52d98a50,transparent 48%)}
+body.trade-drawdown #trade-atmosphere{background:radial-gradient(ellipse at 78% 20%,#ef536750,transparent 48%)}
+body.trade-near-sl #trade-atmosphere{opacity:.9;animation-duration:2.2s;background:radial-gradient(ellipse at 78% 20%,#ed3e596f,transparent 52%)}
+body.trade-near-tp #trade-atmosphere{opacity:.85;animation-duration:3s;background:radial-gradient(ellipse at 78% 20%,#39c98268,transparent 52%)}
+@media(max-width:640px){#mb-settings{padding:16px;align-items:flex-start;flex-direction:column}.market-news-dock{padding:9px}.market-news-dock .market-news-item{flex-basis:82vw}.trade-actions button{min-height:68px}.paper-panel{padding:22px 18px}.paper-panel .paper-close{right:16px}.paper-side-switch button{min-height:72px}}
+@media(prefers-reduced-motion:reduce){.paper-panel::before,#trade-atmosphere{animation:none!important}}
+
 </style></head><body class="v-cards">
-<div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div>
+<div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div><div id="trade-atmosphere" aria-hidden="true"></div>
 <header>
 <h1>MarketBrain</h1>
 <p id="tagline">What the market did while you weren't looking, in plain words. Tap a market to open it, then ask it a question.</p>
-<div class="bar" id="bar"><a class="tv" href="https://www.tradingview.com/" target="_blank" rel="noopener">Open TradingView</a><button class="tv" id="tdkey">Data key</button><button class="tv" id="aikey">AI key</button></div>
-<div class="vb" id="vb"><button class="chip on" data-v="cards">Markets</button><button class="chip" data-v="wall">Wall</button><button class="chip" data-v="focus">Focus</button><button class="go" id="tour">Walk me through</button></div>
+<div class="bar" id="bar" aria-hidden="true"></div>
+<div class="vb" id="vb" hidden></div>
 <p id="note"></p>
 <div class="market-search" id="market-search">
  <input id="market-filter" type="search" placeholder="Find a market — BTC, EURUSD, US30, Apple…" aria-label="Search markets">
@@ -231,7 +299,8 @@ body.v-cards .m.open .s.calm{font-size:17px}
 
 </header>
 <main id="app"></main>
-<div id="dock"><button class="nv" id="pv" aria-label="Previous market">‹</button><span class="lbl" id="lb"></span><button class="ask" id="dk">Ask MarketBrain</button><button class="nv" id="nx" aria-label="Next market">›</button></div>
+<footer id="mb-settings"><span>MarketBrain · Local settings</span><div id="mb-settings-actions"></div></footer>
+<div id="dock"><button class="ask" id="dk">Ask MarketBrain</button></div>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 const TAGLINES=[
@@ -723,6 +792,7 @@ const app=document.getElementById('app'),note=document.getElementById('note'),ba
 const keyBtn=(id,msg,k,reload)=>document.getElementById(id).onclick=()=>{const v=prompt(msg,localStorage.getItem(k)||'');if(v!==null){try{v.trim()?localStorage.setItem(k,v.trim()):localStorage.removeItem(k);if(reload)location.reload()}catch(e){alert('Could not save the key in this browser.')}}};
 keyBtn('tdkey','Paste your Twelve Data API key. It is stored only in this browser. Leave empty to remove it.','mb_td_key',true);
 keyBtn('aikey','Paste an AI key for the assistant: Google Gemini (starts AIza or AQ.), GitHub Models (github_pat_ or ghp_), or Anthropic (sk-ant-). Stored only in this browser. Leave empty to remove it.','mb_ai_key',false);
+const settingsActions=document.getElementById('mb-settings-actions');['tdkey','aikey'].forEach((id,i)=>{const b=document.getElementById(id);if(b){b.textContent=i?'AI connection':'Market data connection';settingsActions.appendChild(b)}});
 app.appendChild(launch);
 const live=MARKETS.filter(m=>m.on!==false);let group='',n=0;
 for(const m of live){
@@ -1053,7 +1123,7 @@ addEventListener('keydown',e=>{
 });
 // the ask button is always on screen
 document.getElementById('dk').onclick=()=>{
- const had=openOne();if(!had)document.getElementById('go').click();
+ const had=openOne();if(!had){const first=live.find(x=>x.el.style.display!=='none');if(first)toggle(first,true)}
  setTimeout(()=>{const o=openOne();if(!o)return;const i=o.el.querySelector('[data-ask]');
   i.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>i.focus({preventScroll:true}),450)},had?0:500);
 };
@@ -1071,7 +1141,7 @@ document.getElementById('tour').onclick=()=>{
  setView('focus');wk=0;document.getElementById('tour').textContent='Stop the walk';
  setTimeout(step,1200);tid=setInterval(step,8000);
 };
-const v0=store.get('mb_view','cards');if(v0!=='cards')setView(['wall','focus'].includes(v0)?v0:'cards');
+view='cards';document.body.classList.remove('v-wall','v-focus');document.body.classList.add('v-cards');
 
 /* =========================================================================
    WORKSPACE LAYER
@@ -1094,14 +1164,19 @@ const v0=store.get('mb_view','cards');if(v0!=='cards')setView(['wall','focus'].i
   <button class="paper-close" type="button" aria-label="Close">×</button>
   <h3 id="paper-title">Paper order</h3><p id="paper-sub">Simulated execution. No real money or broker account is involved.</p>
   <div class="paper-stats"><span>Available cash<strong id="paper-cash">$100,000.00</strong></span><span>Position<strong id="paper-position">0</strong></span></div>
-  <label for="paper-side">Side</label><select id="paper-side"><option value="buy">Buy</option><option value="sell">Sell</option></select>
+  <div class="paper-side-switch"><button type="button" data-side="buy" class="active">BUY</button><button type="button" data-side="sell">SELL</button></div>
+  <input id="paper-side" type="hidden" value="buy">
   <label for="paper-qty">Quantity</label><input id="paper-qty" type="number" min="0.000001" step="any" value="1">
   <label>Estimated fill price</label><input id="paper-price" readonly>
+  <label for="paper-sl">Stop loss · optional</label><input id="paper-sl" type="number" min="0" step="any" placeholder="Price level">
+  <label for="paper-tp">Take profit · optional</label><input id="paper-tp" type="number" min="0" step="any" placeholder="Price level">
   <div class="paper-status" id="paper-status"></div>
   <button class="paper-submit" id="paper-submit" type="button">Place simulated order</button>
  </div>`;
  document.body.appendChild(modal);
- const close=()=>modal.classList.remove('show');
+ const close=()=>{modal.classList.remove('show','mode-buy','mode-sell')};
+ const setPaperSide=side=>{pendingSide=side;$('#paper-side',modal).value=side;modal.classList.toggle('mode-buy',side==='buy');modal.classList.toggle('mode-sell',side==='sell');modal.querySelectorAll('[data-side]').forEach(b=>b.classList.toggle('active',b.dataset.side===side));$('#paper-title',modal).textContent=(side==='buy'?'Buy ':'Sell ')+(pendingMarket?.k||'')};
+ modal.querySelectorAll('[data-side]').forEach(b=>b.onclick=()=>setPaperSide(b.dataset.side));
  $('.paper-close',modal).onclick=close;
  modal.addEventListener('click',e=>{if(e.target===modal)close()});
  addEventListener('keydown',e=>{if(e.key==='Escape')close()});
@@ -1114,36 +1189,50 @@ const v0=store.get('mb_view','cards');if(v0!=='cards')setView(['wall','focus'].i
    const p=priceOf(m);
    $('#paper-title',modal).textContent=(side==='buy'?'Buy ':'Sell ')+m.k;
    $('#paper-sub',modal).textContent=m.name+' · Paper Trading · Simulated only';
-   $('#paper-side',modal).value=side;
+   setPaperSide(side);
+   $('#paper-sl',modal).value='';$('#paper-tp',modal).value='';
    $('#paper-price',modal).value=p?money(p):'Waiting for market data';
    $('#paper-qty',modal).value='1';
    $('#paper-status',modal).textContent=p?'Order will be simulated at the latest loaded candle close.':'No price available yet. Load chart data first.';
    $('#paper-submit',modal).disabled=!p;
    refreshPaperStats();modal.classList.add('show');
  }
- $('#paper-side',modal).onchange=e=>{pendingSide=e.target.value;$('#paper-title',modal).textContent=(pendingSide==='buy'?'Buy ':'Sell ')+(pendingMarket?.k||'')};
+ $('#paper-side',modal).onchange=e=>setPaperSide(e.target.value);
  $('#paper-submit',modal).onclick=()=>{
    const m=pendingMarket,p=priceOf(m),qty=Number($('#paper-qty',modal).value),side=$('#paper-side',modal).value;
    if(!m||!p||!Number.isFinite(qty)||qty<=0){$('#paper-status',modal).textContent='Enter a valid quantity and wait for a market price.';return}
    const value=p*qty,pos=paper.positions[m.k]||{qty:0,avg:0};
-   if(side==='buy'){
-     if(value>paper.cash){$('#paper-status',modal).textContent='Insufficient simulated cash for this order.';return}
-     const nextQty=pos.qty+qty;pos.avg=((pos.qty*pos.avg)+(qty*p))/nextQty;pos.qty=nextQty;paper.cash-=value;
-   }else{
-     if(qty>pos.qty){$('#paper-status',modal).textContent='You cannot sell more than your current paper position.';return}
-     pos.qty-=qty;paper.cash+=value;if(pos.qty<=1e-10){delete paper.positions[m.k]}else paper.positions[m.k]=pos;
-   }
-   if(side==='buy')paper.positions[m.k]=pos;
+   const oldQty=Number(pos.qty||0),sl=Number($('#paper-sl',modal).value)||null,tp=Number($('#paper-tp',modal).value)||null;
+   const nextQty=oldQty+(side==='buy'?qty:-qty),nextDirection=Math.sign(nextQty);
+   if(nextDirection>0&&((sl&&sl>=p)||(tp&&tp<=p))){$('#paper-status',modal).textContent='For a long position, stop loss must be below price and take profit above it.';return}
+   if(nextDirection<0&&((sl&&sl<=p)||(tp&&tp>=p))){$('#paper-status',modal).textContent='For a short position, stop loss must be above price and take profit below it.';return}
+   if(side==='buy'&&value>paper.cash){$('#paper-status',modal).textContent='Insufficient simulated cash for this order.';return}
+   paper.cash+=side==='buy'?-value:value;
+   if(oldQty===0)pos.avg=p;
+   else if(nextDirection!==0&&Math.sign(oldQty)===nextDirection){
+     const addsSameDirection=(side==='buy'&&oldQty>0)||(side==='sell'&&oldQty<0);
+     if(addsSameDirection){const oldAbs=Math.abs(oldQty);pos.avg=((oldAbs*Number(pos.avg||0))+(qty*p))/(oldAbs+qty)}
+     /* Reducing an existing position keeps its original average entry. */
+   }else if(nextDirection!==0){pos.avg=p}
+   pos.qty=nextQty;
+   if(nextDirection===0){delete paper.positions[m.k]}
+   else{if(sl)pos.sl=sl;if(tp)pos.tp=tp;paper.positions[m.k]=pos}
    const order={id:Date.now(),symbol:m.k,name:m.name,side,qty,price:p,value,at:new Date().toISOString(),mode:'paper'};
    paper.orders.unshift(order);paper.orders=paper.orders.slice(0,200);persistPaper();refreshPaperStats();
    $('#paper-status',modal).textContent=`Simulated ${side.toUpperCase()} filled: ${qty} ${m.k} at ${money(p)}.`;
    renderPaperSummary();
  };
  function renderPaperSummary(){
+   let ambience='';
    document.querySelectorAll('.paper-summary').forEach(el=>{
-     const k=el.dataset.market,pos=paper.positions[k]||{qty:0,avg:0};
-     el.innerHTML=`Paper position: <strong>${Number(pos.qty||0).toLocaleString()} ${esc(k)}</strong> <span class="muted">· Avg. ${pos.avg?money(pos.avg):'—'} · Cash ${money(paper.cash)}</span>`;
+     const k=el.dataset.market,pos=paper.positions[k]||{qty:0,avg:0},m=live.find(x=>x.k===k),price=m?priceOf(m):null;
+     const short=pos.qty<0,pnl=price&&pos.qty?(price-pos.avg)*pos.qty:null,hitSL=!!(price&&pos.sl&&(short?price>=pos.sl:price<=pos.sl)),hitTP=!!(price&&pos.tp&&(short?price<=pos.tp:price>=pos.tp)),nearSL=!!(price&&pos.sl&&!hitSL&&(short?pos.sl>price&&(pos.sl-price)/price<.01:price>pos.sl&&(price-pos.sl)/price<.01)),nearTP=!!(price&&pos.tp&&!hitTP&&(short?price>pos.tp&&(price-pos.tp)/price<.01:price<pos.tp&&(pos.tp-price)/price<.01));
+     const state=hitSL?'Stop level reached':hitTP?'Target level reached':nearSL?'Approaching stop loss':nearTP?'Approaching take profit':pnl===null?'Position open':pnl>=0?'In profit':'In drawdown';
+     if(pos.qty&&m?.el.classList.contains('open'))ambience=(hitSL||nearSL)?'trade-near-sl':(hitTP||nearTP)?'trade-near-tp':pnl>=0?'trade-profit':'trade-drawdown';
+     el.innerHTML=`Paper position: <strong>${pos.qty<0?'Short':'Long'} ${Math.abs(Number(pos.qty||0)).toLocaleString()} ${esc(k)}</strong> <span class="muted">· Avg. ${pos.avg?money(pos.avg):'—'} · ${pnl===null?'P&L waiting for price':`P&L ${money(pnl)}`} · ${esc(state)} · Cash ${money(paper.cash)}${pos.sl?' · SL '+money(pos.sl):''}${pos.tp?' · TP '+money(pos.tp):''}</span>`;
    });
+   document.body.classList.remove('trade-profit','trade-drawdown','trade-near-sl','trade-near-tp');
+   if(ambience)document.body.classList.add(ambience);
  }
  const consent=document.createElement('div');consent.id='broker-consent';consent.innerHTML=`<div class="broker-panel" role="dialog" aria-modal="true" aria-labelledby="broker-consent-title"><h3 id="broker-consent-title">Continue to broker</h3><p class="broker-copy">You'll open the provider's website in a new tab. Sign in and review any permissions or account authorisations on the provider's own secure page. MarketBrain will not ask for or store your broker password.</p><div class="broker-actions"><button type="button" data-cancel>Cancel</button><button type="button" class="continue" data-continue>Continue</button></div></div>`;
  document.body.appendChild(consent);let brokerTarget=null;
@@ -1185,21 +1274,23 @@ const v0=store.get('mb_view','cards');if(v0!=='cards')setView(['wall','focus'].i
     <div class="trade-actions">
      <button class="buy" data-paper="buy" type="button">Buy</button>
      <button class="sell" data-paper="sell" type="button">Sell</button>
-     <a href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" target="_blank" rel="noopener">Open full TradingView chart</a>
     </div>
     <div class="paper-stats paper-summary" data-market="${esc(m.k)}"></div>
     <div class="muted" style="margin-top:8px">Paper orders use the latest loaded candle close as the simulated fill price. They do not represent executable live quotes.</div>`;
    const news=document.createElement('div');
-   news.className='market-extra';
+   news.className='market-news-dock';
    news.innerHTML=`<div class="market-extra-head"><span class="market-extra-title">News & developments · ${esc(m.k)}</span><a href="https://news.google.com/search?q=${encodeURIComponent(m.name+' '+m.k+' markets')}" target="_blank" rel="noopener">Search coverage</a></div>
     <p class="muted news-status" style="margin-top:8px">Open this instrument to load recent matching headlines.</p><div class="market-news-list"></div>`;
-   const tradingView=panel.querySelector('.f');
    function brokerHolder(){const d=document.createElement('div');d.innerHTML=brokerMarkup(m);return d.firstElementChild}
    const f=panel.querySelector('.f');
-   if(f)f.insertAdjacentElement('afterend',tools);else panel.appendChild(tools);
+   const timeframe=panel.querySelector('.tf');
+   const chartReadout=panel.querySelector('.rd');
+   if(timeframe)timeframe.insertAdjacentElement('beforebegin',news);
+   if(chartReadout)chartReadout.insertAdjacentElement('afterend',tools);
+   else if(f)f.insertAdjacentElement('beforebegin',tools);else panel.appendChild(tools);
    tools.querySelectorAll('[data-paper]').forEach(b=>b.addEventListener('click',()=>openPaper(m,b.dataset.paper)));
    tools.insertAdjacentElement('afterend',brokerHolder());
-   const broker=tools.nextElementSibling;broker.insertAdjacentElement('afterend',news);
+   const broker=tools.nextElementSibling;
    m._newsBox=news;m._newsLoaded=false;
  });
  // Asset search filters the instrument list without turning every instrument into a dashboard card.
@@ -1222,6 +1313,19 @@ const v0=store.get('mb_view','cards');if(v0!=='cards')setView(['wall','focus'].i
    if(m.el.classList.contains('open')&&m._newsBox&&!m._newsLoaded){m._newsLoaded=true;loadAssetNews(m,m._newsBox)}
  };
  renderPaperSummary();
+ setInterval(()=>{renderPaperSummary();},5000);
+ // While a paper position's instrument is open, refresh only that chart once a minute.
+ // Twelve Data uses one request/minute here; the other instruments are not polled.
+ setInterval(async()=>{
+   if(document.hidden)return;
+   const active=live.find(x=>x.el.classList.contains('open')&&positionQty(x.k)!==0);
+   if(!active||active.tf===1440)return;
+   try{
+     if(active.src==='t')localStorage.removeItem('mb_'+active.k+active.tf);
+     const candles=await getCandles(active,active.tf);
+     setRd(active,active.tf,candles);use(active,active.tf);paint(active);renderPaperSummary();
+   }catch(e){/* Keep the last known state; never turn a feed error into a trade signal. */}
+ },60000);
 })();
 
 </script></body></html>
