@@ -209,6 +209,22 @@ body.v-cards .m.open .s.calm{font-size:17px}
 .paper-status{font-size:12px;color:var(--mute);margin-top:10px;min-height:1.4em}
 #broker-consent{position:fixed;inset:0;z-index:110;background:#24152a55;display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 #broker-consent.show{display:flex}
+#bk-modal{position:fixed;inset:0;z-index:115;background:#24152a55;display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#bk-modal.show{display:flex}
+#bk-modal .broker-panel{width:min(100%,520px);max-height:90vh;overflow:auto}
+.bk-card{margin:14px 0;padding:14px 16px;border-radius:18px;background:#ffffff66;border:1px solid #ffffffa8}
+.bk-card p{margin:8px 0 0}
+.bk-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:3px 0}
+.bk-row small{font-size:12px}
+.bk-stats{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0}
+.bk-stats span{display:block;font-size:12px;color:var(--mute)}.bk-stats strong{font-size:18px}
+.bk-pos{margin-top:6px}.bk-up{color:#267d50}.bk-dn{color:#a83e49}
+.bk-msg{color:var(--ink)!important;font-weight:600}
+.bk-setup{margin:14px 0}.bk-setup summary{cursor:pointer;font-size:14px;color:var(--mute)}
+.bk-setup label{display:block;font-size:12px;color:var(--mute);margin:12px 0 6px}
+.bk-setup input{width:100%;padding:11px 13px;border-radius:12px;border:1px solid #ffffffc0;background:#ffffffa8;color:var(--ink);font:inherit;font-size:15px}
+.bk-setup code{font-size:12px;word-break:break-all}
+#bk-modal .broker-panel button[disabled]{opacity:.45;cursor:not-allowed}
 .broker-panel{width:min(100%,430px);padding:24px;border-radius:24px;background:#fff9fded;color:var(--ink);border:1px solid #ffffffd0;box-shadow:0 24px 80px #3b1d5a30}
 .broker-panel h3{font-size:23px;margin:0 0 8px}.broker-panel p{color:var(--mute);font-size:14px;line-height:1.5}
 .broker-panel .broker-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:20px}
@@ -298,7 +314,7 @@ body.trade-near-tp #trade-atmosphere{opacity:.85;animation-duration:3s;backgroun
 
 </header>
 <main id="app"></main>
-<footer id="mb-settings"><span>MarketBrain · Local settings</span><div id="mb-settings-actions"><button id="tdkey" type="button">Market data connection</button><button id="aikey" type="button">AI connection</button></div></footer>
+<footer id="mb-settings"><span>MarketBrain · Local settings</span><div id="mb-settings-actions"><button id="bkopen" type="button" data-bk-open>Broker connection</button><button id="tdkey" type="button">Market data connection</button><button id="aikey" type="button">AI connection</button></div></footer>
 <div id="dock"><button class="ask" id="dk">Ask MarketBrain</button></div>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
@@ -1243,6 +1259,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  const brokerMarkup=m=>`<div class="market-extra">
   <div class="market-extra-head"><span class="market-extra-title">Connect a trading destination</span><span class="muted">Sign in with the provider</span></div>
   <div class="broker-links">
+   <button type="button" data-bk-open>Connect a broker</button>
    <a href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" data-broker="TradingView" data-url="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}">TradingView</a>
    <a href="https://www.exness.com/" data-broker="Exness" data-url="https://www.exness.com/">Exness</a>
    <a href="https://www.xm.com/" data-broker="XM" data-url="https://www.xm.com/">XM</a>
@@ -1327,4 +1344,122 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  },60000);
 })();
 
-</script></body></html>
+</script>
+<script>
+/* ---- Broker connection (Alpaca first) ----
+   The page sends the user to the broker to sign in and approve. The broker sends them back with a
+   one-time code. A small service you host (broker-worker.js) swaps that code for a token, because the
+   client secret must never sit in this public file. MarketBrain only READS the account and positions. */
+(()=>{
+ const ss={get:k=>{try{return sessionStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}},del:k=>{try{sessionStorage.removeItem(k)}catch(e){}}};
+ const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{v?localStorage.setItem(k,v):localStorage.removeItem(k)}catch(e){}}};
+ const cfg=()=>({client:ls.get('mb_alpaca_client')||'',worker:(ls.get('mb_bk_worker')||'').replace(/\/+$/,'')});
+ const redirectUri=()=>location.origin+location.pathname;
+ const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const money=v=>v==null||!isFinite(+v)?'—':(+v).toLocaleString('en-US',{style:'currency',currency:'USD'});
+ const tok=()=>ss.get('mb_bk_token')||'',env=()=>ss.get('mb_bk_env')||'paper';
+ let acct=null,pos=[],busy=false,msg='',setupOpen=false;
+
+ const modal=document.createElement('div');modal.id='bk-modal';document.body.appendChild(modal);
+ const open=()=>{modal.classList.add('show');draw()},close=()=>modal.classList.remove('show');
+
+ function draw(){
+  const c=cfg(),on=!!tok(),ready=c.client&&c.worker;
+  let h=`<div class="broker-panel" role="dialog" aria-modal="true" aria-labelledby="bk-title"><h3 id="bk-title">Broker connection</h3>`;
+  h+=`<p>Connect an account so MarketBrain can read your positions and let the screen respond to them. You sign in on the broker's own page. MarketBrain never sees your password, and it only reads: it does not place orders.</p>`;
+  if(msg)h+=`<p class="bk-msg">${E(msg)}</p>`;
+  h+=`<div class="bk-card"><div class="bk-row"><strong>Alpaca</strong><span class="muted">${on?'Connected · '+(env()==='live'?'live account':'paper account'):'Not connected'}</span></div>`;
+  if(!on){
+   h+=`<p class="muted">US stocks, ETFs and crypto. You'll leave MarketBrain, approve access on Alpaca, and come back here.</p>
+   <div class="broker-actions" style="justify-content:flex-start;margin-top:10px"><button type="button" class="continue" data-bk="paper"${ready?'':' disabled'}>Continue to Alpaca (paper)</button><button type="button" data-bk="live"${ready?'':' disabled'}>Continue to Alpaca (live)</button></div>`;
+   if(!ready)h+=`<p class="muted">Needs the setup below first.</p>`;
+  }else{
+   h+=acct?`<div class="bk-stats"><div><span>Equity</span><strong>${money(acct.equity)}</strong></div><div><span>Cash</span><strong>${money(acct.cash)}</strong></div><div><span>Buying power</span><strong>${money(acct.buying_power)}</strong></div></div>`:`<p class="muted">${busy?'Reading the account…':'Account not loaded yet.'}</p>`;
+   h+=`<div class="bk-pos">`+(pos.length?pos.map(p=>{const pl=+p.unrealized_pl,short=+p.qty<0;return `<div class="bk-row"><span>${E(p.symbol)} · ${short?'Short':'Long'} ${E(Math.abs(+p.qty))}<small class="muted"> · avg ${money(p.avg_entry_price)}</small></span><strong class="${pl>=0?'bk-up':'bk-dn'}">${money(pl)}</strong></div>`}).join(''):(acct?'<p class="muted">No open positions.</p>':''))+`</div>`;
+   h+=`<div class="broker-actions" style="justify-content:flex-start;margin-top:10px"><button type="button" data-bk="refresh">Refresh</button><button type="button" data-bk="off">Disconnect</button></div><p class="muted">The connection lasts for this browser tab. Close it and you'll connect again next time.</p>`;
+  }
+  h+=`</div>`;
+  h+=`<details class="bk-setup"${setupOpen||!ready?' open':''}><summary>Setup</summary>
+   <label>Alpaca client ID<input id="bk-client" value="${E(c.client)}" autocomplete="off" spellcheck="false"></label>
+   <label>Connection service address<input id="bk-worker" value="${E(c.worker)}" placeholder="https://your-service.workers.dev" autocomplete="off" spellcheck="false"></label>
+   <p class="muted">Register this exact return address with Alpaca:<br><code>${E(redirectUri())}</code></p>
+   <div class="broker-actions" style="justify-content:flex-start"><button type="button" data-bk="save">Save</button></div></details>`;
+  h+=`<div class="bk-card"><div class="bk-row"><strong>Exness · XM · Plus500</strong><span class="muted">Not connected</span></div><p class="muted">These don't offer a sign-in connection that a website like this can use. Their buttons still take you to their sites.</p></div>`;
+  h+=`<div class="broker-actions"><button type="button" data-bk="close">Close</button></div></div>`;
+  modal.innerHTML=h;
+ }
+
+ function connect(e){
+  const c=cfg();if(!c.client||!c.worker){setupOpen=true;msg='Add the client ID and service address first.';draw();return}
+  const a=new Uint8Array(16);crypto.getRandomValues(a);const state=[...a].map(x=>x.toString(16).padStart(2,'0')).join('');
+  ss.set('mb_bk_state',state);ss.set('mb_bk_pending',e);
+  location.href='https://app.alpaca.markets/oauth/authorize?'+new URLSearchParams({response_type:'code',client_id:c.client,redirect_uri:redirectUri(),state,scope:'trading',env:e});
+ }
+ function disconnect(silent){ss.del('mb_bk_token');ss.del('mb_bk_env');acct=null;pos=[];if(!silent)msg='';draw();atmos()}
+ async function api(path){
+  const r=await fetch(`${cfg().worker}/alpaca/read?path=${encodeURIComponent(path)}&env=${env()}`,{headers:{Authorization:'Bearer '+tok()}});
+  if(r.status===401||r.status===403){disconnect(true);throw new Error('Alpaca no longer accepts this connection. Connect again.')}
+  if(!r.ok)throw new Error('Alpaca answered '+r.status+'.');
+  return r.json();
+ }
+ async function refresh(){
+  if(!tok()||busy)return;busy=true;draw();
+  try{const r=await Promise.all([api('/v2/account'),api('/v2/positions')]);acct=r[0];pos=Array.isArray(r[1])?r[1]:[];msg=''}
+  catch(e){msg=e instanceof TypeError?"The browser couldn't reach the connection service.":(e.message||'Could not read the account.')}
+  busy=false;if(modal.classList.contains('show')||msg)draw();atmos();
+ }
+ async function finishReturn(){
+  const q=new URLSearchParams(location.search),code=q.get('code'),state=q.get('state'),err=q.get('error');
+  if(!code&&!err)return;
+  const want=ss.get('mb_bk_state'),e=ss.get('mb_bk_pending')||'paper';
+  history.replaceState(null,'',location.pathname+location.hash);
+  if(!want||state!==want){return}   /* not one of ours */
+  ss.del('mb_bk_state');ss.del('mb_bk_pending');
+  open();
+  if(err){msg='Alpaca did not grant access ('+err+').';draw();return}
+  msg='Finishing the connection…';draw();
+  try{
+   const r=await fetch(cfg().worker+'/alpaca/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code,redirect_uri:redirectUri()})});
+   const d=await r.json();if(!r.ok||!d.access_token)throw new Error(d.error||'The connection service could not complete the sign-in.');
+   ss.set('mb_bk_token',d.access_token);ss.set('mb_bk_env',e);msg='';refresh();
+  }catch(x){msg=x instanceof TypeError?"The browser couldn't reach the connection service.":(x.message||'Connection failed.');draw()}
+ }
+
+ /* The screen's colour follows a real position too: green in profit, red in drawdown.
+    Stop and target distance isn't read from the broker, so there is no "near stop" state here. */
+ const sym=m=>m.g==='Crypto'?m.k+'USD':m.k;
+ const ALL=['trade-profit','trade-drawdown','trade-near-sl','trade-near-tp'];
+ function wanted(){
+  if(!tok()||!pos.length)return '';
+  let m;try{m=live.find(x=>x.el.classList.contains('open'))}catch(e){}
+  const p=m&&pos.find(x=>String(x.symbol).replace('/','')===sym(m));
+  return p?(+p.unrealized_pl>=0?'trade-profit':'trade-drawdown'):'';
+ }
+ function atmos(){
+  const b=document.body,own=b.dataset.bkAtm||'',want=wanted();
+  const others=ALL.filter(c=>c!==own&&b.classList.contains(c));
+  if(others.length||!want){if(own){b.classList.remove(own);delete b.dataset.bkAtm}return}
+  if(own&&own!==want)b.classList.remove(own);
+  if(!b.classList.contains(want))b.classList.add(want);
+  b.dataset.bkAtm=want;
+ }
+ /* The page redraws its own paper-position glow every few seconds and clears the classes first; re-apply straight away. */
+ new MutationObserver(atmos).observe(document.body,{attributes:true,attributeFilter:['class']});
+
+ modal.addEventListener('click',ev=>{
+  if(ev.target===modal)return close();
+  const b=ev.target.closest('[data-bk]');if(!b)return;const a=b.dataset.bk;
+  if(a==='close')close();
+  else if(a==='paper'||a==='live')connect(a);
+  else if(a==='refresh')refresh();
+  else if(a==='off')disconnect();
+  else if(a==='save'){ls.set('mb_alpaca_client',modal.querySelector('#bk-client').value.trim());ls.set('mb_bk_worker',modal.querySelector('#bk-worker').value.trim());setupOpen=false;msg='Saved.';draw()}
+ });
+ document.addEventListener('click',ev=>{if(ev.target.closest('[data-bk-open]')){ev.preventDefault();open();if(tok()&&!acct)refresh()}});
+ addEventListener('keydown',ev=>{if(ev.key==='Escape')close()});
+ setInterval(()=>{if(!document.hidden)atmos()},4000);
+ setInterval(()=>{if(!document.hidden&&tok())refresh()},30000);
+ finishReturn().then(()=>{if(tok())refresh()});
+})();
+</script>
+</body></html>
