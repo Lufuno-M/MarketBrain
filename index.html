@@ -209,9 +209,6 @@ body.v-cards .m.open .s.calm{font-size:17px}
 .paper-status{font-size:12px;color:var(--mute);margin-top:10px;min-height:1.4em}
 #broker-consent{position:fixed;inset:0;z-index:110;background:#24152a55;display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 #broker-consent.show{display:flex}
-#bk-modal{position:fixed;inset:0;z-index:115;background:#24152a55;display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-#bk-modal.show{display:flex}
-#bk-modal .broker-panel{width:min(100%,520px);max-height:90vh;overflow:auto}
 .bk-card{margin:14px 0;padding:14px 16px;border-radius:18px;background:#ffffff66;border:1px solid #ffffffa8}
 .bk-card p{margin:8px 0 0}
 .bk-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:3px 0}
@@ -219,12 +216,6 @@ body.v-cards .m.open .s.calm{font-size:17px}
 .bk-stats{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0}
 .bk-stats span{display:block;font-size:12px;color:var(--mute)}.bk-stats strong{font-size:18px}
 .bk-pos{margin-top:6px}.bk-up{color:#267d50}.bk-dn{color:#a83e49}
-.bk-msg{color:var(--ink)!important;font-weight:600}
-.bk-setup{margin:14px 0}.bk-setup summary{cursor:pointer;font-size:14px;color:var(--mute)}
-.bk-setup label{display:block;font-size:12px;color:var(--mute);margin:12px 0 6px}
-.bk-setup input{width:100%;padding:11px 13px;border-radius:12px;border:1px solid #ffffffc0;background:#ffffffa8;color:var(--ink);font:inherit;font-size:15px}
-.bk-setup code{font-size:12px;word-break:break-all}
-#bk-modal .broker-panel button[disabled]{opacity:.45;cursor:not-allowed}
 .broker-panel{width:min(100%,430px);padding:24px;border-radius:24px;background:#fff9fded;color:var(--ink);border:1px solid #ffffffd0;box-shadow:0 24px 80px #3b1d5a30}
 .broker-panel h3{font-size:23px;margin:0 0 8px}.broker-panel p{color:var(--mute);font-size:14px;line-height:1.5}
 .broker-panel .broker-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:20px}
@@ -292,13 +283,18 @@ body.v-cards .m.open .s.calm{font-size:clamp(25px,3.5vw,42px)}
 .paper-side-switch button[data-side=buy]{background:linear-gradient(130deg,#b9f4d4,#36c17b);color:#075b35}
 .paper-side-switch button[data-side=sell]{background:linear-gradient(130deg,#ffd0d4,#ed6274);color:#7d1728}
 .paper-side-switch button.active{transform:translateY(-3px) scale(1.025);filter:saturate(1.2);outline:3px solid #ffffffc9;outline-offset:3px}
-body.trade-profit #trade-atmosphere,body.trade-drawdown #trade-atmosphere,body.trade-near-sl #trade-atmosphere,body.trade-near-tp #trade-atmosphere{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.65;animation:trade-breathe 5s ease-in-out infinite alternate;transition:opacity 1s,background 1s}
-body.trade-profit #trade-atmosphere{background:radial-gradient(ellipse at 78% 20%,#52d98a50,transparent 48%)}
-body.trade-drawdown #trade-atmosphere{background:radial-gradient(ellipse at 78% 20%,#ef536750,transparent 48%)}
-body.trade-near-sl #trade-atmosphere{opacity:.9;animation-duration:2.2s;background:radial-gradient(ellipse at 78% 20%,#ed3e596f,transparent 52%)}
-body.trade-near-tp #trade-atmosphere{opacity:.85;animation-duration:3s;background:radial-gradient(ellipse at 78% 20%,#39c98268,transparent 52%)}
+/* Full-screen trade atmosphere: the whole room takes the colour of the position */
+body.trade-profit{--ta:#34d27e78;--tw:#46d98a24;--tc:#2fcb7a8c;--pace:5.5s}
+body.trade-drawdown{--ta:#f04e6678;--tw:#f04e6624;--tc:#ee465f8c;--pace:4.2s}
+body.trade-near-sl{--ta:#ee3a56a8;--tw:#ee3a5636;--tc:#ee3a56d0;--pace:1.3s}
+body.trade-near-tp{--ta:#2fcf86a8;--tw:#2fcf8636;--tc:#2fcf86d0;--pace:2.2s}
+#trade-atmosphere{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity 1.4s ease}
+#trade-atmosphere::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 20vmin 5vmin var(--tc,transparent);animation:edge-pulse var(--pace,5s) ease-in-out infinite alternate}
+body.trade-profit #trade-atmosphere,body.trade-drawdown #trade-atmosphere,body.trade-near-sl #trade-atmosphere,body.trade-near-tp #trade-atmosphere{opacity:1;background:radial-gradient(ellipse 90% 60% at 50% 0%,var(--ta),transparent 70%),radial-gradient(ellipse 90% 60% at 50% 100%,var(--ta),transparent 70%),linear-gradient(var(--tw),var(--tw));animation:atm-breathe var(--pace,5s) ease-in-out infinite alternate}
+@keyframes atm-breathe{from{filter:saturate(.9) brightness(.98)}to{filter:saturate(1.35) brightness(1.04)}}
+@keyframes edge-pulse{from{opacity:.45}to{opacity:1}}
 @media(max-width:640px){#mb-settings{padding:16px;align-items:flex-start;flex-direction:column}.market-news-dock{padding:9px}.market-news-dock .market-news-item{flex-basis:82vw}.trade-actions button{min-height:68px}.paper-panel{padding:22px 18px}.paper-panel .paper-close{right:16px}.paper-side-switch button{min-height:72px}}
-@media(prefers-reduced-motion:reduce){.paper-panel::before,#trade-atmosphere{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.paper-panel::before,#trade-atmosphere,#trade-atmosphere::after,.trade-actions button{animation:none!important}}
 
 /* Before you trade: half-width briefing, always visible once a market is open */
 .market-news-dock.nb{padding:16px 18px 14px;border-radius:22px;margin:4px 0 16px}
@@ -319,6 +315,29 @@ a.nb-item:hover{background:#ffffff40}
 #nw-modal{position:fixed;inset:0;z-index:112;background:#24152a55;display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 #nw-modal.show{display:flex}
 #nw-modal .nw-panel{width:min(100%,880px);max-height:90vh;overflow:auto}
+/* Buy and Sell as physical keys */
+.trade-actions{gap:16px;margin:18px 0 20px}
+.trade-actions button{--edge:#2c9a69;--glow:#36b87966;position:relative;min-height:84px;transform:translateY(0);border:1px solid #ffffffe6;box-shadow:inset 0 2px 0 #fffffff0,inset 0 -8px 14px #0000000d,0 8px 0 var(--edge),0 22px 38px var(--glow);transition:transform .14s cubic-bezier(.3,1.6,.5,1),box-shadow .14s ease,filter .2s;animation:key-breathe 4.5s ease-in-out infinite alternate}
+.trade-actions .sell{--edge:#bd4457;--glow:#e5485d5c}
+.trade-actions button:hover{transform:translateY(-3px);filter:saturate(1.15) brightness(1.03);box-shadow:inset 0 2px 0 #fffffff0,inset 0 -8px 14px #0000000d,0 11px 0 var(--edge),0 30px 48px var(--glow)}
+.trade-actions button:active{transform:translateY(7px);animation:none;box-shadow:inset 0 3px 8px #00000026,0 1px 0 var(--edge),0 6px 14px var(--glow)}
+@keyframes key-breathe{from{filter:brightness(1)}to{filter:brightness(1.06) saturate(1.12)}}
+/* Broker buttons, visible and tactile */
+.hdr-brokers{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:14px 0 0}
+.bk-btn,.broker-links a.bk-btn{display:inline-flex;align-items:center;gap:10px;padding:11px 20px 11px 13px;border-radius:99px;border:1px solid #ffffffd9;background:#ffffff8c;color:var(--ink);text-decoration:none;font-size:15px;font-weight:600;box-shadow:inset 0 1px 0 #fff,0 4px 0 #d9c9df,0 12px 24px #3b1d5a1f;transition:transform .14s cubic-bezier(.3,1.6,.5,1),box-shadow .14s ease,background .2s}
+.bk-btn:hover,.broker-links a.bk-btn:hover{transform:translateY(-2px);background:#ffffffc4;box-shadow:inset 0 1px 0 #fff,0 6px 0 #d9c9df,0 18px 30px #ff5fa82e}
+.bk-btn:active,.broker-links a.bk-btn:active{transform:translateY(4px);box-shadow:inset 0 2px 5px #00000014,0 0 0 #d9c9df,0 4px 10px #3b1d5a1a}
+.bi,.bi-fb{width:24px;height:24px;border-radius:7px;flex:none}
+.bi{object-fit:contain;background:#fff;padding:2px;box-shadow:0 1px 3px #0000001f}
+.bi-fb{display:inline-grid;place-items:center;font-style:normal;font-weight:700;font-size:13px;background:linear-gradient(135deg,#ffd7ea,#fff0a8);color:var(--ink)}
+/* Demo account */
+#demo-modal{position:fixed;inset:0;z-index:111;background:#24152a55;display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#demo-modal.show{display:flex}
+#demo-modal .dm-panel{width:min(100%,640px);max-height:90vh;overflow:auto}
+.paper-quick{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+.paper-quick button{font:inherit;font-size:14px;padding:8px 15px;border-radius:99px;border:1px solid #ffffffc0;background:#ffffff78;color:inherit;cursor:pointer;box-shadow:inset 0 1px 0 #fff,0 3px 0 #ffffff55;transition:transform .12s}
+.paper-quick button:active{transform:translateY(3px);box-shadow:none}
+.paper-value{font-size:13px;margin:8px 0 2px;opacity:.85}
 </style></head><body class="v-cards">
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div><div id="trade-atmosphere" aria-hidden="true"></div>
 <header>
@@ -327,11 +346,12 @@ a.nb-item:hover{background:#ffffff40}
 <div class="bar" id="bar" aria-hidden="true"></div>
 <div class="vb" id="vb" hidden><button class="chip" id="pv" type="button">Previous</button><span id="lb"></span><button class="chip" id="nx" type="button">Next</button><button class="chip" id="tour" type="button">Walk me through</button><button class="go" id="go" type="button">Where was I?</button></div>
 <p id="note"></p>
-<div class="market-search" id="market-search"><button class="chip" id="nwopen" type="button">News</button></div>
+<div class="market-search" id="market-search"><button class="chip" id="nwopen" type="button">News</button><button class="chip" id="demoopen" type="button">Demo account</button></div>
+<div class="hdr-brokers" id="hdr-brokers" aria-label="Brokers"><a class="bk-btn" href="https://www.tradingview.com/" data-broker="TradingView" data-url="https://www.tradingview.com/"><img class="bi" data-n="TradingView" src="https://www.google.com/s2/favicons?domain=tradingview.com&amp;sz=64" alt="" width="22" height="22"><span>TradingView</span></a><a class="bk-btn" href="https://www.exness.com/" data-broker="Exness" data-url="https://www.exness.com/"><img class="bi" data-n="Exness" src="https://www.google.com/s2/favicons?domain=exness.com&amp;sz=64" alt="" width="22" height="22"><span>Exness</span></a><a class="bk-btn" href="https://www.xm.com/" data-broker="XM" data-url="https://www.xm.com/"><img class="bi" data-n="XM" src="https://www.google.com/s2/favicons?domain=xm.com&amp;sz=64" alt="" width="22" height="22"><span>XM</span></a><a class="bk-btn" href="https://www.plus500.com/" data-broker="Plus500" data-url="https://www.plus500.com/"><img class="bi" data-n="Plus500" src="https://www.google.com/s2/favicons?domain=plus500.com&amp;sz=64" alt="" width="22" height="22"><span>Plus500</span></a></div>
 
 </header>
 <main id="app"></main>
-<footer id="mb-settings"><span>MarketBrain · Local settings</span><div id="mb-settings-actions"><button id="bkopen" type="button" data-bk-open>Broker connection</button><button id="tdkey" type="button">Market data connection</button><button id="aikey" type="button">AI connection</button></div></footer>
+<footer id="mb-settings"><span>MarketBrain · Local settings</span><div id="mb-settings-actions"><button id="tdkey" type="button">Market data connection</button><button id="aikey" type="button">AI connection</button></div></footer>
 <div id="dock"><button class="ask" id="dk">Ask MarketBrain</button></div>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
@@ -1183,27 +1203,40 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
 (function(){
  const $=(s,r=document)=>r.querySelector(s);
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const PAPER_KEY='mb_paper_account_v1';
- const readPaper=()=>{try{return JSON.parse(localStorage.getItem(PAPER_KEY))||{cash:100000,positions:{},orders:[]}}catch(e){return{cash:100000,positions:{},orders:[]}}};
- let paper=readPaper(), pendingMarket=null, pendingSide='buy';
+ const DEMO_START=100000, DEMO_ZAR_PER_USD=18;
+ const PAPER_KEY='mb_demo_account_v2';
+ const freshAccount=()=>({balance:DEMO_START,positions:{},orders:[],since:Date.now()});
+ const readPaper=()=>{try{const v=JSON.parse(localStorage.getItem(PAPER_KEY));return v&&typeof v.balance==='number'&&v.positions&&Array.isArray(v.orders)?v:freshAccount()}catch(e){return freshAccount()}};
+ let paper=readPaper(), pendingMarket=null, pendingSide='buy', lastAmbience='';
  const persistPaper=()=>{try{localStorage.setItem(PAPER_KEY,JSON.stringify(paper))}catch(e){}};
- const money=n=>Number(n||0).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2});
+ const rand=n=>(Number(n)<0?'-':'')+'R'+Math.abs(Number(n||0)).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const randSigned=n=>(Number(n)>0?'+':'')+rand(n);
  const priceOf=m=>m.res?.last?.c||m.c?.[m.c.length-1]?.c||null;
  const positionQty=k=>Number(paper.positions[k]?.qty||0);
+ /* Demo money is rand. Prices are the real market's, in the market's own units; sizes convert to rand at a fixed demo rate. */
+ const usdBase=m=>/^USD[A-Z]{3}$/.test(m.k);
+ const unitUsd=(m,p)=>usdBase(m)?1:p;
+ const notionalZar=(m,p,q)=>Math.abs(q)*unitUsd(m,p)*DEMO_ZAR_PER_USD;
+ const pnlZar=(m,pos,price)=>(price-pos.avg)*(usdBase(m)?1/price:1)*pos.qty*DEMO_ZAR_PER_USD;
+ const mOf=k=>live.find(x=>x.k===k);
+ const exposureOf=ps=>Object.entries(ps).reduce((a,[k,q])=>{const m=mOf(k);return a+(m?notionalZar(m,q.avg,q.qty):0)},0);
+ const unrealisedOf=ps=>Object.entries(ps).reduce((a,[k,q])=>{const m=mOf(k),pr=m&&priceOf(m);return a+(m&&pr?pnlZar(m,q,pr):0)},0);
+ const equity=()=>paper.balance+unrealisedOf(paper.positions);
+ const available=()=>Math.max(0,equity()-exposureOf(paper.positions));
  const modal=document.createElement('div');
  modal.id='paper-modal';
  modal.innerHTML=`<div class="paper-panel" role="dialog" aria-modal="true" aria-labelledby="paper-title">
   <button class="paper-close" type="button" aria-label="Close">×</button>
-  <h3 id="paper-title">Paper order</h3><p id="paper-sub">Simulated execution. No real money or broker account is involved.</p>
-  <div class="paper-stats"><span>Available cash<strong id="paper-cash">$100,000.00</strong></span><span>Position<strong id="paper-position">0</strong></span></div>
+  <h3 id="paper-title">Paper order</h3><p id="paper-sub">Demo account. Pretend money, real prices.</p>
+  <div class="paper-stats"><span>Available to trade<strong id="paper-cash">R100,000.00</strong></span><span>Position<strong id="paper-position">0</strong></span></div>
   <div class="paper-side-switch"><button type="button" data-side="buy" class="active">BUY</button><button type="button" data-side="sell">SELL</button></div>
   <input id="paper-side" type="hidden" value="buy">
-  <label for="paper-qty">Quantity</label><input id="paper-qty" type="number" min="0.000001" step="any" value="1">
+  <label for="paper-qty">Size</label><div class="paper-quick"><button type="button" data-amt="1000">R1,000</button><button type="button" data-amt="5000">R5,000</button><button type="button" data-amt="10000">R10,000</button><button type="button" data-amt="25000">R25,000</button></div><input id="paper-qty" type="number" min="0.000001" step="any" value="1"><div class="paper-value" id="paper-value"></div>
   <label>Estimated fill price</label><input id="paper-price" readonly>
   <label for="paper-sl">Stop loss · optional</label><input id="paper-sl" type="number" min="0" step="any" placeholder="Price level">
   <label for="paper-tp">Take profit · optional</label><input id="paper-tp" type="number" min="0" step="any" placeholder="Price level">
   <div class="paper-status" id="paper-status"></div>
-  <button class="paper-submit" id="paper-submit" type="button">Place simulated order</button>
+  <button class="paper-submit" id="paper-submit" type="button">Place demo order</button>
  </div>`;
  document.body.appendChild(modal);
  const close=()=>{modal.classList.remove('show','mode-buy','mode-sell')};
@@ -1213,59 +1246,96 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  modal.addEventListener('click',e=>{if(e.target===modal)close()});
  addEventListener('keydown',e=>{if(e.key==='Escape')close()});
  function refreshPaperStats(){
-   $('#paper-cash',modal).textContent=money(paper.cash);
-   $('#paper-position',modal).textContent=pendingMarket?positionQty(pendingMarket.k).toLocaleString()+' '+pendingMarket.k:'—';
+   $('#paper-cash',modal).textContent=rand(available());
+   $('#paper-position',modal).textContent=pendingMarket?positionQty(pendingMarket.k).toLocaleString('en-US',{maximumFractionDigits:6})+' '+pendingMarket.k:'—';
  }
+ const updValue=()=>{const m=pendingMarket,p=m&&priceOf(m),q=Number($('#paper-qty',modal).value);$('#paper-value',modal).textContent=p&&q>0?'This order is '+rand(notionalZar(m,p,q))+' of your demo account':''};
+ const setAmt=amt=>{const m=pendingMarket,p=m&&priceOf(m);if(!p)return;const q=amt/(unitUsd(m,p)*DEMO_ZAR_PER_USD);$('#paper-qty',modal).value=String(Number(q.toPrecision(4)));updValue()};
+ $('#paper-qty',modal).addEventListener('input',updValue);
+ modal.querySelectorAll('[data-amt]').forEach(b=>b.onclick=()=>{try{buzz(10)}catch(e){}setAmt(+b.dataset.amt)});
  function openPaper(m,side){
    pendingMarket=m;pendingSide=side;
    const p=priceOf(m);
    $('#paper-title',modal).textContent=(side==='buy'?'Buy ':'Sell ')+m.k;
-   $('#paper-sub',modal).textContent=m.name+' · Paper Trading · Simulated only';
+   $('#paper-sub',modal).textContent=m.name+' · Demo account · Pretend money, real prices';
    setPaperSide(side);
    $('#paper-sl',modal).value='';$('#paper-tp',modal).value='';
-   $('#paper-price',modal).value=p?money(p):'Waiting for market data';
-   $('#paper-qty',modal).value='1';
-   $('#paper-status',modal).textContent=p?'Order will be simulated at the latest loaded candle close.':'No price available yet. Load chart data first.';
+   $('#paper-price',modal).value=p?fmt(p):'Waiting for market data';
+   $('#paper-status',modal).textContent=p?'Your order fills at the latest loaded candle close.':'No price available yet. Load chart data first.';
    $('#paper-submit',modal).disabled=!p;
-   refreshPaperStats();modal.classList.add('show');
+   refreshPaperStats();setAmt(10000);modal.classList.add('show');
  }
  $('#paper-side',modal).onchange=e=>setPaperSide(e.target.value);
  $('#paper-submit',modal).onclick=()=>{
-   const m=pendingMarket,p=priceOf(m),qty=Number($('#paper-qty',modal).value),side=$('#paper-side',modal).value;
-   if(!m||!p||!Number.isFinite(qty)||qty<=0){$('#paper-status',modal).textContent='Enter a valid quantity and wait for a market price.';return}
-   const value=p*qty,pos=paper.positions[m.k]||{qty:0,avg:0};
-   const oldQty=Number(pos.qty||0),sl=Number($('#paper-sl',modal).value)||null,tp=Number($('#paper-tp',modal).value)||null;
-   const nextQty=oldQty+(side==='buy'?qty:-qty),nextDirection=Math.sign(nextQty);
-   if(nextDirection>0&&((sl&&sl>=p)||(tp&&tp<=p))){$('#paper-status',modal).textContent='For a long position, stop loss must be below price and take profit above it.';return}
-   if(nextDirection<0&&((sl&&sl<=p)||(tp&&tp>=p))){$('#paper-status',modal).textContent='For a short position, stop loss must be above price and take profit below it.';return}
-   if(side==='buy'&&value>paper.cash){$('#paper-status',modal).textContent='Insufficient simulated cash for this order.';return}
-   paper.cash+=side==='buy'?-value:value;
-   if(oldQty===0)pos.avg=p;
-   else if(nextDirection!==0&&Math.sign(oldQty)===nextDirection){
-     const addsSameDirection=(side==='buy'&&oldQty>0)||(side==='sell'&&oldQty<0);
-     if(addsSameDirection){const oldAbs=Math.abs(oldQty);pos.avg=((oldAbs*Number(pos.avg||0))+(qty*p))/(oldAbs+qty)}
-     /* Reducing an existing position keeps its original average entry. */
-   }else if(nextDirection!==0){pos.avg=p}
-   pos.qty=nextQty;
-   if(nextDirection===0){delete paper.positions[m.k]}
-   else{if(sl)pos.sl=sl;if(tp)pos.tp=tp;paper.positions[m.k]=pos}
-   const order={id:Date.now(),symbol:m.k,name:m.name,side,qty,price:p,value,at:new Date().toISOString(),mode:'paper'};
-   paper.orders.unshift(order);paper.orders=paper.orders.slice(0,200);persistPaper();refreshPaperStats();
-   $('#paper-status',modal).textContent=`Simulated ${side.toUpperCase()} filled: ${qty} ${m.k} at ${money(p)}.`;
+   const st=$('#paper-status',modal),m=pendingMarket,p=m&&priceOf(m),qty=Number($('#paper-qty',modal).value),side=$('#paper-side',modal).value;
+   if(!m||!p||!Number.isFinite(qty)||qty<=0){st.textContent='Enter a valid size and wait for a market price.';return}
+   const sl=Number($('#paper-sl',modal).value)||null,tp=Number($('#paper-tp',modal).value)||null;
+   const sign=side==='buy'?1:-1,old=paper.positions[m.k]||null,oldQty=old?Number(old.qty):0,nextQty=oldQty+sign*qty,dir=Math.sign(nextQty);
+   if(dir>0&&((sl&&sl>=p)||(tp&&tp<=p))){st.textContent='For a long position, stop loss must be below price and take profit above it.';return}
+   if(dir<0&&((sl&&sl<=p)||(tp&&tp>=p))){st.textContent='For a short position, stop loss must be above price and take profit below it.';return}
+   /* The part of an order that closes an existing position is realised into the balance. */
+   let realised=0;
+   if(oldQty&&Math.sign(oldQty)!==sign){const closeQ=Math.min(Math.abs(oldQty),qty);realised=pnlZar(m,{avg:old.avg,qty:Math.sign(oldQty)*closeQ},p)}
+   let np=null;
+   if(dir!==0){
+     if(oldQty===0||Math.sign(oldQty)!==dir)np={qty:nextQty,avg:p};
+     else if(Math.sign(oldQty)===sign){const oa=Math.abs(oldQty);np={qty:nextQty,avg:(oa*Number(old.avg)+qty*p)/(oa+qty)}}
+     else np={qty:nextQty,avg:Number(old.avg)};
+     const keep=old&&dir===Math.sign(oldQty);
+     if(sl)np.sl=sl;else if(keep&&old.sl)np.sl=old.sl;
+     if(tp)np.tp=tp;else if(keep&&old.tp)np.tp=old.tp;
+   }
+   const next={...paper.positions};if(np)next[m.k]=np;else delete next[m.k];
+   const nextBal=paper.balance+realised;
+   const expAfter=exposureOf(next),eqAfter=nextBal+Object.entries(next).reduce((a,[k,q])=>{const mm=mOf(k),pr=k===m.k?p:(mm&&priceOf(mm));return a+(mm&&pr?pnlZar(mm,q,pr):0)},0);
+   if(expAfter>exposureOf(paper.positions)+1e-9&&expAfter>eqAfter+1e-6){st.textContent='That is more than your demo account can hold. Available to trade: '+rand(available())+'.';return}
+   paper.balance=nextBal;paper.positions=next;
+   paper.orders.unshift({id:Date.now(),symbol:m.k,name:m.name,side,qty,price:p,valueZar:notionalZar(m,p,qty),realisedZar:realised,at:new Date().toISOString()});
+   paper.orders=paper.orders.slice(0,200);persistPaper();refreshPaperStats();
+   st.textContent=`Filled: ${side.toUpperCase()} ${qty} ${m.k} at ${fmt(p)} · ${rand(notionalZar(m,p,qty))}${realised?' · realised '+randSigned(realised):''}.`;
+   try{buzz([30,40,30])}catch(e){}
    renderPaperSummary();
  };
  function renderPaperSummary(){
    let ambience='';
    document.querySelectorAll('.paper-summary').forEach(el=>{
      const k=el.dataset.market,pos=paper.positions[k]||{qty:0,avg:0},m=live.find(x=>x.k===k),price=m?priceOf(m):null;
-     const short=pos.qty<0,pnl=price&&pos.qty?(price-pos.avg)*pos.qty:null,hitSL=!!(price&&pos.sl&&(short?price>=pos.sl:price<=pos.sl)),hitTP=!!(price&&pos.tp&&(short?price<=pos.tp:price>=pos.tp)),nearSL=!!(price&&pos.sl&&!hitSL&&(short?pos.sl>price&&(pos.sl-price)/price<.01:price>pos.sl&&(price-pos.sl)/price<.01)),nearTP=!!(price&&pos.tp&&!hitTP&&(short?price>pos.tp&&(price-pos.tp)/price<.01:price<pos.tp&&(pos.tp-price)/price<.01));
+     if(!pos.qty){el.innerHTML=`Demo account: <strong>${rand(equity())}</strong> <span class="muted">· Available ${rand(available())} · No open position in ${esc(k)}</span>`;return}
+     const short=pos.qty<0,pnl=price&&m?pnlZar(m,pos,price):null,hitSL=!!(price&&pos.sl&&(short?price>=pos.sl:price<=pos.sl)),hitTP=!!(price&&pos.tp&&(short?price<=pos.tp:price>=pos.tp));
+     /* Close to a level means price has covered most of the way from entry to it, so it scales with each trade's own size. */
+     const toward=(lvl)=>{const span=Math.abs(lvl-pos.avg);return span>0&&price?(short?(lvl<pos.avg?pos.avg-price:price-pos.avg):(lvl<pos.avg?pos.avg-price:price-pos.avg))/span:0};
+     const nearSL=!!(price&&pos.sl&&!hitSL&&toward(pos.sl)>=.7),nearTP=!!(price&&pos.tp&&!hitTP&&toward(pos.tp)>=.7);
      const state=hitSL?'Stop level reached':hitTP?'Target level reached':nearSL?'Approaching stop loss':nearTP?'Approaching take profit':pnl===null?'Position open':pnl>=0?'In profit':'In drawdown';
-     if(pos.qty&&m?.el.classList.contains('open'))ambience=(hitSL||nearSL)?'trade-near-sl':(hitTP||nearTP)?'trade-near-tp':pnl>=0?'trade-profit':'trade-drawdown';
-     el.innerHTML=`Paper position: <strong>${pos.qty<0?'Short':'Long'} ${Math.abs(Number(pos.qty||0)).toLocaleString()} ${esc(k)}</strong> <span class="muted">· Avg. ${pos.avg?money(pos.avg):'—'} · ${pnl===null?'P&L waiting for price':`P&L ${money(pnl)}`} · ${esc(state)} · Cash ${money(paper.cash)}${pos.sl?' · SL '+money(pos.sl):''}${pos.tp?' · TP '+money(pos.tp):''}</span>`;
+     if(m?.el.classList.contains('open'))ambience=(hitSL||nearSL)?'trade-near-sl':(hitTP||nearTP)?'trade-near-tp':pnl>=0?'trade-profit':'trade-drawdown';
+     el.innerHTML=`Demo position: <strong>${short?'Short':'Long'} ${Math.abs(Number(pos.qty)).toLocaleString('en-US',{maximumFractionDigits:6})} ${esc(k)}</strong> <span class="muted">· Entry ${fmt(pos.avg)} · ${pnl===null?'P&L waiting for price':'P&L '+randSigned(pnl)} · ${esc(state)}${pos.sl?' · SL '+fmt(pos.sl):''}${pos.tp?' · TP '+fmt(pos.tp):''} · Balance ${rand(paper.balance)}</span>`;
    });
    document.body.classList.remove('trade-profit','trade-drawdown','trade-near-sl','trade-near-tp');
    if(ambience)document.body.classList.add(ambience);
+   if(ambience!==lastAmbience){try{if(ambience==='trade-near-sl')buzz([70,50,70]);else if(ambience==='trade-near-tp')buzz([40,40,40]);}catch(e){}lastAmbience=ambience}
+   if(demoPanel.classList.contains('show'))demoDraw();
  }
+ /* ---- Demo account panel ---- */
+ const demoPanel=document.createElement('div');demoPanel.id='demo-modal';document.body.appendChild(demoPanel);
+ const demoClose=()=>demoPanel.classList.remove('show');
+ function demoDraw(){
+   const eq=equity(),un=unrealisedOf(paper.positions),ps=Object.entries(paper.positions);
+   const rows=ps.length?ps.map(([k,q])=>{const m=mOf(k),pr=m&&priceOf(m),pl=m&&pr?pnlZar(m,q,pr):null;return `<div class="bk-row"><span>${esc(k)} · ${q.qty<0?'Short':'Long'} ${esc(Math.abs(q.qty).toLocaleString('en-US',{maximumFractionDigits:6}))}<small class="muted"> · entry ${fmt(q.avg)}${pr?' · now '+fmt(pr):''}</small></span><strong class="${pl==null?'':pl>=0?'bk-up':'bk-dn'}">${pl==null?'—':randSigned(pl)}</strong></div>`}).join(''):'<p class="muted">No open positions. Open a market and press Buy or Sell.</p>';
+   const ord=paper.orders.slice(0,8).map(o=>`<div class="bk-row"><span>${esc(o.side.toUpperCase())} ${esc(o.qty)} ${esc(o.symbol)}<small class="muted"> · at ${fmt(o.price)} · ${esc(new Date(o.at).toLocaleString('en-ZA',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}</small></span><span class="muted">${rand(o.valueZar)}</span></div>`).join('')||'<p class="muted">No orders yet.</p>';
+   demoPanel.innerHTML=`<div class="broker-panel dm-panel" role="dialog" aria-modal="true" aria-labelledby="dm-title"><div class="nb-head"><span class="nb-title" id="dm-title">Demo account</span><div class="nb-actions"><button type="button" class="primary" data-dm="close">Close</button></div></div>
+    <p class="muted">Practice with R${DEMO_START.toLocaleString('en-US')} of pretend money against real prices. It is remembered in this browser, like when you last looked.</p>
+    <div class="bk-stats"><div><span>Balance</span><strong>${rand(paper.balance)}</strong></div><div><span>Equity</span><strong>${rand(eq)}</strong></div><div><span>Open P&amp;L</span><strong class="${un>=0?'bk-up':'bk-dn'}">${randSigned(un)}</strong></div><div><span>Available</span><strong>${rand(available())}</strong></div></div>
+    <div class="bk-card"><strong>Open positions</strong>${rows}</div>
+    <div class="bk-card"><strong>Recent orders</strong>${ord}</div>
+    <p class="nb-src">Prices are the real market's, in each market's own units. Sizes convert to rand at a fixed demo rate of R${DEMO_ZAR_PER_USD} to US$1. Fills use the latest loaded candle close, with no slippage, commission or margin. Stop and target levels are watched but never close anything.</p>
+    <div class="broker-actions" style="justify-content:flex-start"><button type="button" data-dm="reset">Reset to R${DEMO_START.toLocaleString('en-US')}</button></div></div>`;
+ }
+ demoPanel.addEventListener('click',ev=>{if(ev.target===demoPanel)return demoClose();const b=ev.target.closest('[data-dm]');if(!b)return;
+   if(b.dataset.dm==='close')demoClose();
+   else if(b.dataset.dm==='reset'&&confirm('Reset the demo account to R'+DEMO_START.toLocaleString('en-US')+'? Open positions and order history will be cleared.')){paper=freshAccount();persistPaper();renderPaperSummary();refreshPaperStats();demoDraw()}});
+ addEventListener('keydown',ev=>{if(ev.key==='Escape')demoClose()});
+ const demoBtn=document.getElementById('demoopen');if(demoBtn)demoBtn.onclick=()=>{demoDraw();demoPanel.classList.add('show')};
+ /* Real broker icons; fall back to an initial if an icon can't load. */
+ addEventListener('error',ev=>{const i=ev.target;if(i&&i.tagName==='IMG'&&i.classList&&i.classList.contains('bi')){const f=document.createElement('i');f.className='bi-fb';f.textContent=(i.dataset.n||'?')[0];i.replaceWith(f)}},true);
  const consent=document.createElement('div');consent.id='broker-consent';consent.innerHTML=`<div class="broker-panel" role="dialog" aria-modal="true" aria-labelledby="broker-consent-title"><h3 id="broker-consent-title">Continue to broker</h3><p class="broker-copy">You'll open the provider's website in a new tab. Sign in and review any permissions or account authorisations on the provider's own secure page. MarketBrain will not ask for or store your broker password.</p><div class="broker-actions"><button type="button" data-cancel>Cancel</button><button type="button" class="continue" data-continue>Continue</button></div></div>`;
  document.body.appendChild(consent);let brokerTarget=null;
  const closeConsent=()=>{consent.classList.remove('show');brokerTarget=null};
@@ -1274,14 +1344,13 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  consent.querySelector('[data-continue]').onclick=()=>{if(brokerTarget)window.open(brokerTarget,'_blank','noopener');closeConsent()};
  document.addEventListener('click',e=>{const a=e.target.closest('[data-broker][data-url]');if(!a)return;e.preventDefault();brokerTarget=a.dataset.url;consent.querySelector('#broker-consent-title').textContent='Continue to '+a.dataset.broker;consent.classList.add('show')});
  const brokerMarkup=m=>`<div class="market-extra">
-  <div class="market-extra-head"><span class="market-extra-title">Connect a trading destination</span><span class="muted">Sign in with the provider</span></div>
+  <div class="market-extra-head"><span class="market-extra-title">Take it to a broker</span><span class="muted">Opens the provider's own site</span></div>
   <div class="broker-links">
-   <button type="button" data-bk-open>Connect a broker</button>
-   <a href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" data-broker="TradingView" data-url="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}">TradingView</a>
-   <a href="https://www.exness.com/" data-broker="Exness" data-url="https://www.exness.com/">Exness</a>
-   <a href="https://www.xm.com/" data-broker="XM" data-url="https://www.xm.com/">XM</a>
-   <a href="https://www.plus500.com/" data-broker="Plus500" data-url="https://www.plus500.com/">Plus500</a>
-  </div><p class="muted" style="margin-top:9px">You'll leave MarketBrain and sign in directly with the provider. MarketBrain does not receive your broker password.</p>
+   <a class="bk-btn" href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}" data-broker="TradingView" data-url="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(m.tv)}"><img class="bi" data-n="TradingView" src="https://www.google.com/s2/favicons?domain=tradingview.com&amp;sz=64" alt="" width="22" height="22"><span>TradingView</span></a>
+   <a class="bk-btn" href="https://www.exness.com/" data-broker="Exness" data-url="https://www.exness.com/"><img class="bi" data-n="Exness" src="https://www.google.com/s2/favicons?domain=exness.com&amp;sz=64" alt="" width="22" height="22"><span>Exness</span></a>
+   <a class="bk-btn" href="https://www.xm.com/" data-broker="XM" data-url="https://www.xm.com/"><img class="bi" data-n="XM" src="https://www.google.com/s2/favicons?domain=xm.com&amp;sz=64" alt="" width="22" height="22"><span>XM</span></a>
+   <a class="bk-btn" href="https://www.plus500.com/" data-broker="Plus500" data-url="https://www.plus500.com/"><img class="bi" data-n="Plus500" src="https://www.google.com/s2/favicons?domain=plus500.com&amp;sz=64" alt="" width="22" height="22"><span>Plus500</span></a>
+  </div>
  </div>`;
  /* ---- Before you trade: what's behind the market ----
     Headlines come from GDELT (open, no key, browser-readable). Scheduled releases come from the free
@@ -1431,122 +1500,5 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  },60000);
 })();
 
-</script>
-<script>
-/* ---- Broker connection (Alpaca first) ----
-   The page sends the user to the broker to sign in and approve. The broker sends them back with a
-   one-time code. A small service you host (broker-worker.js) swaps that code for a token, because the
-   client secret must never sit in this public file. MarketBrain only READS the account and positions. */
-(()=>{
- const ss={get:k=>{try{return sessionStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}},del:k=>{try{sessionStorage.removeItem(k)}catch(e){}}};
- const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{v?localStorage.setItem(k,v):localStorage.removeItem(k)}catch(e){}}};
- const cfg=()=>({client:ls.get('mb_alpaca_client')||'',worker:(ls.get('mb_bk_worker')||'').replace(/\/+$/,'')});
- const redirectUri=()=>location.origin+location.pathname;
- const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const money=v=>v==null||!isFinite(+v)?'—':(+v).toLocaleString('en-US',{style:'currency',currency:'USD'});
- const tok=()=>ss.get('mb_bk_token')||'',env=()=>ss.get('mb_bk_env')||'paper';
- let acct=null,pos=[],busy=false,msg='',setupOpen=false;
-
- const modal=document.createElement('div');modal.id='bk-modal';document.body.appendChild(modal);
- const open=()=>{modal.classList.add('show');draw()},close=()=>modal.classList.remove('show');
-
- function draw(){
-  const c=cfg(),on=!!tok(),ready=c.client&&c.worker;
-  let h=`<div class="broker-panel" role="dialog" aria-modal="true" aria-labelledby="bk-title"><h3 id="bk-title">Broker connection</h3>`;
-  h+=`<p>Connect an account so MarketBrain can read your positions and let the screen respond to them. You sign in on the broker's own page. MarketBrain never sees your password, and it only reads: it does not place orders.</p>`;
-  if(msg)h+=`<p class="bk-msg">${E(msg)}</p>`;
-  h+=`<div class="bk-card"><div class="bk-row"><strong>Alpaca</strong><span class="muted">${on?'Connected · '+(env()==='live'?'live account':'paper account'):'Not connected'}</span></div>`;
-  if(!on){
-   h+=`<p class="muted">US stocks, ETFs and crypto. You'll leave MarketBrain, approve access on Alpaca, and come back here.</p>
-   <div class="broker-actions" style="justify-content:flex-start;margin-top:10px"><button type="button" class="continue" data-bk="paper"${ready?'':' disabled'}>Continue to Alpaca (paper)</button><button type="button" data-bk="live"${ready?'':' disabled'}>Continue to Alpaca (live)</button></div>`;
-   if(!ready)h+=`<p class="muted">Needs the setup below first.</p>`;
-  }else{
-   h+=acct?`<div class="bk-stats"><div><span>Equity</span><strong>${money(acct.equity)}</strong></div><div><span>Cash</span><strong>${money(acct.cash)}</strong></div><div><span>Buying power</span><strong>${money(acct.buying_power)}</strong></div></div>`:`<p class="muted">${busy?'Reading the account…':'Account not loaded yet.'}</p>`;
-   h+=`<div class="bk-pos">`+(pos.length?pos.map(p=>{const pl=+p.unrealized_pl,short=+p.qty<0;return `<div class="bk-row"><span>${E(p.symbol)} · ${short?'Short':'Long'} ${E(Math.abs(+p.qty))}<small class="muted"> · avg ${money(p.avg_entry_price)}</small></span><strong class="${pl>=0?'bk-up':'bk-dn'}">${money(pl)}</strong></div>`}).join(''):(acct?'<p class="muted">No open positions.</p>':''))+`</div>`;
-   h+=`<div class="broker-actions" style="justify-content:flex-start;margin-top:10px"><button type="button" data-bk="refresh">Refresh</button><button type="button" data-bk="off">Disconnect</button></div><p class="muted">The connection lasts for this browser tab. Close it and you'll connect again next time.</p>`;
-  }
-  h+=`</div>`;
-  h+=`<details class="bk-setup"${setupOpen||!ready?' open':''}><summary>Setup</summary>
-   <label>Alpaca client ID<input id="bk-client" value="${E(c.client)}" autocomplete="off" spellcheck="false"></label>
-   <label>Connection service address<input id="bk-worker" value="${E(c.worker)}" placeholder="https://your-service.workers.dev" autocomplete="off" spellcheck="false"></label>
-   <p class="muted">Register this exact return address with Alpaca:<br><code>${E(redirectUri())}</code></p>
-   <div class="broker-actions" style="justify-content:flex-start"><button type="button" data-bk="save">Save</button></div></details>`;
-  h+=`<div class="bk-card"><div class="bk-row"><strong>Exness · XM · Plus500</strong><span class="muted">Not connected</span></div><p class="muted">These don't offer a sign-in connection that a website like this can use. Their buttons still take you to their sites.</p></div>`;
-  h+=`<div class="broker-actions"><button type="button" data-bk="close">Close</button></div></div>`;
-  modal.innerHTML=h;
- }
-
- function connect(e){
-  const c=cfg();if(!c.client||!c.worker){setupOpen=true;msg='Add the client ID and service address first.';draw();return}
-  const a=new Uint8Array(16);crypto.getRandomValues(a);const state=[...a].map(x=>x.toString(16).padStart(2,'0')).join('');
-  ss.set('mb_bk_state',state);ss.set('mb_bk_pending',e);
-  location.href='https://app.alpaca.markets/oauth/authorize?'+new URLSearchParams({response_type:'code',client_id:c.client,redirect_uri:redirectUri(),state,scope:'trading',env:e});
- }
- function disconnect(silent){ss.del('mb_bk_token');ss.del('mb_bk_env');acct=null;pos=[];if(!silent)msg='';draw();atmos()}
- async function api(path){
-  const r=await fetch(`${cfg().worker}/alpaca/read?path=${encodeURIComponent(path)}&env=${env()}`,{headers:{Authorization:'Bearer '+tok()}});
-  if(r.status===401||r.status===403){disconnect(true);throw new Error('Alpaca no longer accepts this connection. Connect again.')}
-  if(!r.ok)throw new Error('Alpaca answered '+r.status+'.');
-  return r.json();
- }
- async function refresh(){
-  if(!tok()||busy)return;busy=true;draw();
-  try{const r=await Promise.all([api('/v2/account'),api('/v2/positions')]);acct=r[0];pos=Array.isArray(r[1])?r[1]:[];msg=''}
-  catch(e){msg=e instanceof TypeError?"The browser couldn't reach the connection service.":(e.message||'Could not read the account.')}
-  busy=false;if(modal.classList.contains('show')||msg)draw();atmos();
- }
- async function finishReturn(){
-  const q=new URLSearchParams(location.search),code=q.get('code'),state=q.get('state'),err=q.get('error');
-  if(!code&&!err)return;
-  const want=ss.get('mb_bk_state'),e=ss.get('mb_bk_pending')||'paper';
-  history.replaceState(null,'',location.pathname+location.hash);
-  if(!want||state!==want){return}   /* not one of ours */
-  ss.del('mb_bk_state');ss.del('mb_bk_pending');
-  open();
-  if(err){msg='Alpaca did not grant access ('+err+').';draw();return}
-  msg='Finishing the connection…';draw();
-  try{
-   const r=await fetch(cfg().worker+'/alpaca/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code,redirect_uri:redirectUri()})});
-   const d=await r.json();if(!r.ok||!d.access_token)throw new Error(d.error||'The connection service could not complete the sign-in.');
-   ss.set('mb_bk_token',d.access_token);ss.set('mb_bk_env',e);msg='';refresh();
-  }catch(x){msg=x instanceof TypeError?"The browser couldn't reach the connection service.":(x.message||'Connection failed.');draw()}
- }
-
- /* The screen's colour follows a real position too: green in profit, red in drawdown.
-    Stop and target distance isn't read from the broker, so there is no "near stop" state here. */
- const sym=m=>m.g==='Crypto'?m.k+'USD':m.k;
- const ALL=['trade-profit','trade-drawdown','trade-near-sl','trade-near-tp'];
- function wanted(){
-  if(!tok()||!pos.length)return '';
-  let m;try{m=live.find(x=>x.el.classList.contains('open'))}catch(e){}
-  const p=m&&pos.find(x=>String(x.symbol).replace('/','')===sym(m));
-  return p?(+p.unrealized_pl>=0?'trade-profit':'trade-drawdown'):'';
- }
- function atmos(){
-  const b=document.body,own=b.dataset.bkAtm||'',want=wanted();
-  const others=ALL.filter(c=>c!==own&&b.classList.contains(c));
-  if(others.length||!want){if(own){b.classList.remove(own);delete b.dataset.bkAtm}return}
-  if(own&&own!==want)b.classList.remove(own);
-  if(!b.classList.contains(want))b.classList.add(want);
-  b.dataset.bkAtm=want;
- }
- /* The page redraws its own paper-position glow every few seconds and clears the classes first; re-apply straight away. */
- new MutationObserver(atmos).observe(document.body,{attributes:true,attributeFilter:['class']});
-
- modal.addEventListener('click',ev=>{
-  if(ev.target===modal)return close();
-  const b=ev.target.closest('[data-bk]');if(!b)return;const a=b.dataset.bk;
-  if(a==='close')close();
-  else if(a==='paper'||a==='live')connect(a);
-  else if(a==='refresh')refresh();
-  else if(a==='off')disconnect();
-  else if(a==='save'){ls.set('mb_alpaca_client',modal.querySelector('#bk-client').value.trim());ls.set('mb_bk_worker',modal.querySelector('#bk-worker').value.trim());setupOpen=false;msg='Saved.';draw()}
- });
- document.addEventListener('click',ev=>{if(ev.target.closest('[data-bk-open]')){ev.preventDefault();open();if(tok()&&!acct)refresh()}});
- addEventListener('keydown',ev=>{if(ev.key==='Escape')close()});
- setInterval(()=>{if(!document.hidden)atmos()},4000);
- setInterval(()=>{if(!document.hidden&&tok())refresh()},30000);
- finishReturn().then(()=>{if(tok())refresh()});
-})();
 </script>
 </body></html>
