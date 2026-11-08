@@ -290,16 +290,15 @@ body.trade-near-tp #trade-atmosphere{opacity:.85;animation-duration:3s;backgroun
 <h1>MarketBrain</h1>
 <p id="tagline">What the market did while you weren't looking, in plain words. Tap a market to open it, then ask it a question.</p>
 <div class="bar" id="bar" aria-hidden="true"></div>
-<div class="vb" id="vb" hidden></div>
+<div class="vb" id="vb" hidden><button class="chip" id="pv" type="button">Previous</button><span id="lb"></span><button class="chip" id="nx" type="button">Next</button><button class="chip" id="tour" type="button">Walk me through</button><button class="go" id="go" type="button">Where was I?</button></div>
 <p id="note"></p>
 <div class="market-search" id="market-search">
  <input id="market-filter" type="search" placeholder="Find a market — BTC, EURUSD, US30, Apple…" aria-label="Search markets">
- <span class="hint">Search the instruments currently available in MarketBrain</span>
 </div>
 
 </header>
 <main id="app"></main>
-<footer id="mb-settings"><span>MarketBrain · Local settings</span><div id="mb-settings-actions"></div></footer>
+<footer id="mb-settings"><span>MarketBrain · Local settings</span><div id="mb-settings-actions"><button id="tdkey" type="button">Market data connection</button><button id="aikey" type="button">AI connection</button></div></footer>
 <div id="dock"><button class="ask" id="dk">Ask MarketBrain</button></div>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
@@ -1065,7 +1064,7 @@ for(const m of live){
  el.querySelector('[data-readall]').onclick=()=>readAll(m);jrender(m);scan(m);
 }
 const groups=[...new Set(live.map(m=>m.g))];
-bar.insertAdjacentHTML('afterbegin',['All',...groups].map((g,i)=>`<button class="chip${i?'':' on'}" data-f="${g}">${g}</button>`).join('')+'<button class="go" id="go">Show me what\'s moving</button>');
+bar.insertAdjacentHTML('afterbegin',['All',...groups].map((g,i)=>`<button class="chip${i?'':' on'}" data-f="${g}">${g}</button>`).join('')+'<button class="go" data-go>Show me what\'s moving</button>');
 bar.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{
  bar.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x===b));
  document.querySelectorAll('[data-g]').forEach(e=>e.style.display=(b.dataset.f==='All'||e.dataset.g===b.dataset.f)?'':'none');
@@ -1084,7 +1083,7 @@ document.getElementById('go').onclick=()=>{
   if(!pick){note.textContent='Everything I read is quiet right now.';return;}
   note.textContent=ins?`Everything I read is quiet. ${pick.k} has been sitting in a gap the longest.`:`Everything I read is quiet. ${pick.k} is the closest to a gap.`;
  }
- document.querySelectorAll('[data-f]')[0].click();
+ document.querySelectorAll('[data-f]')[0]?.click();
  toggle(pick,true);
  if(view==='focus'){fi=vis().indexOf(pick);focus(fi)}else pick.el.scrollIntoView({behavior:'smooth',block:'center'});
 };
