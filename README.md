@@ -1,4 +1,3 @@
-
 # MarketBrain
 
 **What the market did while you weren't looking, in plain words.**
@@ -12,6 +11,7 @@ It is one HTML file: `index.html`.
 - **Reads each market in plain words.** Gaps, swing highs and lows, and fib levels, read on 1m, 5m, 15m, 30m, 1h and 1d. A card opens on the timeframe where the most is happening.
 - **Says when nothing happened.** A quiet market is reported as quiet.
 - **Shows its reasoning.** Each card lists what it knows, what it infers, and what it can't tell.
+- **Shows what's behind the market before you trade.** Opening a market puts a briefing above the chart: recent headlines for that market (GDELT) beside this week's scheduled economic releases (Forex Factory calendar). The only choices are to read on or go to trading. Headlines are what was reported, not proof of why price moved.
 - **Lets you mark the chart.** Levels, lines, zones and fibs, kept per market.
 - **Keeps a journal** per market, with dated entries marked on the chart.
 - **Answers questions** about the chart you're looking at, from quick questions with no key, or typed questions with an AI key.
