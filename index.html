@@ -1483,4 +1483,204 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
 @media(max-width:640px){.ac-row{grid-template-columns:56px 1fr auto}.ac-row button{grid-column:2/4;justify-self:start}}
 </style>
 
+<style id="mb-journal-layer">
+/* brokers: quiet, flat, still visible with logos. TradingView is not listed here. */
+.hdr-brokers{gap:8px;margin-top:16px;align-items:center}
+.hdr-brokers::before{content:"Brokers";font-size:14px;color:var(--mute);margin-right:4px}
+.bk-btn,.broker-links a.bk-btn{padding:8px 15px 8px 10px;font-size:14px;font-weight:500;background:#ffffff55;box-shadow:none!important;transform:none!important}
+.bk-btn:hover,.broker-links a.bk-btn:hover{background:#ffffff90}
+.bi,.bi-fb{width:20px;height:20px}
+
+/* the account is the portal: the balance is the button */
+#demoopen{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;min-width:250px;padding:13px 22px 14px;border-radius:20px;border:1px solid #ffffffd9;background:#ffffff80;box-shadow:inset 0 1px 0 #fff,0 10px 28px #3b1d5a14;transition:box-shadow .3s,transform .25s}
+#demoopen:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 #fff,0 16px 38px #ff5fa830}
+#demoopen .ab-l{font-size:14px;color:var(--mute)}
+#demoopen .ab-v{font-size:clamp(28px,3.4vw,36px);font-weight:700;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--ink)}
+#demoopen .ab-s{font-size:15px;color:var(--mute)}
+#demoopen.in .ab-s{color:var(--ink);font-weight:600}
+.market-search{gap:14px}
+
+/* dock: Write and Ask */
+#dock{gap:8px}
+#dock button{font-size:17px;padding:14px 26px}
+#dock .write{font-weight:700;background:linear-gradient(90deg,var(--pink),var(--yel))}
+#dock .w-call{font-size:14px;color:var(--ink);padding:0 8px 0 12px;max-width:min(300px,52vw);line-height:1.3}
+#dock .w-call[hidden]{display:none}
+#dock .write.call{animation:wcall 1.6s ease-in-out infinite alternate}
+@keyframes wcall{from{box-shadow:0 0 0 0 var(--wc,#ff5fa8)}to{box-shadow:0 0 0 7px #ffffff00,0 0 26px 4px var(--wc,#ff5fa8)}}
+
+/* names and sizes: ticker is the name of the room; nothing small, nothing shouting in capitals */
+body.v-cards .m .n{font-size:19px!important;font-weight:700;color:var(--ink)}
+.dl,.fx-row>b,.cp-lbl,#acct h4,.market-extra-title,.fx b{text-transform:none!important;letter-spacing:0!important}
+.dl{font-size:16px!important;font-weight:600}
+.fx-row>b,.cp-lbl,#acct h4{font-size:14px!important;font-weight:600}
+body.v-cards .m .sc,.cp-sub,.cp-msg,.nu,#mb-settings,#mb-settings-actions button{font-size:14px!important}
+.ev small,.cp-news small,.ac-stats span{font-size:13px!important}
+.mb-conn{color:var(--ink);text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+
+/* the canvas */
+#mbw{position:fixed;inset:0;z-index:125;display:none;overflow:auto;background:linear-gradient(135deg,#fff9fdf4,#fff0f8ee 55%,#fff7e6f4);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px)}
+#mbw.show{display:block}
+#mbw .w-glow{position:fixed;left:50%;bottom:-22vmax;width:90vmax;height:50vmax;transform:translateX(-50%);border-radius:50%;filter:blur(90px);opacity:.5;background-color:var(--mood,#ffffff00);transition:background-color .9s ease;pointer-events:none}
+#mbw .w-in{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:clamp(24px,5vw,56px) 22px 90px}
+#mbw .w-x{position:absolute;top:18px;right:18px;width:46px;height:46px;border-radius:50%;border:1px solid #ffffffc9;background:#ffffff90;font-size:28px;cursor:pointer;color:var(--ink)}
+#mbw .w-ctx{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:6px;padding-right:56px}
+#mbw .w-mk{font:inherit;font-size:16px;font-weight:600;color:var(--ink);padding:9px 16px;border-radius:99px;border:1px solid #ffffffc0;background:#ffffff90}
+#mbw .w-note{font-size:15px;color:var(--mute)}
+#mbw .w-h{font-size:clamp(40px,7vw,76px);font-weight:800;letter-spacing:-.045em;line-height:1.05;margin:6px 0 22px}
+#mbw .w-drop{display:block;border:1.5px dashed #c9b6d6;border-radius:20px;padding:22px;text-align:center;font-size:16px;color:var(--mute);background:#ffffff55;cursor:pointer;margin-bottom:14px;transition:background .25s,border-color .25s}
+#mbw .w-drop:hover,#mbw .w-drop.over{background:#ffffffa0;border-color:var(--pink)}
+#mbw .w-pv{display:block;max-width:100%;max-height:240px;margin:14px auto 0;border-radius:12px}
+#mbw .w-ta{display:block;width:100%;min-height:190px;font:inherit;font-size:20px;line-height:1.5;color:var(--ink);padding:18px 20px;border-radius:20px;border:1px solid #ffffffd0;background:#ffffffa8;resize:vertical}
+#mbw .w-ta:focus{outline:2px solid var(--pink);outline-offset:2px}
+#mbw .w-live{margin:18px 0 6px;min-height:92px}
+#mbw .w-mood{display:flex;align-items:center;gap:10px;font-size:19px}
+#mbw .w-dot{width:14px;height:14px;border-radius:50%;background:#cfc6d6;transition:background-color .6s,box-shadow .6s}
+#mbw .w-word{font-weight:700;letter-spacing:-.01em}
+#mbw .w-why{font-size:15px;color:var(--mute);margin:4px 0 0;min-height:1.4em}
+#mbw .w-fine{font-size:14px;color:var(--mute);margin:2px 0 0}
+#mbw .w-ticks{display:flex;flex-wrap:wrap;gap:8px 20px;list-style:none;padding:0;margin:14px 0 0}
+#mbw .w-ticks li{font-size:15px;color:var(--mute);display:flex;align-items:center;gap:8px;transition:color .3s}
+#mbw .w-ticks li::before{content:"";width:18px;height:18px;border-radius:50%;border:1.5px solid #cdbfd6;display:inline-block;text-align:center;line-height:15px;font-size:12px;color:#fff;transition:background-color .3s,border-color .3s}
+#mbw .w-ticks li.on{color:var(--ink)}
+#mbw .w-ticks li.on::before{content:"✓";background:#3fbf7f;border-color:#3fbf7f}
+#mbw .w-bar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-top:22px}
+#mbw .w-msg{font-size:14px;color:#b8384a;min-height:1.3em}
+#mbw .w-save{font:inherit;font-size:18px;font-weight:700;padding:15px 32px;border-radius:99px;border:0;cursor:pointer;color:var(--ink);background:linear-gradient(90deg,#ffd7ea,#fff0a8);box-shadow:inset 0 1px 0 #fff,0 10px 26px #ff5fa830}
+.w-d{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 6px 0 2px;vertical-align:0}
+@media(prefers-reduced-motion:reduce){#dock .write.call{animation:none!important}#mbw .w-glow{transition:none}}
+</style>
+<script id="mb-journal-layer-js">
+(function(){
+ const $=(s,r=document)=>r.querySelector(s);
+ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const ACCT='mb_demo_account_v2';
+ const RS=n=>(n>0?'+':n<0?'−':'')+'R'+Math.abs(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+ const acct=()=>{try{return JSON.parse(localStorage.getItem(ACCT))}catch(e){return null}};
+
+ /* TradingView is a chart site, not a broker */
+ const tvb=$('.hdr-brokers [data-broker="TradingView"]');if(tvb)tvb.remove();
+
+ /* account block: split the existing "Account · R…" text into label, balance, state */
+ const ab=$('#demoopen');
+ function wrapAcct(){
+  if(!ab||ab.firstElementChild)return;
+  const m=ab.textContent.match(/-?R[\d,]+\.\d{2}/);if(!m)return;
+  const a=acct(),ks=a&&a.positions?Object.keys(a.positions):[];
+  const s=ks.length?'In '+ks.join(', ')+(ks.length===1?(a.positions[ks[0]].qty<0?' (short)':' (long)'):''):'Flat · no open trades';
+  ab.classList.toggle('in',ks.length>0);
+  ab.innerHTML='<span class="ab-l">Demo account</span><span class="ab-v">'+esc(m[0])+'</span><span class="ab-s">'+esc(s)+'</span>';
+ }
+ if(ab){new MutationObserver(wrapAcct).observe(ab,{childList:true});wrapAcct()}
+
+ /* a card with no market-data key gets a way in, not a pointer to a button that moved */
+ setInterval(()=>document.querySelectorAll('.m .s').forEach(s=>{if(/Data key button/.test(s.textContent))s.innerHTML='<a href="#" class="mb-conn">Connect market data to read this market.</a>'}),1500);
+ document.addEventListener('click',e=>{if(e.target.closest('.mb-conn')){e.preventDefault();e.stopPropagation();const b=$('#tdkey');b&&b.click()}},true);
+
+ /* screenshots live in IndexedDB; entries keep only an id */
+ const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open('mb_shots',1);r.onupgradeneeded=()=>r.result.createObjectStore('s');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+ const putShot=async(id,b)=>{const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('s','readwrite');t.objectStore('s').put(b,id);t.oncomplete=res;t.onerror=()=>rej(t.error)})};
+ const getShot=async id=>{const d=await idb();return new Promise((res,rej)=>{const r=d.transaction('s').objectStore('s').get(id);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})};
+
+ /* the live reading: a quick keyword read of your own words. It shows what it matched. It is not a verdict. */
+ const MOODS=[
+  {k:'hurried',w:'hurried',c:'#ffa06b',re:/\b(rush(ed|ing)?|fomo|chas(e|ed|ing)|impatient|jump(ed)? in|couldn['’]?t wait|too (early|quick|fast)|panic(ked)?|asap|slammed)\b/gi},
+  {k:'hesitant',w:'hesitant',c:'#b98cff',re:/\b(hesitat\w*|unsure|not sure|doubt\w*|second.guess\w*|froze|scared|afraid|nervous|waited too long|didn['’]?t pull|wasn['’]?t sure)\b/gi},
+  {k:'frustrated',w:'frustrated',c:'#ff6f8e',re:/\b(angry|annoyed|frustrat\w*|revenge|stupid|dumb|hate|furious|tilt\w*|should have|shouldn['’]?t have|wasted|ugh|my fault)\b/gi},
+  {k:'hoping',w:'hoping',c:'#ffd23f',re:/\b(hope|hoping|hoped|prayed|let it run|moved (my )?stop|widen\w*|removed (my )?stop|give it room|come back)\b/gi},
+  {k:'steady',w:'steady',c:'#7fd66f',re:/\b(confiden\w*|patient|waited for|confirm\w*|stuck to|followed (my|the) plan|disciplin\w*|calm|as planned|by the plan)\b/gi}
+ ];
+ const TICKS={saw:/\b(saw|noticed|price|candle|gap|swing|broke|break|level|support|resistance|trend|wick|spike|dump|pump|rejected|retest\w*|sweep\w*)\b/i,
+  why:/\b(because|reason|since|setup|plan|thought|expected|looked like|wanted to|figured)\b/i,
+  end:/\b(stop|stopped|target|tp|sl|closed|exit\w*|took profit|cut|got out|hit|ended)\b/i,
+  felt:/\b(felt|feel|feeling|anxious|calm|excited|worried|relieved|regret\w*|pressure|fear|tired|nervous|confident|angry|annoyed)\b/i};
+ const readOf=t=>{let best=null;for(const m of MOODS){const h=t.match(m.re)||[];if(h.length&&(!best||h.length>best.n))best={k:m.k,w:m.w,c:m.c,n:h.length,why:[...new Set(h.map(x=>x.toLowerCase()))].slice(0,4)}}return best};
+
+ /* the canvas */
+ const cv=document.createElement('div');cv.id='mbw';
+ cv.innerHTML='<div class="w-glow"></div><div class="w-in" role="dialog" aria-modal="true" aria-label="Write an entry"><button class="w-x" type="button" aria-label="Close">×</button><div class="w-ctx"><select class="w-mk" aria-label="Market"></select><span class="w-note"></span></div><h2 class="w-h">What happened?</h2><label class="w-drop"><input type="file" accept="image/*" hidden><span class="w-dt">Drop the chart screenshot here, or paste it</span><img class="w-pv" alt="Your screenshot" hidden></label><textarea class="w-ta" placeholder="Write it the way you’d say it. Nothing needs a format."></textarea><div class="w-live"><div class="w-mood"><i class="w-dot"></i><span class="w-word">Waiting for your words</span></div><p class="w-why"></p><p class="w-fine">A quick read of your words, not a verdict.</p><ul class="w-ticks"><li data-t="saw">What you saw</li><li data-t="why">Why you went in</li><li data-t="end">How it ended</li><li data-t="felt">How it felt</li></ul></div><div class="w-bar"><span class="w-msg" aria-live="polite"></span><button class="w-save" type="button">Keep this entry</button></div></div>';
+ document.body.appendChild(cv);
+ const ta=$('.w-ta',cv),mk=$('.w-mk',cv),note=$('.w-note',cv),dot=$('.w-dot',cv),word=$('.w-word',cv),why=$('.w-why',cv),msg=$('.w-msg',cv),pv=$('.w-pv',cv),dt=$('.w-dt',cv),fi=$('input[type=file]',cv),dr=$('.w-drop',cv);
+ let shot=null,cur=null,ctx=null;
+
+ function react(){
+  const t=ta.value,n=t.trim().length;
+  cv.querySelectorAll('.w-ticks li').forEach(li=>li.classList.toggle('on',TICKS[li.dataset.t].test(t)||(li.dataset.t==='felt'&&!!readOf(t))));
+  if(n<12){cur=null;word.textContent='Waiting for your words';dot.style.background='#cfc6d6';dot.style.boxShadow='none';why.textContent='';cv.style.setProperty('--mood','#ffffff00');return}
+  cur=readOf(t);
+  if(!cur){word.textContent='Reads as neutral so far';dot.style.background='#cfc6d6';dot.style.boxShadow='none';why.textContent='No feeling words yet. Say how it sat with you, if you want it read.';cv.style.setProperty('--mood','#ffffff00');return}
+  word.textContent='Reads as '+cur.w;dot.style.background=cur.c;dot.style.boxShadow='0 0 14px 3px '+cur.c;why.textContent='From your words: '+cur.why.join(', ');cv.style.setProperty('--mood',cur.c);
+ }
+ ta.addEventListener('input',()=>{msg.textContent='';react()});
+
+ async function take(f){
+  if(!f||!/^image\//.test(f.type))return;
+  try{const bm=await createImageBitmap(f),s=Math.min(1,1400/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*s);c.height=Math.round(bm.height*s);c.getContext('2d').drawImage(bm,0,0,c.width,c.height);
+   shot=await new Promise(r=>c.toBlob(r,'image/jpeg',.72));pv.src=URL.createObjectURL(shot);pv.hidden=false;dt.textContent='Screenshot attached. Drop another to replace it.'}
+  catch(e){msg.textContent='That image couldn’t be read. Try a PNG or JPEG.'}
+ }
+ fi.addEventListener('change',()=>take(fi.files[0]));
+ ['dragover','dragenter'].forEach(ev=>dr.addEventListener(ev,e=>{e.preventDefault();dr.classList.add('over')}));
+ ['dragleave','drop'].forEach(ev=>dr.addEventListener(ev,()=>dr.classList.remove('over')));
+ dr.addEventListener('drop',e=>{e.preventDefault();take(e.dataTransfer.files[0])});
+ document.addEventListener('paste',e=>{if(!cv.classList.contains('show'))return;const f=[...(e.clipboardData?e.clipboardData.files:[])].find(x=>/^image\//.test(x.type));if(f){e.preventDefault();take(f)}});
+
+ /* the dock */
+ const dock=$('#dock'),ask=$('#dk');
+ const call=document.createElement('span');call.className='w-call';call.hidden=true;
+ const wb=document.createElement('button');wb.type='button';wb.className='write';wb.id='mbw-open';wb.textContent='Write';
+ dock.insertBefore(call,ask);dock.insertBefore(wb,ask);ask.textContent='Ask MarketBrain';
+
+ function open(){
+  mk.innerHTML=live.map(m=>'<option value="'+esc(m.k)+'">'+esc(m.k)+' · '+esc(m.name)+'</option>').join('');
+  const o=live.find(m=>m.el.classList.contains('open'));mk.value=ctx?ctx.k:(o?o.k:live[0].k);
+  if(ctx){const mn=Math.max(1,Math.round((Date.now()-ctx.at)/6e4));note.textContent=ctx.k+' closed '+span(mn)+' ago · '+RS(ctx.real)+(ctx.why?' · '+ctx.why:'')}
+  else note.textContent='Any market, any time.';
+  cv.classList.add('show');react();setTimeout(()=>ta.focus(),60);
+ }
+ function close(){cv.classList.remove('show')}
+ function clearCall(){ctx=null;call.hidden=true;wb.classList.remove('call')}
+ wb.onclick=open;$('.w-x',cv).onclick=close;
+ addEventListener('keydown',e=>{if(!cv.classList.contains('show'))return;if(e.key==='Escape')close();if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))save()});
+
+ async function save(){
+  const t=ta.value.trim();if(!t){msg.textContent='Write a line first.';return}
+  let sid=null;
+  if(shot){sid=Date.now().toString(36)+'s';try{await putShot(sid,shot)}catch(e){sid=null;if(!confirm('The screenshot couldn’t be stored in this browser. Keep the entry without it?'))return}}
+  const e={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),k:mk.value,date:new Date().toISOString().slice(0,10),text:t,at:Date.now()};
+  if(cur){e.mood=cur.k;e.moodWhy=cur.why}if(sid)e.shot=sid;if(ctx)e.close={real:ctx.real,why:ctx.why||''};
+  J.push(e);saveJ();const m=live.find(x=>x.k===e.k);if(m)jrender(m);
+  ta.value='';shot=null;pv.hidden=true;pv.removeAttribute('src');dt.textContent='Drop the chart screenshot here, or paste it';fi.value='';react();clearCall();close();
+ }
+ $('.w-save',cv).onclick=save;
+
+ /* the room calls when a paper trade closes. It never forces anything. */
+ let seen=(()=>{const a=acct();return a&&a.orders&&a.orders[0]?a.orders[0].id:0})();
+ setInterval(()=>{const a=acct(),o=a&&a.orders&&a.orders[0];if(!o||o.id===seen)return;seen=o.id;
+  if(!o.realisedZar)return;
+  ctx={k:o.symbol,real:o.realisedZar,why:o.why||'',at:Date.parse(o.at)||Date.now()};
+  call.textContent=o.symbol+' closed '+RS(o.realisedZar)+'. Write it down?';call.hidden=false;
+  dock.style.setProperty('--wc',o.realisedZar>=0?'#3fbf7f':'#ef6878');wb.classList.add('call');
+ },2000);
+
+ /* journal entries show how they read, and keep their screenshot */
+ const _jr=jrender;
+ jrender=function(m){
+  _jr(m);
+  m.el.querySelectorAll('.en').forEach(n=>{
+   const e=J.find(x=>x.id===n.dataset.id);if(!e||(!e.mood&&!e.shot))return;
+   const d=n.querySelector('.d');
+   if(e.mood){const mo=MOODS.find(x=>x.k===e.mood);if(mo)d.insertAdjacentHTML('beforeend',' · <i class="w-d" style="background:'+mo.c+'"></i>reads as '+mo.w)}
+   if(e.shot){const row=n.querySelector('.tf');if(row)row.insertAdjacentHTML('afterbegin','<button class="chip" data-shot="'+esc(e.shot)+'">View screenshot</button>')}
+  });
+ };
+ document.addEventListener('click',async ev=>{
+  const b=ev.target.closest('[data-shot]');if(!b)return;
+  const w=window.open('about:blank','_blank');
+  try{const bl=await getShot(b.dataset.shot);if(!bl)throw 0;w.location=URL.createObjectURL(bl)}catch(e){if(w)w.close();alert('That screenshot isn’t in this browser anymore.')}
+ });
+ live.forEach(m=>{try{jrender(m)}catch(e){}});
+})();
+</script>
+
 </body></html>
