@@ -338,33 +338,85 @@ a.nb-item:hover{background:#ffffff40}
 .paper-quick button{font:inherit;font-size:14px;padding:8px 15px;border-radius:99px;border:1px solid #ffffffc0;background:#ffffff78;color:inherit;cursor:pointer;box-shadow:inset 0 1px 0 #fff,0 3px 0 #ffffff55;transition:transform .12s}
 .paper-quick button:active{transform:translateY(3px);box-shadow:none}
 .paper-value{font-size:13px;margin:8px 0 2px;opacity:.85}
+
+/* ===== MarketBrain interface update: clearer hierarchy, calmer colour, better placement ===== */
+:root{
+ --mb-positive:#23845b;
+ --mb-negative:#b84a58;
+ --mb-attention:#a87908;
+ --mb-focus:#e94f99;
+ --mb-surface:rgba(255,255,255,.78);
+ --mb-edge:rgba(89,67,103,.14);
+ --mb-shadow:0 12px 34px rgba(47,29,61,.09);
+}
+html{background:#fff9fc}
+body{color:var(--ink);line-height:1.45}
+header{padding-top:clamp(34px,6vw,64px);padding-bottom:18px}
+header p#tagline{max-width:34em;margin-top:14px;margin-bottom:20px;color:#51465a;font-size:clamp(18px,2.25vw,23px);line-height:1.42;letter-spacing:-.018em}
+header h1{letter-spacing:-.055em}
+.market-search{margin:18px 0 8px;gap:9px}
+.market-search .chip{min-height:42px;padding:10px 18px}
+.market-search #nwopen{background:rgba(255,255,255,.82);border-color:var(--mb-edge)}
+.market-search #demoopen{background:rgba(255,255,255,.58);border-color:var(--mb-edge);color:var(--mute)}
+.hdr-brokers{margin-top:12px;gap:9px}
+.bk-btn,.broker-links a.bk-btn{font-size:13px;padding:9px 15px 9px 11px;box-shadow:inset 0 1px 0 #fff,0 2px 8px rgba(59,29,90,.07)}
+#mb-settings{max-width:1180px;margin:20px auto 90px;padding:18px 28px 24px;border-top:1px solid var(--mb-edge);color:var(--mute);font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+#mb-settings-actions{display:flex;gap:8px;flex-wrap:wrap}
+#mb-settings-actions button{font:inherit;font-size:12px;font-weight:600;padding:9px 14px;border:1px solid var(--mb-edge);border-radius:99px;background:rgba(255,255,255,.7);color:var(--mute);cursor:pointer;transition:background .2s,border-color .2s,color .2s,transform .2s}
+#mb-settings-actions button:hover{background:#fff;color:var(--ink);border-color:rgba(233,79,153,.4);transform:translateY(-1px)}
+#dock{padding:7px;background:rgba(255,255,255,.88);border-color:rgba(255,255,255,.96);box-shadow:0 10px 34px rgba(47,29,61,.16)}
+#dock #dk{min-height:48px;padding:13px 24px;background:linear-gradient(105deg,#ff78b7,#ffd66a);border:1px solid rgba(255,255,255,.78);color:#24152a;box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 4px 14px rgba(233,79,153,.18);font-weight:700;letter-spacing:-.01em}
+#dock #dk:hover{filter:saturate(1.06) brightness(1.02);transform:translateY(-1px)}
+.chip,.tv,.go{border-color:var(--mb-edge);box-shadow:inset 0 1px 0 #fff,0 2px 8px rgba(59,29,90,.045)}
+.chip.on,.dk button.on{background:rgba(255,95,168,.15);border-color:rgba(233,79,153,.34);color:#8e315f}
+.go{background:rgba(255,207,51,.2);border-color:rgba(168,121,8,.2)}
+.chip.think,.nb-actions button.primary{background:rgba(255,95,168,.13);border:1px solid rgba(233,79,153,.28);color:#8e315f}
+.m{border-color:rgba(89,67,103,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.92),0 5px 22px rgba(59,29,90,.055);backdrop-filter:blur(20px) saturate(1.25);-webkit-backdrop-filter:blur(20px) saturate(1.25)}
+.m.open{box-shadow:inset 0 1px 0 #fff,0 14px 40px rgba(59,29,90,.11)}
+.m.up{box-shadow:inset 0 1px 0 #fff,0 8px 28px rgba(35,132,91,.09)}
+.m.dn{box-shadow:inset 0 1px 0 #fff,0 8px 28px rgba(184,74,88,.08)}
+.m.up .n{color:var(--mb-positive)}
+.m.dn .n{color:var(--mb-negative)}
+.m .dot{box-shadow:0 0 8px 2px var(--c)}
+.trade-actions button{animation:none}
+.trade-actions .buy{--edge:#23845b;--glow:rgba(35,132,91,.22)}
+.trade-actions .sell{--edge:#b84a58;--glow:rgba(184,74,88,.2)}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid rgba(233,79,153,.65)!important;outline-offset:3px!important}
+button:disabled{cursor:not-allowed;opacity:.48;transform:none!important}
+@media(max-width:700px){
+ header{padding:30px 18px 14px}
+ main{padding-left:18px;padding-right:18px}
+ .market-search{gap:7px}
+ .market-search .chip{font-size:14px;padding:9px 14px}
+ .hdr-brokers{gap:7px}
+ .bk-btn,.broker-links a.bk-btn{font-size:12px;padding:8px 11px 8px 9px}
+ #mb-settings{margin-bottom:88px;padding:16px 18px 20px}
+ #dock{bottom:calc(10px + env(safe-area-inset-bottom,0px));max-width:calc(100vw - 24px)}
+ #dock #dk{min-height:46px;padding:12px 20px}
+}
+@media(prefers-reduced-motion:reduce){
+ #dock #dk:hover,.market-search button:hover,#mb-settings-actions button:hover{transform:none}
+ .trade-actions button{animation:none!important}
+}
+
 </style></head><body class="v-cards">
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div><div id="trade-atmosphere" aria-hidden="true"></div>
 <header>
 <h1>MarketBrain</h1>
-<p id="tagline">What the market did while you weren't looking, in plain words. Tap a market to open it, then ask it a question.</p>
+<p id="tagline">What changed since your last look? What's still unresolved? Open a market to restore its context, then ask a question.</p>
 <div class="bar" id="bar" aria-hidden="true"></div>
-<div class="vb" id="vb" hidden><button class="chip" id="pv" type="button">Previous</button><span id="lb"></span><button class="chip" id="nx" type="button">Next</button><button class="chip" id="tour" type="button">Walk me through</button><button class="go" id="go" type="button">Where was I?</button></div>
+<div class="vb" id="vb" hidden><button class="chip" id="pv" type="button">Previous</button><span id="lb"></span><button class="chip" id="nx" type="button">Next</button><button class="chip" id="tour" type="button">Walk me through this market</button><button class="go" id="go" type="button">Return to where you left off</button></div>
 <p id="note"></p>
 <div class="market-search" id="market-search"><button class="chip" id="nwopen" type="button">News</button><button class="chip" id="demoopen" type="button">Account</button></div>
 <div class="hdr-brokers" id="hdr-brokers" aria-label="Brokers"><a class="bk-btn" href="https://www.tradingview.com/" data-broker="TradingView" data-url="https://www.tradingview.com/"><img class="bi" data-n="TradingView" src="https://www.google.com/s2/favicons?domain=tradingview.com&amp;sz=64" alt="" width="22" height="22"><span>TradingView</span></a><a class="bk-btn" href="https://www.exness.com/" data-broker="Exness" data-url="https://www.exness.com/"><img class="bi" data-n="Exness" src="https://www.google.com/s2/favicons?domain=exness.com&amp;sz=64" alt="" width="22" height="22"><span>Exness</span></a><a class="bk-btn" href="https://www.xm.com/" data-broker="XM" data-url="https://www.xm.com/"><img class="bi" data-n="XM" src="https://www.google.com/s2/favicons?domain=xm.com&amp;sz=64" alt="" width="22" height="22"><span>XM</span></a><a class="bk-btn" href="https://www.plus500.com/" data-broker="Plus500" data-url="https://www.plus500.com/"><img class="bi" data-n="Plus500" src="https://www.google.com/s2/favicons?domain=plus500.com&amp;sz=64" alt="" width="22" height="22"><span>Plus500</span></a></div>
 
 </header>
 <main id="app"></main>
-<footer id="mb-settings"><span>MarketBrain · Local settings</span><div id="mb-settings-actions"><button id="tdkey" type="button">Market data connection</button><button id="aikey" type="button">AI connection</button></div></footer>
+<footer id="mb-settings"><span>MarketBrain · Local settings</span><div id="mb-settings-actions"><button id="tdkey" type="button">Connect market data</button><button id="aikey" type="button">Connect AI assistant</button></div></footer>
 <div id="dock"><button class="ask" id="dk">Ask MarketBrain</button></div>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
-const TAGLINES=[
- "What the market did while you weren't looking, in plain words. Tap a market to open it, then ask it a question.",
- "The market kept moving. Here's what happened while you were away.",
- "A little context for the markets you haven't checked yet. Open one, and ask away.",
- "Catch up with the market, without having to catch every candle.",
- "What changed since your last look? Open a market and find out.",
- "Markets don't wait. Your context can.",
- "A clearer look at what happened, what's still unfolding, and what you might have missed."
-];
-(function rotateTagline(){const el=document.getElementById('tagline');if(!el)return;let last=-1;const pick=()=>{let n=Math.floor(Math.random()*TAGLINES.length);if(TAGLINES.length>1&&n===last)n=(n+1)%TAGLINES.length;last=n;el.classList.remove('fresh');void el.offsetWidth;el.textContent=TAGLINES[n];el.classList.add('fresh')};pick();setInterval(()=>{if(!document.hidden)pick()},45000)})();
+// Keep the product promise stable. The interface should restore context, not compete for attention.
 const TWELVE_KEY=localStorage.getItem('mb_td_key')||'';
 const AI_MODEL='claude-sonnet-5-5',GH_MODEL='openai/gpt-4.1',GEMINI_MODEL='gemini-3.6-flash';
 // Add or remove markets here. on:false hides one until you switch it on (change it to true or delete it).
@@ -844,7 +896,7 @@ const app=document.getElementById('app'),note=document.getElementById('note'),ba
 const keyBtn=(id,msg,k,reload)=>document.getElementById(id).onclick=()=>{const v=prompt(msg,localStorage.getItem(k)||'');if(v!==null){try{v.trim()?localStorage.setItem(k,v.trim()):localStorage.removeItem(k);if(reload)location.reload()}catch(e){alert('Could not save the key in this browser.')}}};
 keyBtn('tdkey','Paste your Twelve Data API key. It is stored only in this browser. Leave empty to remove it.','mb_td_key',true);
 keyBtn('aikey','Paste an AI key for the assistant: Google Gemini (starts AIza or AQ.), GitHub Models (github_pat_ or ghp_), or Anthropic (sk-ant-). Stored only in this browser. Leave empty to remove it.','mb_ai_key',false);
-const settingsActions=document.getElementById('mb-settings-actions');['tdkey','aikey'].forEach((id,i)=>{const b=document.getElementById(id);if(b){b.textContent=i?'AI connection':'Market data connection';settingsActions.appendChild(b)}});
+const settingsActions=document.getElementById('mb-settings-actions');['tdkey','aikey'].forEach((id,i)=>{const b=document.getElementById(id);if(b){b.textContent=i?'Connect AI assistant':'Connect market data';settingsActions.appendChild(b)}});
 app.appendChild(launch);
 const live=MARKETS.filter(m=>m.on!==false);let group='',n=0;
 for(const m of live){
@@ -1186,7 +1238,7 @@ function step(){
  setTimeout(()=>{const m=vis()[fi];if(m&&m.res){note.textContent='Walking through '+m.k+'. Press Escape to stop.';STEPS[s](m)}},first?900:0);
  wk++;
 }
-function stop(){if(tid){clearInterval(tid);tid=null;document.getElementById('tour').textContent='Walk me through';note.textContent=''}}
+function stop(){if(tid){clearInterval(tid);tid=null;document.getElementById('tour').textContent='Walk me through this market';note.textContent=''}}
 document.getElementById('tour').onclick=()=>{
  if(tid){stop();return}
  setView('focus');wk=0;document.getElementById('tour').textContent='Stop the walk';
