@@ -1474,7 +1474,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   if(w.ctx)return `${m.k} closed ${RS(w.ctx.real)}. What happened?`;
   if(pos)return `You are ${pos.qty<0?'short':'long'} ${m.k}. What are you watching for?`;
   if(last&&Date.now()-last.at<2592e5)return `You last wrote about ${m.k} ${span(Math.max(1,Math.round((Date.now()-last.at)/6e4)))} ago. Has anything changed for you?`;
-  return 'That is what I can see. What do you see?';
+  return 'I am here when you want to look at this market together.';
  }
  function invite(m){const w=m._w;if(!w)return;const q=prompt(m);if(w.q.textContent!==q)w.q.textContent=q;w.inv.classList.toggle('kept',!!(w.kept&&Date.now()-w.kept<9e4))}
  function ribbon(m,editing){
@@ -1487,16 +1487,13 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   else w.mem.hidden=true;
  }
  function react(m){
-  const w=m._w,t=w.ta.value,n=t.trim().length,cur=readOf(t),got={};
-  for(const[k]of ASKS)got[k]=k==='sure'?!!w.sure:k==='felt'?(TICKS.felt.test(t)||!!cur):TICKS[k].test(t);
-  const next=ASKS.find(a=>!got[a[0]]);
-  w.lis.forEach(li=>{li.classList.toggle('on',got[li.dataset.t]);li.classList.toggle('next',!!next&&li.dataset.t===next[0])});
-  w.sureRow.classList.toggle('next',!!next&&next[0]==='sure');
-  $$('[data-s]',w.sureRow).forEach(b=>b.classList.toggle('on',+b.dataset.s===w.sure));
-  w.wait.textContent=!n?'Waiting for you. Start with: '+ASKS[0][1]:next?'Got it. Still waiting on: '+next[1]:'That is a whole entry. Keep it when you are ready.';
-  w.canvas.classList.toggle('hungry',!!next);w.save.classList.toggle('ready',!next);
-  w.cur=n>=12?cur:null;w.canvas.style.setProperty('--mood',w.cur?w.cur.c+'66':'#ffffff00');
-  w.mood.textContent=w.cur?'Reads as '+w.cur.w+' · from your words: '+w.cur.why.join(', '):n>=12?'Reads as neutral so far. Say how it sat with you, if you want it read.':'';
+  const w=m._w,t=w.ta.value.trim(),hasText=!!t;
+  // The journal is an open space, not a keyword detector or a compulsory questionnaire.
+  w.wait.textContent=hasText?'Keep going if there is more to say. You can save whenever you are ready.':'Write naturally. Start with a chart, a question, a decision, or whatever is on your mind.';
+  w.canvas.classList.remove('hungry');
+  w.save.classList.toggle('ready',hasText);
+  w.cur=null;
+  w.mood.textContent='';
  }
  function openW(m,e){
   const w=m._w;if(!w||!m.res)return;if(!m.el.classList.contains('open'))toggle(m,true);
@@ -1855,6 +1852,7 @@ ${mbMarketContext()}`;
 .w-sure button.on{background:linear-gradient(90deg,var(--pink),var(--yel));border-color:transparent}
 .w-sure.next{padding:10px 14px;border-radius:99px;background:#ffffff70;box-shadow:0 0 0 2px var(--pink)}
 .w-mood{font-size:16px;color:var(--mute);min-height:1.4em;margin:0 0 10px}
+.w-asks,.w-sure{display:none!important}
 .w-drop{display:block;border:1.5px dashed #c9b6d6;border-radius:20px;padding:20px;text-align:center;font-size:16px;color:var(--mute);background:#ffffff55;cursor:pointer;transition:background .25s,border-color .25s}
 .w-drop:hover,.w-drop.over{background:#ffffffa0;border-color:var(--pink)}
 .w-pv{display:block;max-width:100%;max-height:260px;margin:14px auto 0;border-radius:12px}
