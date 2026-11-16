@@ -413,7 +413,7 @@ button:disabled{cursor:not-allowed;opacity:.48;transform:none!important}
 </header>
 <main id="app"></main>
 <footer id="mb-settings"><span>MarketBrain · Local settings</span><div id="mb-settings-actions"><button id="tdkey" type="button">Connect market data</button><button id="aikey" type="button">Connect AI assistant</button></div></footer>
-<div id="dock"><button class="ask" id="dk">Ask MarketBrain</button></div>
+<div id="dock"><button class="ask" id="dk">Talk to MarketBrain</button></div>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 // Keep the product promise stable. The interface should restore context, not compete for attention.
@@ -1606,7 +1606,7 @@ ${mbMarketContext()}`;
   const key=localStorage.getItem('mb_ai_key');
   if(!key){mbBubble('assistant',mbWelcome()+' Connect your AI assistant in Local settings to enable live replies.');return}
   const pending=mbBubble('assistant','Getting the market conversation ready…');pending.classList.add('pending');
-  try{const t=await callAI(key,mbSystem()+'\n\nYou are opening the conversation. Greet the trader naturally for the current time of day. Be warm and genuinely interested in markets. Ask how they slept or how they are arriving, and invite them to share what they did since the last conversation or what is on their mind. Use prior conversation and journal context if available. Do not claim to have monitored markets while they were away. Keep it to 2–4 natural sentences.',[{role:'user',text:'Open today’s MarketBrain conversation.'}]);pending.textContent=t;pending.classList.remove('pending');mbChat.push({role:'assistant',text:t});mbSave();localStorage.setItem(MB_GREETING_KEY,new Date().toISOString().slice(0,10));const copy=document.getElementById('mb-greet-copy');copy.textContent=t;}
+  try{const greetingHistory=mbChat.slice(-10).map(x=>({role:x.role,text:x.text}));greetingHistory.push({role:'user',text:'Open today’s MarketBrain conversation.'});const t=await callAI(key,mbSystem()+'\n\nYou are opening the conversation. Greet the trader naturally for the current time of day. Be warm and genuinely interested in markets. Ask how they slept or how they are arriving, and invite them to share what they did since the last conversation or what is on their mind. Use prior conversation and journal context if available. Do not claim to have monitored markets while they were away. Keep it to 2–4 natural sentences.',greetingHistory);pending.textContent=t;pending.classList.remove('pending');mbChat.push({role:'assistant',text:t});mbSave();localStorage.setItem(MB_GREETING_KEY,new Date().toISOString().slice(0,10));const copy=document.getElementById('mb-greet-copy');copy.textContent=t;}
   catch(e){pending.textContent=mbWelcome()+' I could not reach the AI service just now: '+(e.message||e);pending.classList.remove('pending')}
  };
  const mbReadImage=f=>new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=()=>reject(r.error);r.readAsDataURL(f)});
