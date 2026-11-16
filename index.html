@@ -1597,16 +1597,17 @@ ${mbMarketContext()}`;
  let mbImage=null,mbGreetingStarted=false;
  const mbSave=()=>{try{localStorage.setItem(MB_CHAT_KEY,JSON.stringify(mbChat.slice(-24)))}catch(e){}};
  const mbBubble=(role,text,imageUrl)=>{const d=document.createElement('div');d.className='mb-chat-msg '+role;d.textContent=text;if(imageUrl){const im=document.createElement('img');im.src=imageUrl;im.alt='Attached market chart';d.appendChild(im)}log.appendChild(d);log.scrollTop=log.scrollHeight;return d};
- const mbOpen=()=>{chat.classList.add('show');log.scrollTop=log.scrollHeight;setTimeout(()=>input.focus(),80);if(!mbGreetingStarted){mbGreetingStarted=true;mbStartGreeting()}};
+ const mbOpen=()=>{chat.classList.add('show');log.scrollTop=log.scrollHeight;setTimeout(()=>input.focus(),80);if(!mbGreetingStarted)mbStartGreeting()};
  const mbClose=()=>chat.classList.remove('show');
  const mbWelcome=()=>mbGreeting()+' — welcome back. How are you arriving today? We can pick up an unfinished market thought, look at a chart, or start with whatever is on your mind.';
  const mbStartGreeting=async()=>{
+  if(mbGreetingStarted)return;mbGreetingStarted=true;
   if(mbChat.length){mbChat.slice(-12).forEach(x=>mbBubble(x.role==='user'?'user':'assistant',x.text));}
-  if(mbChat.length&&mbChat[mbChat.length-1].role==='assistant')return;
+  if(localStorage.getItem(MB_GREETING_KEY)===new Date().toISOString().slice(0,10))return;
   const key=localStorage.getItem('mb_ai_key');
   if(!key){mbBubble('assistant',mbWelcome()+' Connect your AI assistant in Local settings to enable live replies.');return}
   const pending=mbBubble('assistant','Getting the market conversation ready…');pending.classList.add('pending');
-  try{const t=await callAI(key,mbSystem()+'\n\nYou are opening the conversation. Greet the trader naturally for the current time of day. Be warm and genuinely interested in markets. Ask how they slept or how they are arriving, and invite them to share what they did since the last conversation or what is on their mind. Use prior conversation and journal context if available. Do not claim to have monitored markets while they were away. Keep it to 2–4 natural sentences.',[{role:'user',text:'Open today’s MarketBrain conversation.'}]);pending.textContent=t;pending.classList.remove('pending');mbChat.push({role:'assistant',text:t});mbSave();const copy=document.getElementById('mb-greet-copy');copy.textContent=t;}
+  try{const t=await callAI(key,mbSystem()+'\n\nYou are opening the conversation. Greet the trader naturally for the current time of day. Be warm and genuinely interested in markets. Ask how they slept or how they are arriving, and invite them to share what they did since the last conversation or what is on their mind. Use prior conversation and journal context if available. Do not claim to have monitored markets while they were away. Keep it to 2–4 natural sentences.',[{role:'user',text:'Open today’s MarketBrain conversation.'}]);pending.textContent=t;pending.classList.remove('pending');mbChat.push({role:'assistant',text:t});mbSave();localStorage.setItem(MB_GREETING_KEY,new Date().toISOString().slice(0,10));const copy=document.getElementById('mb-greet-copy');copy.textContent=t;}
   catch(e){pending.textContent=mbWelcome()+' I could not reach the AI service just now: '+(e.message||e);pending.classList.remove('pending')}
  };
  const mbReadImage=f=>new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=()=>reject(r.error);r.readAsDataURL(f)});
@@ -1641,7 +1642,7 @@ ${mbMarketContext()}`;
  ask.onclick=mbOpen;
  const greetingDay=new Date().toISOString().slice(0,10);
  const greetingKey=localStorage.getItem('mb_ai_key');
- if(greetingKey&&localStorage.getItem(MB_GREETING_KEY)!==greetingDay){localStorage.setItem(MB_GREETING_KEY,greetingDay);setTimeout(()=>{const p=document.getElementById('mb-greet-copy');p.textContent='Preparing your market conversation…';mbGreetingStarted=false;mbStartGreeting()},900)}
+ if(greetingKey&&localStorage.getItem(MB_GREETING_KEY)!==greetingDay){setTimeout(()=>{const p=document.getElementById('mb-greet-copy');p.textContent='Preparing your market conversation…';mbStartGreeting()},900)}
  else if(!greetingKey)document.getElementById('mb-greet-copy').textContent=mbWelcome()+' Connect your AI assistant in Local settings for live conversation.';
 
  addEventListener('keydown',e=>{const m=live.find(x=>x.el.classList.contains('writing'));if(!m)return;if(e.key==='Escape')closeW(m);if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))save(m)});
