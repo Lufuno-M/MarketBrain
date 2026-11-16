@@ -418,7 +418,7 @@ button:disabled{cursor:not-allowed;opacity:.48;transform:none!important}
 <script>
 // Keep the product promise stable. The interface should restore context, not compete for attention.
 const TWELVE_KEY=localStorage.getItem('mb_td_key')||'';
-const AI_MODEL='claude-sonnet-5-5',GH_MODEL='openai/gpt-4.1',GEMINI_MODEL='gemini-3.6-flash';
+const AI_MODEL='claude-sonnet-5-5',GEMINI_MODEL='gemini-3.8-flash';
 // Add or remove markets here. on:false hides one until you switch it on (change it to true or delete it).
 // src:'b' = Binance (free, no key). src:'t' = Twelve Data (needs your Data key; the free plan allows about 8 requests a minute).
 // etf:true marks a fund that trades only in US stock hours, not the 24-hour forex week.
@@ -771,13 +771,12 @@ THE USER'S JOURNAL NOTES on ${m.k} (their words, not facts):
 ${es}`;
 }
 async function callAI(key,sys,msgs){
- const gh=/^(github_pat_|ghp_)/.test(key),gm=/^(AIza|AQ\.)/.test(key),H={'content-type':'application/json'};let r;
- if(gh)r=await fetch('https://models.github.ai/inference/chat/completions',{method:'POST',headers:{...H,accept:'application/vnd.github+json',authorization:'Bearer '+key},body:JSON.stringify({model:GH_MODEL,max_tokens:600,messages:[{role:'system',content:sys},...msgs.map(x=>({role:x.role,content:x.text}))]})});
- else if(gm)r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,{method:'POST',headers:{...H,'x-goog-api-key':key},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:msgs.map(x=>({role:x.role==='user'?'user':'model',parts:[{text:x.text}]})),generationConfig:{maxOutputTokens:2048,temperature:.2}})});
- else r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{...H,'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:AI_MODEL,max_tokens:600,system:sys,messages:msgs.map(x=>({role:x.role,content:x.text}))})});
+ const gm=/^(AIza|AQ\.)/.test(key),H={'content-type':'application/json'};let r;
+ if(gm)r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,{method:'POST',headers:{...H,'x-goog-api-key':key},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:msgs.map(x=>({role:x.role==='user'?'user':'model',parts:[{text:x.text}]})),generationConfig:{maxOutputTokens:4096,temperature:.55}})});
+ else r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{...H,'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:AI_MODEL,max_tokens:1200,system:sys,messages:msgs.map(x=>({role:x.role,content:x.text}))})});
  const j=await r.json();
  if(!r.ok)throw(j.error&&(j.error.message||j.error))||'Request failed ('+r.status+')';
- const t=gm?(j.candidates?.[0]?.content?.parts||[]).map(b=>b.text||'').join('\n'):gh?(j.choices?.[0]?.message?.content||''):(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+ const t=gm?(j.candidates?.[0]?.content?.parts||[]).map(b=>b.text||'').join('\n'):(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
  if(!t)throw 'The AI service returned no text. Check the key, model access, and limits.';return t;
 }
 
@@ -895,7 +894,7 @@ document.getElementById('dexnew').onclick=()=>dexFeed('new');document.getElement
 const app=document.getElementById('app'),note=document.getElementById('note'),bar=document.getElementById('bar');
 const keyBtn=(id,msg,k,reload)=>document.getElementById(id).onclick=()=>{const v=prompt(msg,localStorage.getItem(k)||'');if(v!==null){try{v.trim()?localStorage.setItem(k,v.trim()):localStorage.removeItem(k);if(reload)location.reload()}catch(e){alert('Could not save the key in this browser.')}}};
 keyBtn('tdkey','Paste your Twelve Data API key. It is stored only in this browser. Leave empty to remove it.','mb_td_key',true);
-keyBtn('aikey','Paste an AI key for the assistant: Google Gemini (starts AIza or AQ.), GitHub Models (github_pat_ or ghp_), or Anthropic (sk-ant-). Stored only in this browser. Leave empty to remove it.','mb_ai_key',false);
+keyBtn('aikey','Paste a Google Gemini key (AIza… or AQ…) or Anthropic key (sk-ant-…). Stored only in this browser. Leave empty to remove it.','mb_ai_key',false);
 const settingsActions=document.getElementById('mb-settings-actions');['tdkey','aikey'].forEach((id,i)=>{const b=document.getElementById(id);if(b){b.textContent=i?'Connect AI assistant':'Connect market data';settingsActions.appendChild(b)}});
 app.appendChild(launch);
 const live=MARKETS.filter(m=>m.on!==false);let group='',n=0;
@@ -1633,7 +1632,7 @@ ${mbMarketContext()}`;
    pending.textContent=answer;pending.classList.remove('pending');mbChat.push({role:'assistant',text:answer});mbSave();
   }catch(e){pending.textContent='I could not complete that reply. '+(e.message||String(e));pending.classList.remove('pending');}
  };
- fileInput.addEventListener('change',async()=>{const f=fileInput.files&&fileInput.files[0];if(!f)return;if(!/^image\//.test(f.type)){fileLabel.textContent='Choose an image file.';return}try{const url=await mbReadImage(f);mbImage={url,mime:f.type};fileLabel.textContent=f.name+' attached';}catch(e){fileLabel.textContent='Could not read that image.'}});
+ fileInput.addEventListener('change',async()=>{const f=fileInput.files&&fileInput.files[0];if(!f)return;if(!/^image\//.test(f.type)){fileLabel.textContent='Choose an image file.';return}try{const bm=await createImageBitmap(f),scale=Math.min(1,1600/Math.max(bm.width,bm.height)),canvas=document.createElement('canvas');canvas.width=Math.round(bm.width*scale);canvas.height=Math.round(bm.height*scale);canvas.getContext('2d').drawImage(bm,0,0,canvas.width,canvas.height);const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.78));const url=await mbReadImage(blob);mbImage={url,mime:'image/jpeg'};fileLabel.textContent=f.name+' attached';}catch(e){fileLabel.textContent='Could not read that image.'}});
  chat.querySelector('.send').onclick=mbSend;
  input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();mbSend()}});
  chat.querySelector('.mb-chat-close').onclick=mbClose;
