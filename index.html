@@ -1528,7 +1528,125 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  const wb=document.createElement('button');wb.type='button';wb.className='write';wb.textContent='Write';
  dock.insertBefore(call,ask);dock.insertBefore(wb,ask);
  wb.onclick=()=>openW(live.find(x=>x._w&&x._w.ctx)||live.find(x=>x.el.classList.contains('open'))||live[0]);
+ 
  ask.addEventListener('click',()=>live.forEach(closeW),true);
+
+ /* ---- MarketBrain conversation: one persistent, market-aware assistant ---- */
+ const MB_CHAT_KEY='mb_conversation_v1',MB_GREETING_KEY='mb_greeting_day_v1';
+ let mbChat=[];try{mbChat=JSON.parse(localStorage.getItem(MB_CHAT_KEY)||'[]');if(!Array.isArray(mbChat))mbChat=[]}catch(e){mbChat=[]}
+ const mbEsc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ const mbClock=()=>new Intl.DateTimeFormat('en-ZA',{hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());
+ const mbGreeting=()=>{const h=+new Intl.DateTimeFormat('en-ZA',{hour:'2-digit',hour12:false}).format(new Date());return h<12?'Good morning':h<17?'Good afternoon':'Good evening'};
+ const mbMarketContext=()=>{
+  const rows=live.filter(m=>m.res).slice(0,14).map(m=>m.k+': '+sentence(m.res)+'; timeframe '+tfl(m.tf)+'.');
+  const notes=J.slice().sort((a,b)=>b.at-a.at).slice(0,8).map(e=>'['+e.date+' '+e.k+'] '+e.text.slice(0,420)).join('\n');
+  return 'MARKET SNAPSHOT FROM THIS PAGE (may be stale; respect each instrument data timestamp):\n'+(rows.join('\n')||'No chart readings have loaded yet.')+'\n\nRECENT JOURNAL NOTES (the trader’s own words, not verified market facts):\n'+(notes||'No journal notes yet.');
+ };
+ const mbSystem=()=>`You are MarketBrain: a genuinely conversational, market-centred thinking partner inside a trader's workspace. You are warm, alert, curious about markets, grounded and naturally enthusiastic about understanding price action. You are not a form, checklist, therapist, trading signal service, or motivational chatbot.
+
+CONVERSATION:
+- Talk like a thoughtful human conversation partner. Understand the meaning of the whole message, including context, references, corrections, uncertainty and changes of mind. Do not classify messages by keyword or force the user through a fixed sequence of questions.
+- Remember the conversation history supplied with each turn. Refer back to relevant details naturally; distinguish what the user said previously from what the market data shows.
+- Ask one useful follow-up only when it genuinely advances the conversation. Sometimes answer directly, reflect an insight, disagree with reasoning, or simply acknowledge. Do not end every response with a question.
+- If the user says hello or opens the day, greet them with genuine market-centred enthusiasm. It is appropriate to ask how they slept, what they did since the last conversation, and what is on their mind today, but vary the wording and do not ask all of these mechanically every time.
+- Be interested in screenshots and written observations. When a chart image is supplied, describe only what is actually visible; ask for instrument/timeframe if unclear. Separate visible evidence, interpretation and unknowns.
+- Track evolving hypotheses, evidence, contradictions, confidence when volunteered, decisions and unresolved questions. Do not infer a belief or emotion from a keyword. Never pretend to know what happened while the user was away.
+- Be willing to challenge weak reasoning respectfully. Do not validate a trade merely because the user took it or feels confident.
+
+MARKET INTEGRITY:
+- The attached market snapshot is contextual evidence, not a guarantee of freshness. State limitations. Never invent prices, candles, news, liquidity, institutional intent or causes.
+- Do not predict prices, issue buy/sell calls, or give personalised financial advice. You may explain scenarios and conditional readings, clearly identifying what would support or contradict each.
+- Keep the tone concise but not artificially capped; give the conversation room when the topic deserves it. Avoid canned headings unless useful.
+
+CURRENT PAGE CONTEXT:
+${mbMarketContext()}`;
+ const mbStyle=document.createElement('style');
+ mbStyle.textContent=`
+ #mb-greeting{max-width:1180px;margin:0 auto 24px;padding:0 28px}
+ .mb-greet{padding:22px 26px;border-radius:24px;background:linear-gradient(115deg,#ffffffb8,#fff0f780 58%,#fff4d780);border:1px solid #ffffffdf;box-shadow:inset 0 1px 0 #fff,0 12px 36px #3b1d5a12;backdrop-filter:blur(20px) saturate(1.3);-webkit-backdrop-filter:blur(20px) saturate(1.3)}
+ .mb-greet small{display:block;color:var(--mute);font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+ .mb-greet strong{display:block;margin:7px 0 6px;font-size:clamp(22px,3vw,32px);letter-spacing:-.03em;color:var(--ink);line-height:1.2}
+ .mb-greet p{margin:0;color:var(--mute);font-size:16px;line-height:1.5}
+ .mb-greet button{margin-top:14px;border:1px solid #ffffffd0;border-radius:99px;padding:10px 18px;background:#ffffffb8;color:var(--ink);font:inherit;font-weight:650;cursor:pointer}
+ #mb-chat{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;padding:14px;background:#21152c70;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+ #mb-chat.show{display:flex}
+ .mb-chat-panel{width:min(100%,860px);height:min(88vh,900px);display:flex;flex-direction:column;overflow:hidden;border:1px solid #ffffffed;border-radius:28px;background:linear-gradient(145deg,#fffdfef7,#fff5f9f5 60%,#fff8e9f5);box-shadow:0 28px 90px #1a13254a;color:var(--ink)}
+ .mb-chat-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid #e8dfea}
+ .mb-chat-head strong{font-size:20px;letter-spacing:-.02em}.mb-chat-head small{display:block;color:var(--mute);font-size:12px;margin-top:2px}
+ .mb-chat-close{width:38px;height:38px;border:1px solid #ffffffd0;border-radius:50%;background:#ffffffb8;color:var(--ink);font-size:23px;cursor:pointer}
+ .mb-chat-log{flex:1;overflow:auto;padding:22px;display:flex;flex-direction:column;gap:12px}
+ .mb-chat-msg{max-width:min(88%,680px);padding:13px 16px;border-radius:18px;font-size:16px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+ .mb-chat-msg.user{align-self:flex-end;background:linear-gradient(100deg,#ffd7ea,#fff0a8)}
+ .mb-chat-msg.assistant{align-self:flex-start;background:#ffffffc9;border:1px solid #ffffffdf;border-left:3px solid #d9a7c5}
+ .mb-chat-msg.pending{opacity:.65}
+ .mb-chat-msg img{display:block;max-width:100%;max-height:260px;border-radius:12px;margin-top:8px}
+ .mb-chat-compose{padding:14px 16px 16px;border-top:1px solid #e8dfea;background:#ffffff70}
+ .mb-chat-compose textarea{display:block;width:100%;min-height:66px;max-height:180px;resize:vertical;border:1px solid #e5dce9;border-radius:17px;background:#ffffffd9;color:var(--ink);font:inherit;font-size:16px;line-height:1.45;padding:13px 15px}
+ .mb-chat-compose textarea:focus{outline:2px solid #ff8cbd;outline-offset:1px}
+ .mb-chat-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;flex-wrap:wrap}
+ .mb-chat-actions label,.mb-chat-actions button{border:1px solid #ffffffd0;border-radius:99px;padding:9px 15px;background:#ffffffb8;color:var(--ink);font:inherit;font-size:14px;font-weight:650;cursor:pointer}
+ .mb-chat-actions button.send{background:linear-gradient(90deg,#ffd7ea,#fff0a8)}
+ .mb-chat-file{font-size:12px;color:var(--mute);margin-left:8px}
+ @media(max-width:600px){#mb-greeting{padding:0 16px}.mb-greet{padding:18px}.mb-chat-panel{height:94vh;border-radius:20px}.mb-chat-log{padding:15px}.mb-chat-msg{max-width:95%;font-size:15px}}
+ `;
+ document.head.appendChild(mbStyle);
+ const greet=document.createElement('section');greet.id='mb-greeting';
+ greet.innerHTML='<div class="mb-greet"><small>MarketBrain · Your market conversation</small><strong id="mb-greet-title">'+mbGreeting()+'.</strong><p id="mb-greet-copy">Your market desk is ready. Bring a chart, a question, a thought, or just tell me how the day is starting.</p><button type="button" id="mb-greet-open">Talk to MarketBrain</button></div>';
+ document.querySelector('header').insertAdjacentElement('afterend',greet);
+ const chat=document.createElement('section');chat.id='mb-chat';chat.setAttribute('aria-label','MarketBrain conversation');
+ chat.innerHTML='<div class="mb-chat-panel" role="dialog" aria-modal="true" aria-label="Talk to MarketBrain"><div class="mb-chat-head"><div><strong>MarketBrain</strong><small>Market context · conversation · memory on this device</small></div><button class="mb-chat-close" type="button" aria-label="Close">×</button></div><div class="mb-chat-log" aria-live="polite"></div><div class="mb-chat-compose"><textarea aria-label="Message MarketBrain" placeholder="Say what you’re seeing, ask a question, or just say hey…"></textarea><div class="mb-chat-actions"><div><label>Attach chart<input class="mb-chat-file-input" type="file" accept="image/*" hidden></label><span class="mb-chat-file"></span></div><button class="send" type="button">Send</button></div></div></div>';
+ document.body.appendChild(chat);
+ const log=chat.querySelector('.mb-chat-log'),input=chat.querySelector('textarea'),fileInput=chat.querySelector('.mb-chat-file-input'),fileLabel=chat.querySelector('.mb-chat-file');
+ let mbImage=null,mbGreetingStarted=false;
+ const mbSave=()=>{try{localStorage.setItem(MB_CHAT_KEY,JSON.stringify(mbChat.slice(-24)))}catch(e){}};
+ const mbBubble=(role,text,imageUrl)=>{const d=document.createElement('div');d.className='mb-chat-msg '+role;d.textContent=text;if(imageUrl){const im=document.createElement('img');im.src=imageUrl;im.alt='Attached market chart';d.appendChild(im)}log.appendChild(d);log.scrollTop=log.scrollHeight;return d};
+ const mbOpen=()=>{chat.classList.add('show');log.scrollTop=log.scrollHeight;setTimeout(()=>input.focus(),80);if(!mbGreetingStarted){mbGreetingStarted=true;mbStartGreeting()}};
+ const mbClose=()=>chat.classList.remove('show');
+ const mbWelcome=()=>mbGreeting()+' — welcome back. How are you arriving today? We can pick up an unfinished market thought, look at a chart, or start with whatever is on your mind.';
+ const mbStartGreeting=async()=>{
+  if(mbChat.length){mbChat.slice(-12).forEach(x=>mbBubble(x.role==='user'?'user':'assistant',x.text));}
+  if(mbChat.length&&mbChat[mbChat.length-1].role==='assistant')return;
+  const key=localStorage.getItem('mb_ai_key');
+  if(!key){mbBubble('assistant',mbWelcome()+' Connect your AI assistant in Local settings to enable live replies.');return}
+  const pending=mbBubble('assistant','Getting the market conversation ready…');pending.classList.add('pending');
+  try{const t=await callAI(key,mbSystem()+'\n\nYou are opening the conversation. Greet the trader naturally for the current time of day. Be warm and genuinely interested in markets. Ask how they slept or how they are arriving, and invite them to share what they did since the last conversation or what is on their mind. Use prior conversation and journal context if available. Do not claim to have monitored markets while they were away. Keep it to 2–4 natural sentences.',[{role:'user',text:'Open today’s MarketBrain conversation.'}]);pending.textContent=t;pending.classList.remove('pending');mbChat.push({role:'assistant',text:t});mbSave();const copy=document.getElementById('mb-greet-copy');copy.textContent=t;}
+  catch(e){pending.textContent=mbWelcome()+' I could not reach the AI service just now: '+(e.message||e);pending.classList.remove('pending')}
+ };
+ const mbReadImage=f=>new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=()=>reject(r.error);r.readAsDataURL(f)});
+ const mbSend=async()=>{
+  const q=input.value.trim();if(!q&&!mbImage)return;
+  const key=localStorage.getItem('mb_ai_key');if(!key){mbBubble('assistant','Connect your AI assistant in Local settings first. The key stays in this browser and is sent directly to your selected AI provider.');return}
+  const imageData=mbImage,preview=imageData&&imageData.url;
+  mbBubble('user',q||'Please read this chart screenshot.',preview);
+  const userText=q+(imageData?'\n[The user attached a chart screenshot for visual analysis.]':'');
+  mbChat.push({role:'user',text:userText});mbSave();input.value='';mbImage=null;fileInput.value='';fileLabel.textContent='';
+  const pending=mbBubble('assistant','Reading the conversation and market context…');pending.classList.add('pending');
+  try{
+   let answer;
+   if(imageData){
+    if(!/^(AIza|AQ\.)/.test(key))throw new Error('Screenshot understanding currently requires a Google Gemini API key. Connect a Gemini key in Local settings, then send the screenshot again.');
+    const base64=imageData.url.split(',')[1];
+    const contents=mbChat.slice(-12).map((x,i)=>({role:x.role==='assistant'?'model':'user',parts:[{text:x.text}]}));
+    contents[contents.length-1].parts.push({inline_data:{mime_type:imageData.mime,data:base64}});
+    const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODEL+':generateContent',{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':key},body:JSON.stringify({systemInstruction:{parts:[{text:mbSystem()}]},contents,generationConfig:{maxOutputTokens:1800,temperature:.55}})});
+    const data=await response.json();if(!response.ok)throw new Error(data.error?.message||'Gemini request failed ('+response.status+').');
+    answer=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('\n');if(!answer)throw new Error('Gemini returned no readable answer.');
+   }else answer=await callAI(key,mbSystem(),mbChat.slice(-12).map(x=>({role:x.role,text:x.text})));
+   pending.textContent=answer;pending.classList.remove('pending');mbChat.push({role:'assistant',text:answer});mbSave();
+  }catch(e){pending.textContent='I could not complete that reply. '+(e.message||String(e));pending.classList.remove('pending');}
+ };
+ fileInput.addEventListener('change',async()=>{const f=fileInput.files&&fileInput.files[0];if(!f)return;if(!/^image\//.test(f.type)){fileLabel.textContent='Choose an image file.';return}try{const url=await mbReadImage(f);mbImage={url,mime:f.type};fileLabel.textContent=f.name+' attached';}catch(e){fileLabel.textContent='Could not read that image.'}});
+ chat.querySelector('.send').onclick=mbSend;
+ input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();mbSend()}});
+ chat.querySelector('.mb-chat-close').onclick=mbClose;
+ chat.addEventListener('click',e=>{if(e.target===chat)mbClose()});
+ document.getElementById('mb-greet-open').onclick=mbOpen;
+ ask.onclick=mbOpen;
+ const greetingDay=new Date().toISOString().slice(0,10);
+ const greetingKey=localStorage.getItem('mb_ai_key');
+ if(greetingKey&&localStorage.getItem(MB_GREETING_KEY)!==greetingDay){localStorage.setItem(MB_GREETING_KEY,greetingDay);setTimeout(()=>{const p=document.getElementById('mb-greet-copy');p.textContent='Preparing your market conversation…';mbGreetingStarted=false;mbStartGreeting()},900)}
+ else if(!greetingKey)document.getElementById('mb-greet-copy').textContent=mbWelcome()+' Connect your AI assistant in Local settings for live conversation.';
+
  addEventListener('keydown',e=>{const m=live.find(x=>x.el.classList.contains('writing'));if(!m)return;if(e.key==='Escape')closeW(m);if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))save(m)});
  document.addEventListener('paste',e=>{const m=live.find(x=>x.el.classList.contains('writing'));if(!m)return;const f=[...(e.clipboardData?e.clipboardData.files:[])].find(x=>/^image\//.test(x.type));if(f){e.preventDefault();take(m,f)}});
 
