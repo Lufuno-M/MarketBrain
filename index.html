@@ -454,6 +454,20 @@ button:disabled{cursor:not-allowed;opacity:.48;transform:none!important}
 #mb-storage-info p{margin:0;font-size:13px;color:#51465b}
 #mb-storage-info strong{color:var(--ink)}
 
+
+/* Fibonacci levels: configurable chart-native controls and saved presets. */
+.dk{z-index:8}
+.dk .fib-panel{position:absolute;top:calc(100% + 9px);left:0;width:min(340px,calc(100vw - 36px));padding:16px;border:1px solid #ffffffed;border-radius:18px;background:linear-gradient(145deg,#fffdfef5,#fff5f9f5 65%,#fff8e9f5);box-shadow:0 18px 48px #21152c30;color:var(--ink);backdrop-filter:blur(20px) saturate(1.35);-webkit-backdrop-filter:blur(20px) saturate(1.35);display:grid;gap:10px;white-space:normal}
+.dk .fib-panel[hidden]{display:none}
+.dk .fib-panel>strong{font-size:15px}
+.dk .fib-panel>p,.dk .fib-panel small{font-size:12px;line-height:1.45;color:#62576b;margin:0}
+.dk .fib-panel label{display:grid;gap:5px;font-size:12px;font-weight:650;color:#51465b}
+.dk .fib-panel input,.dk .fib-panel select{width:100%;min-width:0;box-sizing:border-box;border:1px solid #e3d9e8;border-radius:10px;padding:10px 11px;background:#fff;color:var(--ink);font:inherit;font-size:14px}
+.dk .fib-actions{display:flex;flex-wrap:wrap;gap:6px}
+.dk .fib-actions button{font:inherit;font-size:12px;padding:8px 10px;border:1px solid #e5dce9;border-radius:99px;background:#ffffffd9;color:var(--ink);cursor:pointer}
+.dk .fib-actions button:first-child{background:linear-gradient(90deg,#ffd7ea,#fff0a8);border-color:transparent;font-weight:700}
+.dk [data-d="fib-settings"]{font-weight:650}
+
 </style></head><body class="v-cards">
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div><div id="trade-atmosphere" aria-hidden="true"></div>
 <header>
@@ -982,7 +996,15 @@ async function ask(m,q){
 }
 /* ---- marks: the crosshair, the magnet, and your own drawings, on one overlay ---- */
 const MB=(()=>{
- const INK='#1a1325',PINK='#e0408f',GOLD='#e0a800',FIB=[0,.5,.705,1],FL={0:'0',.5:'50%',.705:'70.5%',1:'100%'};
+ const INK='#1a1325',PINK='#e0408f',GOLD='#e0a800';
+ const FIB_KEY='mb_fib_settings_v1',FIB_DEFAULT=[0,.5,.705,1];
+ const fibState=store.get(FIB_KEY,{levels:FIB_DEFAULT,presets:{Default:FIB_DEFAULT},active:'Default'});
+ fibState.levels=validLevels(fibState.levels)?fibState.levels:FIB_DEFAULT;
+ fibState.presets=fibState.presets&&typeof fibState.presets==='object'?fibState.presets:{Default:FIB_DEFAULT};
+ if(!fibState.presets.Default)fibState.presets.Default=FIB_DEFAULT;
+ function validLevels(a){return Array.isArray(a)&&a.length>=1&&a.length<=20&&a.every(v=>Number.isFinite(v)&&v>=0&&v<=1)&&new Set(a).size===a.length}
+ const fibLevels=()=>fibState.levels.slice().sort((a,b)=>a-b),fibLabel=r=>Number.isInteger(r*100)?(r*100)+'%':(r*100).toFixed(1)+'%';
+ const saveFib=()=>store.set(FIB_KEY,fibState);
  const COARSE=matchMedia('(pointer:coarse)').matches,V=COARSE?'Tap':'Click',FONT='600 11px -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif';
  const HINT={level:V+' where the level sits',line:V+' the first point',zone:V+' one corner',fib:V+' the start of the swing'};
  const HINT2={line:V+' the second point',zone:V+' the opposite corner',fib:V+' the end of the swing'};
@@ -1026,7 +1048,7 @@ const MB=(()=>{
    if(q.bx==null||q.by==null)continue;
    if(o.type==='line'&&seg(x,y,q.ax,q.ay,q.bx,q.by)<=th)return{o,part:'move'};
    if(o.type==='zone'&&x>=Math.min(q.ax,q.bx)-th&&x<=Math.max(q.ax,q.bx)+th&&y>=Math.min(q.ay,q.by)-th&&y<=Math.max(q.ay,q.by)+th)return{o,part:'move'};
-   if(o.type==='fib'&&x>=Math.min(q.ax,q.bx)-th)for(const r of FIB){const yy=Y(m,fl(o,r));if(yy!=null&&Math.abs(y-yy)<=th)return{o,part:'move'}}}
+   if(o.type==='fib'&&x>=Math.min(q.ax,q.bx)-th)for(const r of fibLevels()){const yy=Y(m,fl(o,r));if(yy!=null&&Math.abs(y-yy)<=th)return{o,part:'move'}}}
   return null}
 
  function pill(x,txt,cx,cy,w,h,fill,col){x.fillStyle=fill;x.beginPath();x.roundRect?x.roundRect(cx-w/2,cy-h/2,w,h,5):x.rect(cx-w/2,cy-h/2,w,h);x.fill();x.fillStyle=col;x.textAlign='center';x.textBaseline='middle';x.fillText(txt,cx,cy+.5)}
@@ -1040,7 +1062,7 @@ const MB=(()=>{
   if(o.type==='zone'){const l=Math.min(q.ax,q.bx),t=Math.min(q.ay,q.by),w=Math.abs(q.bx-q.ax),h=Math.abs(q.by-q.ay);x.fillStyle='rgba(255,196,0,.17)';x.fillRect(l,t,w,h);x.strokeStyle=GOLD;x.lineWidth=1.2;x.strokeRect(l,t,w,h)}
   if(o.type==='fib'){const x0=Math.min(q.ax,q.bx);x.strokeStyle=PINK;x.lineWidth=1;x.globalAlpha=al*.5;x.setLineDash([3,4]);x.beginPath();x.moveTo(q.ax,q.ay);x.lineTo(q.bx,q.by);x.stroke();x.globalAlpha=al;
    x.font=FONT;x.textAlign='left';x.textBaseline='alphabetic';
-   for(const r of FIB){const yy=Y(m,fl(o,r));if(yy==null)continue;x.setLineDash(r===0||r===1?[]:[6,4]);x.strokeStyle=PINK;x.beginPath();x.moveTo(x0,yy);x.lineTo(g.pw,yy);x.stroke();x.setLineDash([]);x.fillStyle=PINK;x.fillText(FL[r]+'  '+fmt(fl(o,r)),x0+6,yy-5);if(r===.5||r===.705)axis.push({y:yy,t:fmt(fl(o,r)),f:PINK})}}
+   for(const r of fibLevels()){const yy=Y(m,fl(o,r));if(yy==null)continue;x.setLineDash(r===0||r===1?[]:[6,4]);x.strokeStyle=PINK;x.beginPath();x.moveTo(x0,yy);x.lineTo(g.pw,yy);x.stroke();x.setLineDash([]);x.fillStyle=PINK;x.fillText(fibLabel(r)+'  '+fmt(fl(o,r)),x0+6,yy-5);axis.push({y:yy,t:fmt(fl(o,r)),f:PINK})}}
   if(sel){hd(q.ax,q.ay);hd(q.bx,q.by)}}
 
  function render(m){
@@ -1082,11 +1104,20 @@ const MB=(()=>{
   const el=m.el.querySelector('.ch');
   const d=m.dr={el,list:store.get(key(m),[]),sel:null,tool:null,pend:null,ghost:null,mouse:null,down:null,drag:null,hold:false,free:false,dirty:true,sig:'',pt:null};
   d.cv=el.appendChild(Object.assign(document.createElement('canvas'),{className:'mbc'}));
-  el.insertAdjacentHTML('beforeend','<div class="dk" role="toolbar" aria-label="Chart marks"><button data-d="mag" title="Snap to the open, high, low and close (M). Hold Alt to place freely.">Magnet</button><button data-d="level">Level</button><button data-d="line">Line</button><button data-d="zone">Zone</button><button data-d="fib">Fib</button><button data-d="del" hidden>Remove</button><button data-d="clr" hidden>Clear</button><span class="dh"></span></div>');
+  el.insertAdjacentHTML('beforeend','<div class="dk" role="toolbar" aria-label="Chart marks"><button data-d="mag" title="Snap to the open, high, low and close (M). Hold Alt to place freely.">Magnet</button><button data-d="level">Level</button><button data-d="line">Line</button><button data-d="zone">Zone</button><button data-d="fib">Fib</button><button data-d="fib-settings" aria-expanded="false">Fib levels</button><button data-d="del" hidden>Remove</button><button data-d="clr" hidden>Clear</button><span class="dh"></span><section class="fib-panel" hidden><strong>Fibonacci levels</strong><p>Enter percentages separated by commas. These levels apply to automatic swing levels and new Fib drawings.</p><label>Levels (%)<input data-fib-levels type="text" inputmode="decimal" value="0, 50, 70.5, 100" aria-label="Fibonacci levels as percentages"></label><label>Preset<select data-fib-preset></select></label><div class="fib-actions"><button type="button" data-fib-apply>Apply levels</button><button type="button" data-fib-save>Save preset</button><button type="button" data-fib-reset>Restore defaults</button></div><small data-fib-note role="status">Default: 0, 50, 70.5 and 100.</small></section></div>');
   d.dk=el.querySelector('.dk');
+  const fibPanel=d.dk.querySelector('.fib-panel'),fibInput=fibPanel.querySelector('[data-fib-levels]'),fibSelect=fibPanel.querySelector('[data-fib-preset]'),fibNote=fibPanel.querySelector('[data-fib-note]');
+  function refreshFibPanel(){fibInput.value=fibLevels().map(v=>String(v*100)).join(', ');fibSelect.innerHTML=Object.keys(fibState.presets).map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join('');fibSelect.value=fibState.active in fibState.presets?fibState.active:'Default'}
+  function applyFibValues(values,name){if(!validLevels(values)){fibNote.textContent='Use 1–20 unique levels between 0 and 100.';return false}fibState.levels=values.slice().sort((a,b)=>a-b);fibState.active=name||'Custom';saveFib();refreshFibPanel();live.forEach(x=>{if(x.dr){x.dr.dirty=true;render(x)}if(x.sr)draw(x)});fibNote.textContent='Applied '+fibLevels().map(fibLabel).join(', ')+'.';return true}
+  refreshFibPanel();
+  fibSelect.addEventListener('change',()=>{const n=fibSelect.value,vals=fibState.presets[n];if(validLevels(vals)){fibState.active=n;applyFibValues(vals,n)}});
+  fibPanel.querySelector('[data-fib-apply]').onclick=()=>{const vals=fibInput.value.split(',').map(x=>Number(x.trim())/100);applyFibValues(vals,'Custom')};
+  fibPanel.querySelector('[data-fib-save]').onclick=()=>{const name=prompt('Name this Fibonacci preset');if(!name||!name.trim())return;const vals=fibInput.value.split(',').map(x=>Number(x.trim())/100);if(!validLevels(vals)){fibNote.textContent='Enter 1–20 unique percentages between 0 and 100 first.';return}const n=name.trim().slice(0,32);fibState.presets[n]=vals.slice().sort((a,b)=>a-b);fibState.active=n;applyFibValues(vals,n);fibNote.textContent='Saved preset “'+n+'” on this device.'};
+  fibPanel.querySelector('[data-fib-reset]').onclick=()=>{fibState.presets.Default=[...FIB_DEFAULT];fibState.active='Default';applyFibValues(FIB_DEFAULT,'Default');fibNote.textContent='Restored the original default levels.'};
   const pos=e=>{const r=el.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
   const ghost=(p)=>{const a=d.pend||(d.down&&Math.hypot(p.x-d.down.x,p.y-d.down.y)>6?d.down.pt:null);if(a&&d.tool!=='level'){const b=snap(m,p.x,p.y,d.free);d.ghost=b?{type:d.tool,a,b}:null}else d.ghost=null};
   d.dk.addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;const k=b.dataset.d;
+   if(k==='fib-settings'){const opening=fibPanel.hidden;fibPanel.hidden=!opening;b.setAttribute('aria-expanded',String(opening));if(opening)refreshFibPanel();return}
    if(k==='mag'){magnet=!magnet;store.set('mb_magnet',magnet);live.forEach(x=>x.dr&&ui(x))}
    else if(k==='del'){if(d.sel)remove(m)}
    else if(k==='clr'){if(d.list.length&&confirm('Clear all your marks on '+m.k+'?')){d.list=[];save(m);cancel(m)}}
@@ -1156,7 +1187,7 @@ function draw(m){
  m.lines.forEach(l=>m.sr.removePriceLine(l));m.lines=[];
  const pl=(price,title,color)=>m.lines.push(m.sr.createPriceLine({price,title,color,lineWidth:1,lineStyle:2,axisLabelVisible:true}));
  if(m.show.gap&&m.res.near){pl(m.res.near.hi,'gap top','#8b5cf6');pl(m.res.near.lo,'gap bottom','#8b5cf6');}
- if(m.show.fib&&m.res.fib){pl(m.res.fib.lvl(.5),'50%','#e0408f');pl(m.res.fib.lvl(.705),'70.5%','#e0408f');}
+ if(m.show.fib&&m.res.fib){for(const r of fibLevels())pl(m.res.fib.lvl(r),fibLabel(r),'#e0408f');}
 }
 function jrender(m){
  const L=m.el.querySelector('.el'),es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)||b.at-a.at);
