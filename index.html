@@ -399,6 +399,52 @@ button:disabled{cursor:not-allowed;opacity:.48;transform:none!important}
  .trade-actions button{animation:none!important}
 }
 
+
+/* Interaction and clarity pass — order feedback, readable microcopy, and confident inputs. */
+.dk-f{gap:7px!important}
+.dk-f>span{font-size:14px!important;font-weight:650!important;color:var(--ink)!important}
+.dk-f input,.account-market-label select,.market-search input,.w-ta,.mb-chat input,.mb-chat textarea{
+ min-height:48px;border:1px solid rgba(89,67,103,.22)!important;background:rgba(255,255,255,.88)!important;
+ color:var(--ink)!important;border-radius:14px!important;padding:13px 15px!important;
+ font:inherit;font-size:16px!important;line-height:1.4;box-shadow:inset 0 1px 2px rgba(26,19,37,.035),0 2px 8px rgba(59,29,90,.035);
+ transition:border-color .2s,box-shadow .2s,background .2s;
+}
+.dk-f input::placeholder,.w-ta::placeholder{color:#8b8093;opacity:1}
+.dk-f input:focus,.account-market-label select:focus,.market-search input:focus,.w-ta:focus{
+ outline:none!important;border-color:rgba(233,79,153,.72)!important;background:#fff!important;
+ box-shadow:0 0 0 4px rgba(233,79,153,.12),inset 0 1px 2px rgba(26,19,37,.025)!important;
+}
+.dk-help{display:block;font-size:13px;line-height:1.45;color:#62576b;margin:0 2px 2px}
+.dk-q button,.dk-keys button,.dk-tabs button,.dk-book button,.account-close,#demoopen,.trade-actions button,#dock button{
+ -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.dk-q button,.dk-keys button,.dk-tabs button,.dk-book button,.account-close,#demoopen,.trade-actions button,#dock button{
+ transition:transform .16s ease,box-shadow .2s ease,filter .2s ease,background .2s ease;
+}
+.dk-q button:active,.dk-keys button:active,.dk-tabs button:active,.dk-book button:active,
+.account-close:active,#demoopen:active,.trade-actions button:active,#dock button:active{
+ transform:translateY(1px) scale(.975)!important;filter:brightness(.97);
+}
+.dk-keys button{min-height:58px;font-size:17px!important;font-weight:750!important;letter-spacing:-.015em}
+.dk-keys button:focus-visible,.dk-q button:focus-visible,.dk-tabs button:focus-visible,.dk-book button:focus-visible{
+ outline:3px solid rgba(233,79,153,.62)!important;outline-offset:3px!important;
+}
+.dk-msg{font-size:14px!important;line-height:1.45!important;min-height:0!important;margin-top:12px!important}
+.dk-msg:empty{display:none}
+.dk-msg.bad{padding:13px 15px;border-radius:15px;background:rgba(221,91,111,.11);border:1px solid rgba(184,74,88,.28);color:#8e293b}
+.dk-msg.success{padding:0!important;background:transparent!important;border:0!important;color:var(--ink)!important}
+.dk-confirm{display:flex;gap:12px;align-items:flex-start;padding:16px;border:1px solid rgba(35,132,91,.25);border-radius:18px;background:linear-gradient(125deg,rgba(69,184,137,.13),rgba(255,255,255,.78));box-shadow:0 8px 24px rgba(35,132,91,.08);animation:mb-confirm-in .42s cubic-bezier(.2,.7,.2,1) both}
+.dk-confirm-mark{width:30px;height:30px;flex:0 0 30px;border-radius:50%;display:grid;place-items:center;background:#218b5b;color:white;font-size:17px;font-weight:800;box-shadow:0 4px 12px rgba(33,139,91,.22)}
+.dk-confirm>div{display:grid;gap:4px;min-width:0}
+.dk-confirm strong{font-size:16px;color:#176b48}
+.dk-confirm span:not(.dk-confirm-mark){font-size:14px;color:var(--ink)}
+.dk-confirm small{font-size:12px;line-height:1.45;color:#51465b;overflow-wrap:anywhere}
+@keyframes mb-confirm-in{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+.account-foot{font-size:14px!important;line-height:1.6!important;padding:13px 15px;border:1px solid rgba(89,67,103,.14);border-radius:15px;background:rgba(255,255,255,.58);color:#51465b!important}
+.account-market-label{font-size:14px!important;color:var(--ink)!important}
+.account-market-label select{cursor:pointer}
+@media(prefers-reduced-motion:reduce){.dk-confirm{animation:none}}
+
 </style></head><body class="v-cards">
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div><div id="trade-atmosphere" aria-hidden="true"></div>
 <header>
@@ -1255,7 +1301,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  const fresh=()=>({balance:START,positions:{},orders:[],pending:[]});
  const readP=()=>{try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&typeof v.balance==='number'&&v.positions&&Array.isArray(v.orders)){v.pending=v.pending||[];return v}}catch(e){}return fresh()};
  let paper=readP(),lastAmb='',seenId=paper.orders[0]?paper.orders[0].id:0;
- const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(paper))}catch(e){}};
+ let lastPersistOK=true;const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(paper));lastPersistOK=true;return true}catch(e){lastPersistOK=false;return false}};
  const R=n=>(n<0?'-':'')+'R'+Math.abs(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
  const RS=n=>(n>0?'+':'')+R(n);
  const priceOf=m=>m.res&&m.res.last?m.res.last.c:null;
@@ -1398,7 +1444,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   <div class="account-summary" id="account-summary"></div>
   <label class="account-market-label">Instrument<select id="account-market"></select></label>
   <div id="account-desk-slot"></div>
-  <p class="account-foot">Demo orders use simulated funds in this browser. Nothing is sent to a broker. USD conversion uses a fixed R18.00 assumption, not a live exchange rate.</p>
+  <p class="account-foot">Demo orders use simulated funds only. Orders, positions and balance are saved in this browser on this device (local storage); they are not synced to an account or sent to a broker. Clearing browser data can remove them. USD conversion uses a fixed R18.00 assumption, not a live exchange rate.</p>
  </div>`;
  document.body.appendChild(account);
  const accountSlot=$('#account-desk-slot',account),accountMarket=$('#account-market',account),accountSummary=$('#account-summary',account);
@@ -1657,13 +1703,13 @@ ${mbMarketContext()}`;
   side.innerHTML=`<div class="dk-top"><div><span class="dk-sym">${esc(m.k)}</span><span class="dk-name">${esc(m.name)} · demo, in rand</span></div><strong class="dk-px" data-px></strong></div>
    <div class="dk-eq" data-eq></div>
    <div class="dk-seg" data-types>${TYPES.map((t,i)=>`<button type="button" data-type="${t[0]}"${i?'':' class="on"'}>${t[1]}</button>`).join('')}</div>
-   <label class="dk-f" data-pxrow hidden><span>Entry price</span><input data-entry type="number" min="0" step="any"></label>
-   <label class="dk-f"><span>Size, in rand</span><input data-size type="number" min="0" step="any" value="10000"></label>
+   <label class="dk-f" data-pxrow hidden><span>Entry price</span><input data-entry type="number" inputmode="decimal" min="0" step="any" placeholder="Enter price"><small class="dk-help">Your requested entry level. The order waits here until the market reaches it.</small></label>
+   <label class="dk-f"><span>Order value · ZAR</span><input data-size type="number" inputmode="decimal" min="0" step="any" value="10000" placeholder="e.g. 10000"><small class="dk-help">Amount in rand, not lots or units. Choose a quick amount below or type your own.</small></label>
    <div class="dk-q">${[1000,5000,10000,25000].map(a=>`<button type="button" data-amt="${a}">R${a/1000}k</button>`).join('')}</div>
-   <div class="dk-lv"><label class="dk-f"><span>Stop loss</span><input data-sl type="number" min="0" step="any" placeholder="price"></label><label class="dk-f"><span>Take profit</span><input data-tp type="number" min="0" step="any" placeholder="price"></label></div>
+   <div class="dk-lv"><label class="dk-f"><span>Stop loss · price</span><input data-sl type="number" inputmode="decimal" min="0" step="any" placeholder="Optional stop price"></label><label class="dk-f"><span>Take profit · price</span><input data-tp type="number" inputmode="decimal" min="0" step="any" placeholder="Optional target price"></label></div>
    <div class="dk-risk" data-risk></div>
    <div class="dk-keys"><button type="button" class="sell" data-side="sell"></button><button type="button" class="buy" data-side="buy"></button></div>
-   <div class="dk-msg" data-msg></div>
+   <div class="dk-msg" data-msg role="status" aria-live="polite" aria-atomic="true"></div>
    <div class="dk-tabs" data-tabs><button type="button" data-bt="pos"></button><button type="button" data-bt="ord"></button><button type="button" data-bt="his"></button></div>
    <div class="dk-book" data-book></div>`;
   (rd||ch||panel.firstChild).insertAdjacentElement('afterend',side);m._side=side;
@@ -1675,8 +1721,18 @@ ${mbMarketContext()}`;
   $$('[data-side]',side).forEach(b=>b.onclick=()=>{
    const sd=b.dataset.side,amt=+d.size.value,sl=+d.sl.value||null,tp=+d.tp.value||null;
    const err=d.type==='market'?place(m,sd,amt,sl,tp):queue(m,d.type,sd,+d.entry.value,amt,sl,tp);
-   msg.textContent=err||(d.type==='market'?`${sd==='buy'?'Bought':'Sold'} ${R(amt)} at ${fmt(priceOf(m))}`:`${cap(sd)} ${d.type} placed at ${d.entry.value}`);msg.classList.toggle('bad',!!err);
-   if(!err){buzz([30,40,30]);d.sl.value='';d.tp.value='';d.tab=d.type==='market'?'pos':'ord'}renderAll();
+   msg.classList.toggle('bad',!!err);msg.classList.toggle('success',!err);
+   if(err){msg.textContent=err;}
+   else{
+    const order=d.type==='market'?paper.orders[0]:paper.pending[paper.pending.length-1];
+    const reference=order&&order.id?String(order.id):'Recorded';
+    const action=d.type==='market'?'Market order filled':'Pending '+d.type+' order placed';
+    const price=d.type==='market'?fmt(priceOf(m)):fmt(+d.entry.value);
+    const storage=lastPersistOK?'Saved on this device in this browser.':'Browser storage is unavailable; this action may not survive a refresh.';
+    msg.innerHTML=`<div class="dk-confirm"><span class="dk-confirm-mark" aria-hidden="true">✓</span><div><strong>${action}</strong><span>${esc(cap(sd))} · ${esc(m.k)} · ${esc(R(amt))}</span><span>${d.type==='market'?'Fill':'Entry'} price · ${esc(price)}</span><small>Reference · ${esc(reference)}</small><small>${esc(storage)} Simulated funds only; nothing was sent to a broker.</small></div></div>`;
+    buzz([30,40,30]);d.sl.value='';d.tp.value='';d.tab=d.type==='market'?'pos':'ord';
+   }
+   renderAll();
   });
   d.tabs.onclick=ev=>{const b=ev.target.closest('[data-bt]');if(b){d.tab=b.dataset.bt;drawDesk(m)}};
   d.book.onclick=ev=>{
