@@ -1003,7 +1003,7 @@ const MB=(()=>{
  fibState.presets=fibState.presets&&typeof fibState.presets==='object'?fibState.presets:{Default:FIB_DEFAULT};
  if(!fibState.presets.Default)fibState.presets.Default=FIB_DEFAULT;
  function validLevels(a){return Array.isArray(a)&&a.length>=1&&a.length<=20&&a.every(v=>Number.isFinite(v)&&v>=0&&v<=1)&&new Set(a).size===a.length}
- const fibLevels=()=>fibState.levels.slice().sort((a,b)=>a-b),fibLabel=r=>Number.isInteger(r*100)?(r*100)+'%':(r*100).toFixed(1)+'%';
+ const fibLevels=()=>fibState.levels.slice().sort((a,b)=>a-b),fibLabel=r=>Number.isInteger(r*100)?(r*100)+'%':(r*100).toFixed(1)+'%',fibMeaning=r=>Math.abs(r-.5)<1e-8?' · midpoint':Math.abs(r-.705)<1e-8?' · deep retracement':Math.abs(r)<1e-8?' · swing end':Math.abs(r-1)<1e-8?' · swing start':'';
  const saveFib=()=>store.set(FIB_KEY,fibState);
  const COARSE=matchMedia('(pointer:coarse)').matches,V=COARSE?'Tap':'Click',FONT='600 11px -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif';
  const HINT={level:V+' where the level sits',line:V+' the first point',zone:V+' one corner',fib:V+' the start of the swing'};
@@ -1062,7 +1062,7 @@ const MB=(()=>{
   if(o.type==='zone'){const l=Math.min(q.ax,q.bx),t=Math.min(q.ay,q.by),w=Math.abs(q.bx-q.ax),h=Math.abs(q.by-q.ay);x.fillStyle='rgba(255,196,0,.17)';x.fillRect(l,t,w,h);x.strokeStyle=GOLD;x.lineWidth=1.2;x.strokeRect(l,t,w,h)}
   if(o.type==='fib'){const x0=Math.min(q.ax,q.bx);x.strokeStyle=PINK;x.lineWidth=1;x.globalAlpha=al*.5;x.setLineDash([3,4]);x.beginPath();x.moveTo(q.ax,q.ay);x.lineTo(q.bx,q.by);x.stroke();x.globalAlpha=al;
    x.font=FONT;x.textAlign='left';x.textBaseline='alphabetic';
-   for(const r of fibLevels()){const yy=Y(m,fl(o,r));if(yy==null)continue;x.setLineDash(r===0||r===1?[]:[6,4]);x.strokeStyle=PINK;x.beginPath();x.moveTo(x0,yy);x.lineTo(g.pw,yy);x.stroke();x.setLineDash([]);x.fillStyle=PINK;x.fillText(fibLabel(r)+'  '+fmt(fl(o,r)),x0+6,yy-5);axis.push({y:yy,t:fmt(fl(o,r)),f:PINK})}}
+   for(const r of fibLevels()){const yy=Y(m,fl(o,r));if(yy==null)continue;x.setLineDash(r===0||r===1?[]:[6,4]);x.strokeStyle=PINK;x.beginPath();x.moveTo(x0,yy);x.lineTo(g.pw,yy);x.stroke();x.setLineDash([]);x.fillStyle=PINK;x.fillText(fibLabel(r)+fibMeaning(r)+'  '+fmt(fl(o,r)),x0+6,yy-5);axis.push({y:yy,t:fmt(fl(o,r)),f:PINK})}}
   if(sel){hd(q.ax,q.ay);hd(q.bx,q.by)}}
 
  function render(m){
@@ -1104,7 +1104,7 @@ const MB=(()=>{
   const el=m.el.querySelector('.ch');
   const d=m.dr={el,list:store.get(key(m),[]),sel:null,tool:null,pend:null,ghost:null,mouse:null,down:null,drag:null,hold:false,free:false,dirty:true,sig:'',pt:null};
   d.cv=el.appendChild(Object.assign(document.createElement('canvas'),{className:'mbc'}));
-  el.insertAdjacentHTML('beforeend','<div class="dk" role="toolbar" aria-label="Chart marks"><button data-d="mag" title="Snap to the open, high, low and close (M). Hold Alt to place freely.">Magnet</button><button data-d="level">Level</button><button data-d="line">Line</button><button data-d="zone">Zone</button><button data-d="fib">Fib</button><button data-d="fib-settings" aria-expanded="false">Fib levels</button><button data-d="del" hidden>Remove</button><button data-d="clr" hidden>Clear</button><span class="dh"></span><section class="fib-panel" hidden><strong>Fibonacci levels</strong><p>Enter percentages separated by commas. These levels apply to automatic swing levels and new Fib drawings.</p><label>Levels (%)<input data-fib-levels type="text" inputmode="decimal" value="0, 50, 70.5, 100" aria-label="Fibonacci levels as percentages"></label><label>Preset<select data-fib-preset></select></label><div class="fib-actions"><button type="button" data-fib-apply>Apply levels</button><button type="button" data-fib-save>Save preset</button><button type="button" data-fib-reset>Restore defaults</button></div><small data-fib-note role="status">Default: 0, 50, 70.5 and 100.</small></section></div>');
+  el.insertAdjacentHTML('beforeend','<div class="dk" role="toolbar" aria-label="Chart marks"><button data-d="mag" title="Snap to the open, high, low and close (M). Hold Alt to place freely.">Magnet</button><button data-d="level">Level</button><button data-d="line">Line</button><button data-d="zone">Zone</button><button data-d="fib">Fib</button><button data-d="fib-settings" aria-expanded="false">Fib levels</button><button data-d="del" hidden>Remove</button><button data-d="clr" hidden>Clear</button><span class="dh"></span><section class="fib-panel" hidden><strong>Fibonacci levels</strong><p>50% marks the swing midpoint; 70.5% marks a deeper retracement. Add, remove or change levels below. These settings apply to automatic swing levels and new Fib drawings.</p><label>Levels (%)<input data-fib-levels type="text" inputmode="decimal" value="0, 50, 70.5, 100" aria-label="Fibonacci levels as percentages"></label><label>Preset<select data-fib-preset></select></label><div class="fib-actions"><button type="button" data-fib-apply>Apply levels</button><button type="button" data-fib-save>Save preset</button><button type="button" data-fib-delete>Delete preset</button><button type="button" data-fib-reset>Restore defaults</button></div><small data-fib-note role="status">Default: 0, 50, 70.5 and 100.</small></section></div>');
   d.dk=el.querySelector('.dk');
   const fibPanel=d.dk.querySelector('.fib-panel'),fibInput=fibPanel.querySelector('[data-fib-levels]'),fibSelect=fibPanel.querySelector('[data-fib-preset]'),fibNote=fibPanel.querySelector('[data-fib-note]');
   function refreshFibPanel(){fibInput.value=fibLevels().map(v=>String(v*100)).join(', ');fibSelect.innerHTML=Object.keys(fibState.presets).map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join('');fibSelect.value=fibState.active in fibState.presets?fibState.active:'Default'}
@@ -1113,6 +1113,7 @@ const MB=(()=>{
   fibSelect.addEventListener('change',()=>{const n=fibSelect.value,vals=fibState.presets[n];if(validLevels(vals)){fibState.active=n;applyFibValues(vals,n)}});
   fibPanel.querySelector('[data-fib-apply]').onclick=()=>{const vals=fibInput.value.split(',').map(x=>Number(x.trim())/100);applyFibValues(vals,'Custom')};
   fibPanel.querySelector('[data-fib-save]').onclick=()=>{const name=prompt('Name this Fibonacci preset');if(!name||!name.trim())return;const vals=fibInput.value.split(',').map(x=>Number(x.trim())/100);if(!validLevels(vals)){fibNote.textContent='Enter 1–20 unique percentages between 0 and 100 first.';return}const n=name.trim().slice(0,32);fibState.presets[n]=vals.slice().sort((a,b)=>a-b);fibState.active=n;applyFibValues(vals,n);fibNote.textContent='Saved preset “'+n+'” on this device.'};
+  fibPanel.querySelector('[data-fib-delete]').onclick=()=>{const n=fibSelect.value;if(n==='Default'){fibNote.textContent='The Default preset is protected.';return}if(!fibState.presets[n])return;delete fibState.presets[n];fibState.active='Default';applyFibValues(fibState.presets.Default,'Default');fibNote.textContent='Deleted preset “'+n+'”.'};
   fibPanel.querySelector('[data-fib-reset]').onclick=()=>{fibState.presets.Default=[...FIB_DEFAULT];fibState.active='Default';applyFibValues(FIB_DEFAULT,'Default');fibNote.textContent='Restored the original default levels.'};
   const pos=e=>{const r=el.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
   const ghost=(p)=>{const a=d.pend||(d.down&&Math.hypot(p.x-d.down.x,p.y-d.down.y)>6?d.down.pt:null);if(a&&d.tool!=='level'){const b=snap(m,p.x,p.y,d.free);d.ghost=b?{type:d.tool,a,b}:null}else d.ghost=null};
@@ -1187,7 +1188,7 @@ function draw(m){
  m.lines.forEach(l=>m.sr.removePriceLine(l));m.lines=[];
  const pl=(price,title,color)=>m.lines.push(m.sr.createPriceLine({price,title,color,lineWidth:1,lineStyle:2,axisLabelVisible:true}));
  if(m.show.gap&&m.res.near){pl(m.res.near.hi,'gap top','#8b5cf6');pl(m.res.near.lo,'gap bottom','#8b5cf6');}
- if(m.show.fib&&m.res.fib){for(const r of fibLevels())pl(m.res.fib.lvl(r),fibLabel(r),'#e0408f');}
+ if(m.show.fib&&m.res.fib){for(const r of fibLevels())pl(m.res.fib.lvl(r),fibLabel(r)+fibMeaning(r),'#e0408f');}
 }
 function jrender(m){
  const L=m.el.querySelector('.el'),es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)||b.at-a.at);
