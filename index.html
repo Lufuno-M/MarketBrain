@@ -1465,7 +1465,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   const np=Object.keys(paper.positions).length,no=paper.pending.length;
   $$('[data-bt]',d.tabs).forEach(b=>{const k=b.dataset.bt;b.classList.toggle('on',k===d.tab);b.textContent=k==='pos'?'Positions'+(np?' '+np:''):k==='ord'?'Orders'+(no?' '+no:''):'History'});
   let h='';
-  if(d.tab==='pos')h=Object.entries(paper.positions).map(([k,q])=>{const mm=mOf(k),pp=mm&&priceOf(mm),pl=mm&&pp?pnl(mm,q,pp):0;return `<div class="bk"><b>${esc(k)}</b><span>${q.qty<0?'Short':'Long'} · in ${fmt(q.avg)}${pp?' · now '+fmt(pp):''}<br>${q.sl?'stop '+fmt(q.sl):'no stop'} · ${q.tp?'target '+fmt(q.tp):'no target'}</span><strong class="${pl>=0?'up':'dn'}">${RS(pl)}</strong><button data-close="${esc(k)}">Close</button></div>`}).join('')||'<p class="bk-e">Flat. No open positions.</p>';
+  if(d.tab==='pos')h=Object.entries(paper.positions).map(([k,q])=>{const mm=mOf(k),pp=mm&&priceOf(mm),pl=mm&&pp?pnl(mm,q,pp):0,value=mm?notional(mm,q.avg,Math.abs(q.qty)):0,reward=mm&&q.tp?pnl(mm,q,q.tp):null,move=q.tp?Math.abs((q.tp-q.avg)/q.avg*100):null;return `<article class="bk position-card"><div class="position-main"><div class="position-heading"><b>${esc(k)} · ${q.qty<0?'SHORT':'LONG'}</b><strong class="${pl>=0?'up':'dn'}">${RS(pl)}</strong></div><div class="position-value">${R(value)} <small>position value</small></div><div class="position-levels"><div><small>Entry</small><strong>${fmt(q.avg)}</strong></div><div><small>Current</small><strong>${pp?fmt(pp):'Waiting'}</strong></div><div><small>Take profit</small><strong class="position-target">${q.tp?fmt(q.tp):'Not set'}</strong></div><div><small>Stop loss</small><strong class="position-stop">${q.sl?fmt(q.sl):'Not set'}</strong></div></div><div class="position-note">${q.tp?'Target is '+move.toFixed(2)+'% from entry · projected outcome '+RS(reward):'No take-profit level recorded. Set one in the order controls to calculate a target outcome.'}</div></div><div class="position-actions"><button type="button" data-chart="${esc(k)}">Open chart</button><button type="button" data-close="${esc(k)}">Close position</button></div></article>`}).join('')||'<p class="bk-e">Flat. No open positions.</p>';
   else if(d.tab==='ord')h=paper.pending.map(o=>`<div class="bk"><b>${esc(o.k)}</b><span>${cap(o.side)} ${o.type} · ${R(o.amt)} at ${fmt(o.px)}<br>${o.sl?'stop '+fmt(o.sl):'no stop'} · ${o.tp?'target '+fmt(o.tp):'no target'}</span><span></span><button data-cancel="${o.id}">Cancel</button></div>`).join('')||'<p class="bk-e">No resting orders.</p>';
   else h=paper.orders.slice(0,12).map(o=>`<div class="bk dim"><b>${esc(o.symbol)}</b><span>${o.side.toUpperCase()} ${R(o.valueZar)} at ${fmt(o.price)}${o.why?' · '+esc(o.why):''}</span><strong class="${(o.realisedZar||0)>=0?'up':'dn'}">${o.realisedZar?RS(o.realisedZar):''}</strong></div>`).join('')||'<p class="bk-e">No trades yet.</p>';
   if(d.book._h!==h){d.book._h=h;d.book.innerHTML=h}
@@ -1777,7 +1777,8 @@ ${mbMarketContext()}`;
   });
   d.tabs.onclick=ev=>{const b=ev.target.closest('[data-bt]');if(b){d.tab=b.dataset.bt;drawDesk(m)}};
   d.book.onclick=ev=>{
-   const c=ev.target.closest('[data-close]'),x=ev.target.closest('[data-cancel]');
+   const c=ev.target.closest('[data-close]'),x=ev.target.closest('[data-cancel]'),v=ev.target.closest('[data-chart]');
+   if(v){const mm=mOf(v.dataset.chart);if(mm){closeAccount();toggle(mm,true);drawTL(mm);mm.el.scrollIntoView({behavior:'smooth',block:'start'})}}
    if(c){const mm=mOf(c.dataset.close),p=mm&&priceOf(mm);if(mm&&p){closeAt(mm,p,'closed');buzz(20);renderAll()}}
    if(x){paper.pending=paper.pending.filter(o=>o.id!==x.dataset.cancel);persist();renderAll()}
   };
@@ -1906,6 +1907,24 @@ ${mbMarketContext()}`;
 .bk span{color:var(--mute);font-size:13px;line-height:1.4}.bk.dim{opacity:.75;grid-template-columns:54px 1fr auto}
 .bk button{font:inherit;font-size:13px;font-weight:600;padding:7px 13px;border-radius:99px;border:1px solid #e5dce9;background:#ffffffa8;color:var(--ink);cursor:pointer}
 .bk-e{color:var(--mute);font-size:14px;margin:12px 0}
+.bk.position-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:start;padding:22px 0}
+.position-main{display:grid;gap:12px;min-width:0}
+.position-heading{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.position-heading b{font-size:17px;letter-spacing:-.02em}
+.position-heading>strong{font-size:20px;font-variant-numeric:tabular-nums}
+.position-value{font-size:clamp(25px,3vw,34px);font-weight:800;letter-spacing:-.045em;line-height:1.05;font-variant-numeric:tabular-nums}
+.position-value small{display:block;margin-top:5px;font-size:11px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.position-levels{display:grid;grid-template-columns:repeat(4,minmax(90px,1fr));gap:12px;padding:15px 0;border-top:1px solid #e5dce9;border-bottom:1px solid #e5dce9}
+.position-levels>div{display:grid;gap:5px;min-width:0}
+.position-levels small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.position-levels strong{font-size:15px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.position-levels .position-target{color:#23845b}.position-levels .position-stop{color:#b84a58}
+.position-note{font-size:13px;line-height:1.5;color:var(--mute)}
+.position-actions{display:flex;flex-direction:column;gap:8px;align-items:stretch;padding-top:2px}
+.position-actions button{white-space:nowrap;padding:10px 15px}
+.position-actions button[data-chart]{background:linear-gradient(100deg,#ffd7ea,#fff0a8);border-color:transparent;color:#2a1d30;font-weight:750}
+@media(max-width:640px){.bk.position-card{grid-template-columns:1fr;gap:14px}.position-levels{grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.position-actions{flex-direction:row;flex-wrap:wrap}.position-actions button{flex:1}}
+
 @media(min-width:980px){
  body.v-cards .m.open .p>div{display:flex;flex-direction:column;gap:0}
  body.v-cards .m.open .p>div>.c-ch{height:clamp(440px,66vh,740px);width:100%}
