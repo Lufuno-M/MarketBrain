@@ -85,7 +85,7 @@ h2{font-size:15px;font-weight:600;color:var(--mute);margin:44px 0 8px}
 /* liquid silver + living typography */
 :root{--silver-hi:rgba(255,255,255,.96);--silver-mid:rgba(220,226,235,.66);--silver-low:rgba(151,162,178,.20);--silver-edge:rgba(255,255,255,.88)}
 header h1{position:relative;display:inline-block;color:transparent;background:linear-gradient(112deg,#8d96a5 0%,#fdfefe 14%,#aab3c1 27%,#ffffff 39%,#8b95a5 53%,#f8fbff 67%,#aeb7c5 81%,#ffffff 100%);background-size:220% 100%;background-position:0% 50%;-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 1px 0 rgba(255,255,255,.75));animation:mb-silver-drift 12s ease-in-out infinite alternate}
-header h1::after{content:"";position:absolute;left:4%;right:4%;bottom:-.10em;height:.075em;border-radius:999px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),rgba(163,174,190,.42),transparent);filter:blur(2px);opacity:.7;pointer-events:none}
+header h1::after{content:"";position:absolute;left:4%;right:4%;bottom:-.10em;height:.075em;border-radius:999px;background:#000;filter:none;opacity:1;pointer-events:none}
 @keyframes mb-silver-drift{0%{background-position:0% 50%}100%{background-position:100% 50%}}
 .m{position:relative;isolation:isolate;overflow:visible}
 .m::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.42;background:radial-gradient(ellipse at 12% 0%,rgba(255,255,255,.94),transparent 38%),linear-gradient(118deg,transparent 22%,rgba(255,255,255,.38) 42%,transparent 59%);background-size:100% 100%,230% 100%;background-position:0 0,-120% 0;transition:opacity .6s ease,background-position 1.2s ease}
