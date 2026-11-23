@@ -455,6 +455,18 @@ button:disabled{cursor:not-allowed;opacity:.48;transform:none!important}
 #mb-storage-info strong{color:var(--ink)}
 
 
+/* Footer controls stay together; storage details sit on their own line. */
+#mb-settings{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center!important;column-gap:18px;row-gap:10px}
+#mb-settings>span{grid-column:1;grid-row:1;align-self:center}
+#mb-settings-actions{grid-column:2;grid-row:1;display:flex!important;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:8px}
+#mb-settings-actions button{white-space:nowrap}
+#mb-storage-info{grid-column:1/-1;grid-row:2;order:initial!important;flex:initial!important;width:100%;max-width:none;margin:0!important}
+@media(max-width:600px){#mb-settings{grid-template-columns:1fr;gap:10px}#mb-settings>span,#mb-settings-actions,#mb-storage-info{grid-column:1;grid-row:auto}#mb-settings-actions{justify-content:flex-start;flex-wrap:wrap}}
+/* Return the wordmark to a quiet, solid black. */
+header h1{color:#111!important;background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;filter:none!important;animation:none!important;text-shadow:none!important}
+header h1::after{display:none!important}
+
+
 /* Fibonacci levels: configurable chart-native controls and saved presets. */
 .dk{z-index:8}
 .dk .fib-panel{position:absolute;top:calc(100% + 9px);left:0;width:min(340px,calc(100vw - 36px));padding:16px;border:1px solid #ffffffed;border-radius:18px;background:linear-gradient(145deg,#fffdfef5,#fff5f9f5 65%,#fff8e9f5);box-shadow:0 18px 48px #21152c30;color:var(--ink);backdrop-filter:blur(20px) saturate(1.35);-webkit-backdrop-filter:blur(20px) saturate(1.35);display:grid;gap:10px;white-space:normal}
