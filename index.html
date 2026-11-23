@@ -1549,26 +1549,29 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   (h.controls||[]).forEach(x=>{if(x.node&&x.parent)x.parent.insertBefore(x.node,x.next&&x.next.parentNode===x.parent?x.next:null)});
   m._accountChartHome=null;
  }
- function showAccountMarket(m){
+ async function showAccountMarket(m){
   if(!m||!m._side)return;
-  if(!m.chart){
-   const priorVisibility=m.el.style.visibility;
-   m.el.style.visibility='hidden';
-   if(!m.el.classList.contains('open'))toggle(m,true);
-   if(!m.res){load(m).then(()=>{if(!m.chart)toggle(m,true);showAccountMarket(m)}).finally(()=>{m.el.style.visibility=priorVisibility});return;}
-   if(!m.chart)toggle(m,true);
-   m.el.style.visibility=priorVisibility;
-  }
   const previous=mOf(accountMarket.value);if(previous&&previous!==m)restoreAccountChart(previous);
   accountMarket.value=m.k;accountSlot.replaceChildren(m._side);
-  const chart=m.el.querySelector('.c-ch'),readout=m.el.querySelector('.c-rd');
+  let chart=m.el.querySelector('.c-ch'),readout=m.el.querySelector('.c-rd');
+  if(!m.chart&&!m.res){
+   if(m._accountLoading)return;
+   m._accountLoading=true;
+   try{await load(m)}finally{m._accountLoading=false}
+   if(!m.res)return;
+  }
+  if(chart&&!m._accountChartHome){
+   const controls=[m.el.querySelector('.c-tf'),m.el.querySelector('.c-tg')].filter(Boolean);
+   m._accountChartHome={chart,chartParent:chart.parentNode,chartNext:chart.nextSibling,readout,readoutParent:readout&&readout.parentNode,readoutNext:readout&&readout.nextSibling,controls:controls.map(node=>({node,parent:node.parentNode,next:node.nextSibling}))};
+  }
   if(chart){
-   if(!m._accountChartHome){const controls=[m.el.querySelector('.c-tf'),m.el.querySelector('.c-tg')].filter(Boolean);m._accountChartHome={chart,chartParent:chart.parentNode,chartNext:chart.nextSibling,readout,readoutParent:readout&&readout.parentNode,readoutNext:readout&&readout.nextSibling,controls:controls.map(node=>({node,parent:node.parentNode,next:node.nextSibling}))};}
    accountChartSlot.replaceChildren(chart);
-   if(m.el.classList.contains('open'))toggle(m,false);
    if(readout)accountReadoutSlot.replaceChildren(readout);else accountReadoutSlot.replaceChildren();
-   accountChartControls.replaceChildren(...m._accountChartHome.controls.map(x=>x.node));
+   accountChartControls.replaceChildren(...(m._accountChartHome?.controls||[]).map(x=>x.node));
    accountChartTitle.textContent=m.k+' · '+m.name;
+   // Create the chart only after its container has moved into the visible Account workspace.
+   // Opening and closing the source card in the same task prevents an intermediate card expansion.
+   if(!m.chart){toggle(m,true);toggle(m,false);}
    requestAnimationFrame(()=>{if(m.chart){const w=chart.clientWidth,h=chart.clientHeight;if(w&&h)m.chart.resize(w,h);drawDragLevels(m);}});
   }
   drawDesk(m);drawDragLevels(m);
@@ -1586,7 +1589,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  function goDesk(){
   const m=live.find(x=>x.el.classList.contains('open'))||live.find(x=>x._side)||live[0];if(!m)return;
   const writing=live.find(x=>x.el.classList.contains('writing'));if(writing)closeW(writing);
-  showAccountMarket(m);account.classList.add('show');renderAll();
+  account.classList.add('show');showAccountMarket(m);renderAll();
  }
  if(ab){ab.onclick=goDesk;ab.setAttribute('aria-haspopup','dialog');ab.setAttribute('aria-controls','account-modal')}
 
