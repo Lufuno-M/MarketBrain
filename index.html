@@ -1401,7 +1401,9 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   }
  }
  function riskTxt(m){
-  const d=m._d,p=priceOf(m);if(!p)return '';const e=d.type==='market'?p:(+d.entry.value||p),amt=+d.size.value||0,sl=+d.sl.value||0,tp=+d.tp.value||0;
+  const d=m._d,p=priceOf(m),open=paper.positions[m.k];
+  if(open){const rk=open.sl?-pnl(m,open,open.sl):0,rw=open.tp?pnl(m,open,open.tp):0;return `Open ${open.qty>0?'long':'short'} · risk <b>${open.sl?R(rk):'not protected'}</b> · reward <b>${open.tp?R(rw):'not set'}</b>`+(open.sl&&open.tp&&rk>0?` · 1 : ${(rw/rk).toFixed(1)}`:'');}
+  if(!p)return '';const e=d.type==='market'?p:(+d.entry.value||p),amt=+d.size.value||0,sl=+d.sl.value||0,tp=+d.tp.value||0;
   if(!amt)return 'Enter a size.';if(!sl&&!tp)return 'No stop set. Set one and your risk shows here.';
   const dir=sl?(sl<e?1:-1):(tp>e?1:-1),pos={avg:e,qty:dir*amt/(unitUsd(m,e)*ZAR)};
   const rk=sl?-pnl(m,pos,sl):0,rw=tp?pnl(m,pos,tp):0;
@@ -1805,7 +1807,7 @@ ${mbMarketContext()}`;
    <div class="dk-eq" data-eq></div>
    <div class="dk-seg" data-types>${TYPES.map((t,i)=>`<button type="button" data-type="${t[0]}"${i?'':' class="on"'}>${t[1]}</button>`).join('')}</div>
    <label class="dk-f" data-pxrow hidden><span>Entry price</span><input data-entry type="number" inputmode="decimal" min="0" step="any" placeholder="Enter price"><small class="dk-help">Your requested entry level. The order waits here until the market reaches it.</small></label>
-   <label class="dk-f"><span>Trade value · ZAR</span><div class="dk-money-input"><span>R</span><input data-size type="number" inputmode="decimal" min="0" step="any" value="10000" placeholder="Enter trade value"></div><small class="dk-help">Enter the rand value you want to trade. MarketBrain calculates the position size for the selected instrument.</small></label>
+   <label class="dk-f"><span>Trade value · ZAR</span><div class="dk-money-input"><span>R</span><input data-size type="number" inputmode="decimal" min="0" step="any" value="10000" placeholder="Enter trade value"></div><small class="dk-help">Position value in rand. MarketBrain calculates the corresponding units from the current instrument price.</small></label>
    <div class="dk-lv"><label class="dk-f"><span>Stop loss · chart or price</span><input data-sl type="number" inputmode="decimal" min="0" step="any" placeholder="Drag the stop line or enter price"></label><label class="dk-f"><span>Take profit · chart or price</span><input data-tp type="number" inputmode="decimal" min="0" step="any" placeholder="Drag the target line or enter price"></label></div>
    <p class="dk-level-hint">You can drag the stop and target directly on the chart. Exact prices and estimated risk/reward update here.</p>
    <div class="dk-risk" data-risk></div>
