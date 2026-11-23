@@ -468,7 +468,7 @@ button:disabled{cursor:not-allowed;opacity:.48;transform:none!important}
 .dk .fib-actions button:first-child{background:linear-gradient(90deg,#ffd7ea,#fff0a8);border-color:transparent;font-weight:700}
 .dk [data-d="fib-settings"]{font-weight:650}
 
-</style></head><body class="v-cards">
+<style>.mb-price-plus{display:none;position:absolute;right:42px;z-index:14;width:24px;height:24px;transform:translateY(-50%);place-items:center;border:0;border-radius:50%;background:#1a1325;color:#fff;font:600 18px/1 -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 2px 9px #1a132544;cursor:pointer;padding:0}.mb-price-plus:hover,.mb-price-plus:focus-visible{background:#d84d96;outline:2px solid #fff;outline-offset:2px}</style></head><body class="v-cards">
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div><div id="trade-atmosphere" aria-hidden="true"></div>
 <header>
 <h1>MarketBrain</h1>
@@ -1483,6 +1483,12 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  function drawDragLevels(m){
   if(!m||!m.sr||!m.chart)return;
   const host=m.el.querySelector('.c-ch');if(!host)return;
+  let plus=m._pricePlus;
+  if(!plus){plus=document.createElement('button');plus.type='button';plus.className='mb-price-plus';plus.textContent='+';plus.setAttribute('aria-label','Create order at this price');host.appendChild(plus);m._pricePlus=plus;
+   const reveal=e=>{const r=host.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(x>=r.width-82&&x<=r.width&&y>=0&&y<=r.height){const p=m.sr.coordinateToPrice(y);if(p>0){plus.style.top=y+'px';plus.style.display='grid';plus.dataset.price=String(p);}}else plus.style.display='none';};
+   host.addEventListener('pointermove',reveal);host.addEventListener('pointerleave',()=>{plus.style.display='none'});
+   plus.addEventListener('click',e=>{e.preventDefault();const price=+plus.dataset.price;if(!(price>0))return;const d=m._d;d.type='limit';d.entry.value=String(price);d._draft=true;d._draftSide=price<priceOf(m)?'buy':'sell';$('[data-type]',m._side).forEach(b=>b.classList.toggle('on',b.dataset.type==='limit'));$('[data-pxrow]',m._side).hidden=false;const msg=m._side.querySelector('[data-msg]');msg.textContent='';msg.className='dk-msg';drawDesk(m);drawDragLevels(m);m._side.scrollIntoView({behavior:'smooth',block:'nearest'});setTimeout(()=>d.buyK.focus(),250);});
+  }
   let layer=m._dragLayer;
   if(!layer){layer=document.createElement('div');layer.className='mb-level-layer';layer.setAttribute('aria-label','Draggable stop loss and take profit levels');host.appendChild(layer);m._dragLayer=layer;
    layer.addEventListener('pointerdown',e=>{const line=e.target.closest('[data-level]');if(!line)return;e.preventDefault();const key=line.dataset.level;m._dragging={key,line,start:+line.dataset.price};line.setPointerCapture(e.pointerId);});
@@ -1492,7 +1498,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
     if(!valid&&(pos||pending)){line.dataset.price=String(start);const msg=m._side.querySelector('[data-msg]');msg.className='dk-msg bad';msg.textContent=key==='entry'?'Entry price is on the wrong side of the market for this order type.':key==='sl'?'Stop loss must be beyond the entry in the loss direction.':'Take profit must be beyond the entry in the profit direction.';m._d[inputKey].value=String(start);}
     else if(pos){pos[key]=v;persist();m._d[inputKey].value=String(v);}
     else if(pending){pending[key==='entry'?'px':key]=v;persist();m._d[inputKey].value=String(v);}
-    else m._d[inputKey].value=String(v);
+    else {m._d[inputKey].value=String(v);if(m._d._draft){m._d._draftLevels=m._d._draftLevels||{};m._d._draftLevels[key]=v;}}
     m._dragging=null;renderAll();drawDragLevels(m);
    });
    layer.addEventListener('pointercancel',()=>{m._dragging=null;drawDragLevels(m)});
@@ -1501,6 +1507,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   const rows=[];
   if(pos){if(pos.sl)rows.push({key:'sl',price:pos.sl,label:'STOP',color:'stop'});if(pos.tp)rows.push({key:'tp',price:pos.tp,label:'TARGET',color:'target'});}
   else if(pending){rows.push({key:'entry',price:pending.px,label:'ENTRY',color:'entry'});if(pending.sl)rows.push({key:'sl',price:pending.sl,label:'STOP',color:'stop'});if(pending.tp)rows.push({key:'tp',price:pending.tp,label:'TARGET',color:'target'});}
+  else if(m._d&&m._d._draft){const d=m._d,levels=d._draftLevels||{};rows.push({key:'entry',price:+d.entry.value,label:'ENTRY',color:'entry'});if(+d.sl.value||levels.sl)rows.push({key:'sl',price:+d.sl.value||levels.sl,label:'STOP',color:'stop'});if(+d.tp.value||levels.tp)rows.push({key:'tp',price:+d.tp.value||levels.tp,label:'TARGET',color:'target'});}
   
   layer.innerHTML=rows.map(r=>{const y=m.sr.priceToCoordinate(r.price);if(y==null||!isFinite(y))return '';return `<button type="button" class="mb-level-line ${r.color}" data-level="${r.key}" data-price="${r.price}" style="top:${y}px" aria-label="Drag ${r.label} level at ${fmt(r.price)}"><span>${r.label} · ${fmt(r.price)}</span><i></i></button>`}).join('');
  }
@@ -1805,7 +1812,7 @@ ${mbMarketContext()}`;
   side.innerHTML=`<div class="dk-top"><div><span class="dk-sym">${esc(m.k)}</span><span class="dk-name">${esc(m.name)}</span></div><strong class="dk-px" data-px></strong></div>
    <div class="dk-eq" data-eq></div>
    <div class="dk-seg" data-types>${TYPES.map((t,i)=>`<button type="button" data-type="${t[0]}"${i?'':' class="on"'}>${t[1]}</button>`).join('')}</div>
-   <label class="dk-f" data-pxrow hidden><span>Entry price</span><input data-entry type="number" inputmode="decimal" min="0" step="any" placeholder="Set entry price"><small class="dk-help">Required for Limit and Stop orders.</small></label>
+   <label class="dk-f" data-pxrow hidden><span>Entry price</span><input data-entry type="number" inputmode="decimal" min="0" step="any" placeholder="Price"></label>
    <label class="dk-f"><span>Trade value · ZAR</span><div class="dk-money-input"><span>R</span><input data-size type="number" inputmode="decimal" min="0" step="any" value="10000" placeholder="Enter trade value"></div></label>
    <div class="dk-lv"><label class="dk-f"><span>Stop loss (optional)</span><input data-sl type="number" inputmode="decimal" min="0" step="any" placeholder="Price"></label><label class="dk-f"><span>Take profit (optional)</span><input data-tp type="number" inputmode="decimal" min="0" step="any" placeholder="Price"></label></div>
    <div class="dk-risk" data-risk></div>
@@ -1821,6 +1828,7 @@ ${mbMarketContext()}`;
   [d.entry,d.size,d.sl,d.tp].forEach(i=>i.addEventListener('input',sync));
   $$('[data-side]',side).forEach(b=>b.onclick=()=>{
    const sd=b.dataset.side,amt=+d.size.value,sl=+d.sl.value||null,tp=+d.tp.value||null;
+   if(d._draft){const ep=+d.entry.value,p=priceOf(m);d.type=(sd==='buy'?(ep<p?'limit':'stop'):(ep>p?'limit':'stop'));}
    const err=d.type==='market'?place(m,sd,amt,sl,tp):queue(m,d.type,sd,+d.entry.value,amt,sl,tp);
    msg.classList.toggle('bad',!!err);msg.classList.toggle('success',!err);
    if(err){msg.textContent=err;}
@@ -1831,7 +1839,7 @@ ${mbMarketContext()}`;
     const price=d.type==='market'?fmt(priceOf(m)):fmt(+d.entry.value);
     const storage=lastPersistOK?'Saved on this device in this browser.':'Browser storage is unavailable; this action may not survive a refresh.';
     msg.innerHTML=`<div class="dk-confirm"><span class="dk-confirm-mark" aria-hidden="true">✓</span><div><strong>${action}</strong><span>${esc(cap(sd))} · ${esc(m.k)} · ${esc(R(amt))}</span><span>${d.type==='market'?'Fill':'Entry'} price · ${esc(price)}</span><small>Reference · ${esc(reference)}</small><small>${esc(storage)}</small></div></div>`;
-    buzz([30,40,30]);d.sl.value='';d.tp.value='';d.tab=d.type==='market'?'pos':'ord';
+    buzz([30,40,30]);d.sl.value='';d.tp.value='';d._draft=false;d._draftLevels=null;d.tab=d.type==='market'?'pos':'ord';
    }
    renderAll();
   });
