@@ -1484,7 +1484,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   let layer=m._dragLayer;
   if(!layer){layer=document.createElement('div');layer.className='mb-level-layer';layer.setAttribute('aria-label','Draggable stop loss and take profit levels');host.appendChild(layer);m._dragLayer=layer;
    layer.addEventListener('pointerdown',e=>{const line=e.target.closest('[data-level]');if(!line)return;e.preventDefault();const key=line.dataset.level;m._dragging={key,line,start:+line.dataset.price};line.setPointerCapture(e.pointerId);});
-   layer.addEventListener('pointermove',e=>{if(!m._dragging)return;const rect=layer.getBoundingClientRect(),y=e.clientY-rect.top,price=m.sr.coordinateToPrice(y);if(!(price>0))return;const v=+price;const line=m._dragging.line;line.dataset.price=String(v);line.style.top=y+'px';line.querySelector('span').textContent=(m._dragging.key==='sl'?'STOP · ':'TARGET · ')+fmt(v);const d=m._d;if(m._dragging.key==='sl')d.sl.value=String(v);else if(m._dragging.key==='tp')d.tp.value=String(v);else if(m._dragging.key==='entry')d.entry.value=String(v);d.risk.innerHTML=riskTxt(m);});
+   layer.addEventListener('pointermove',e=>{if(!m._dragging)return;const rect=layer.getBoundingClientRect(),y=e.clientY-rect.top,price=m.sr.coordinateToPrice(y);if(!(price>0))return;const v=+price;const line=m._dragging.line;line.dataset.price=String(v);line.style.top=y+'px';line.querySelector('span').textContent=(m._dragging.key==='sl'?'STOP · ':m._dragging.key==='entry'?'ENTRY · ':'TARGET · ')+fmt(v);const d=m._d;if(m._dragging.key==='sl')d.sl.value=String(v);else if(m._dragging.key==='tp')d.tp.value=String(v);else if(m._dragging.key==='entry')d.entry.value=String(v);d.risk.innerHTML=riskTxt(m);});
    layer.addEventListener('pointerup',()=>{if(!m._dragging)return;const {key,line,start}=m._dragging,v=+line.dataset.price;const pos=paper.positions[m.k],pending=paper.pending.find(o=>o.k===m.k);let ref=pos?pos.avg:pending?pending.px:(m._d.type==='market'?priceOf(m):(+m._d.entry.value||priceOf(m)));let isLong=pos?pos.qty>0:pending?pending.side==='buy':true;const valid=key==='entry'&&pending?(pending.type==='limit'?(pending.side==='buy'?v<priceOf(m):v>priceOf(m)):(pending.side==='buy'?v>priceOf(m):v<priceOf(m))):key==='sl'?(isLong?v<ref:v>ref):(isLong?v>ref:v<ref);
     const inputKey=key==='entry'?'entry':key;
     if(!valid&&(pos||pending)){line.dataset.price=String(start);const msg=m._side.querySelector('[data-msg]');msg.className='dk-msg bad';msg.textContent=key==='entry'?'Entry price is on the wrong side of the market for this order type.':key==='sl'?'Stop loss must be beyond the entry in the loss direction.':'Take profit must be beyond the entry in the profit direction.';m._d[inputKey].value=String(start);}
@@ -1528,6 +1528,11 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  }
  function showAccountMarket(m){
   if(!m||!m._side)return;
+  if(!m.chart){
+   if(!m.el.classList.contains('open'))toggle(m,true);
+   if(!m.res){load(m).then(()=>{if(!m.chart)toggle(m,true);showAccountMarket(m)});return;}
+   if(!m.chart)toggle(m,true);
+  }
   const previous=mOf(accountMarket.value);if(previous&&previous!==m)restoreAccountChart(previous);
   accountMarket.value=m.k;accountSlot.replaceChildren(m._side);
   const chart=m.el.querySelector('.c-ch'),readout=m.el.querySelector('.c-rd');
