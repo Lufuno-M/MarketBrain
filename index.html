@@ -1190,11 +1190,11 @@ function draw(m){
  if(m.show.gap&&m.res.near){pl(m.res.near.hi,'gap top','#8b5cf6');pl(m.res.near.lo,'gap bottom','#8b5cf6');}
  if(m.show.fib&&m.res.fib){for(const r of fibLevels())pl(m.res.fib.lvl(r),fibLabel(r)+fibMeaning(r),'#e0408f');}
 }
-function jrender(m){
+function jrender(m,updateMarkers=true){
  const L=m.el.querySelector('.el'),es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)||b.at-a.at);
  const tx=s=>{const d=document.createElement('div');d.textContent=s;return d.innerHTML};
  L.innerHTML=es.map(e=>`<div class="en${e.date===m.sel?' sel':''}" data-id="${e.id}"><p class="d">${nice(e.date)}${m.days&&!m.days.has(e.date)?' · outside this chart':''}${e.edited?' · edited':''}</p><p class="t">${tx(e.text)}</p><div class="tf"><button class="chip" data-a="edit">Edit</button><button class="chip" data-a="del">Delete</button></div></div>`).join('');
- if(m.sr&&m.days){const R=m.res,sw=R&&m.show.fib?[R.sh&&{time:m.c[R.sh.i].t/1000,position:'aboveBar',color:'#6f6479',shape:'arrowDown',text:'swing high'},R.sl&&{time:m.c[R.sl.i].t/1000,position:'belowBar',color:'#6f6479',shape:'arrowUp',text:'swing low'}].filter(Boolean):[];
+ if(updateMarkers&&m.sr&&m.days){const R=m.res,down=!!(R&&R.fib&&R.fib.down),sw=R&&m.show.fib?[R.sh&&{time:m.c[R.sh.i].t/1000,position:'aboveBar',color:'#6f6479',shape:'arrowDown',text:down?'SL':'TP'},R.sl&&{time:m.c[R.sl.i].t/1000,position:'belowBar',color:'#6f6479',shape:'arrowUp',text:down?'TP':'SL'}].filter(Boolean):[];
   const jm=es.filter(e=>m.days.has(e.date)).map(e=>({time:m.days.get(e.date),position:'belowBar',color:'#ff5fa8',shape:'circle'})).sort((a,b)=>a.time-b.time).filter((x,i,a)=>!i||x.time!==a[i-1].time);
   m.sr.setMarkers(jm.concat(sw).sort((a,b)=>a.time-b.time))}
 }
@@ -1225,7 +1225,7 @@ function toggle(m,force){
   m.show_=b=>{if(!b)return;const t=b.t||b.time*1000,o=b.o??b.open,h=b.h??b.high,l=b.l??b.low,c=b.c??b.close,Z=m.c[m.c.length-1].c;rd.innerHTML=`<b>${m.tf===1440?nice(day(t/1000)):ny(t)}</b> · open ${fmt(o)} · high ${fmt(h)} · low ${fmt(l)} · close ${fmt(c)} · body ${c>=o?'up':'down'} ${dst(m,c-o)} · range ${dst(m,h-l)} · ${same(Z,c)?'this is the latest close':'close is '+dst(m,Z-c)+(c<Z?' below':' above')+' the latest close'}`};
   m.chart.subscribeCrosshairMove(p=>{const b=p.time&&p.seriesData.get(m.sr);m.show_(b||m.c[m.c.length-1])});
   MB.attach(m);
-  m.chart.subscribeClick(p=>{if(!p.time)return;m.sel=day(p.time);m.el.querySelector('input[type=date]').value=m.sel;jrender(m)});
+  m.chart.subscribeClick(p=>{if(!p.time)return;m.sel=day(p.time);m.el.querySelector('input[type=date]').value=m.sel;jrender(m,false)});
   paint(m);
  }
 }
@@ -1482,10 +1482,10 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
 
  function drawDragLevels(m){
   if(!m||!m.sr||!m.chart)return;
-  const host=m.el.querySelector('.c-ch');if(!host)return;
+  const host=m._accountChartHome&&m._accountChartHome.chart?m._accountChartHome.chart:m.el.querySelector('.c-ch');if(!host)return;
   let plus=m._pricePlus;
   if(!plus){plus=document.createElement('button');plus.type='button';plus.className='mb-price-plus';plus.textContent='+';plus.setAttribute('aria-label','Create order at this price');host.appendChild(plus);m._pricePlus=plus;
-   const reveal=e=>{const r=host.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;if(x>=r.width-82&&x<=r.width&&y>=0&&y<=r.height){const p=m.sr.coordinateToPrice(y);if(p>0){plus.style.top=y+'px';plus.style.display='grid';plus.dataset.price=String(p);}}else plus.style.display='none';};
+   const reveal=e=>{const r=host.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,axisWidth=m.chart.priceScale('right').width()||56;if(x>=r.width-axisWidth-10&&x<=r.width&&y>=0&&y<=r.height){const p=m.sr.coordinateToPrice(y);if(p>0){plus.style.top=y+'px';plus.style.right=Math.max(4,axisWidth/2-12)+'px';plus.style.display='grid';plus.dataset.price=String(p);}}else plus.style.display='none';};
    host.addEventListener('pointermove',reveal);host.addEventListener('pointerleave',()=>{plus.style.display='none'});
    plus.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const price=+plus.dataset.price;if(!(price>0))return;const d=m._d;d.type='limit';d.entry.value=String(price);d._draft=true;d._draftSide=price<priceOf(m)?'buy':'sell';const y=m.sr.priceToCoordinate(price),sg=d._draftSide==='buy'?1:-1,slp=m.sr.coordinateToPrice(y+sg*55),tpp=m.sr.coordinateToPrice(y-sg*85);d._draftLevels={entry:price,sl:slp>0?slp:null,tp:tpp>0?tpp:null};d.sl.value=slp>0?String(slp):'';d.tp.value=tpp>0?String(tpp):'';$('[data-type]',m._side).forEach(b=>b.classList.toggle('on',b.dataset.type==='limit'));$('[data-pxrow]',m._side).hidden=false;const msg=m._side.querySelector('[data-msg]');msg.textContent='';msg.className='dk-msg';drawDesk(m);drawDragLevels(m);m._side.scrollIntoView({behavior:'smooth',block:'nearest'});setTimeout(()=>d.buyK.focus(),250);});
   }
@@ -2217,7 +2217,7 @@ body.v-cards .m.open .p>div>.c-ch{height:clamp(440px,66vh,760px);min-height:400p
 .dk-level-hint{font-size:12px;line-height:1.45;color:var(--mb-muted);margin:-4px 0 0}
 .dk-lv{gap:8px!important}
 .dk-lv .dk-f>span{font-size:12px!important;line-height:1.35}
-.dk-lv input{font-size:14px!important;padding:10px!important;min-height:44px!important}
+.dk-lv input{font-size:14px!important;padding:10px!important;min-height:44px!important}.dk-lv input[type=number]{appearance:textfield;-moz-appearance:textfield}.dk-lv input[type=number]::-webkit-inner-spin-button,.dk-lv input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .dk-q{display:none!important}
 .mb-level-layer{position:absolute;inset:0;z-index:12;pointer-events:none;overflow:hidden}
 .mb-level-line{position:absolute;left:0;right:0;width:100%;height:0;padding:0;border:0;background:transparent;pointer-events:none;cursor:ns-resize;touch-action:none}
