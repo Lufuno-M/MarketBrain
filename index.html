@@ -462,9 +462,7 @@ button:disabled{cursor:not-allowed;opacity:.48;transform:none!important}
 #mb-settings-actions button{white-space:nowrap}
 #mb-storage-info{grid-column:1/-1;grid-row:2;order:initial!important;flex:initial!important;width:100%;max-width:none;margin:0!important}
 @media(max-width:600px){#mb-settings{grid-template-columns:1fr;gap:10px}#mb-settings>span,#mb-settings-actions,#mb-storage-info{grid-column:1;grid-row:auto}#mb-settings-actions{justify-content:flex-start;flex-wrap:wrap}}
-/* Return the wordmark to a quiet, solid black. */
-header h1{color:#111!important;background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;filter:none!important;animation:none!important;text-shadow:none!important}
-header h1::after{display:none!important}
+/* Keep the original reflective silver wordmark and its soft light line. */
 
 
 /* Fibonacci levels: configurable chart-native controls and saved presets. */
@@ -481,8 +479,7 @@ header h1::after{display:none!important}
 .dk [data-d="fib-settings"]{font-weight:650}
 
 <style>.mb-price-plus{display:none;position:fixed;z-index:9999;width:24px;height:24px;transform:none;place-items:center;border:0;border-radius:50%;background:#1a1325;color:#fff;font:600 18px/1 -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 2px 9px #1a132544;cursor:pointer;padding:0}.mb-price-plus:hover,.mb-price-plus:focus-visible{background:#d84d96;outline:2px solid #fff;outline-offset:2px}
-/* The changing line beneath the wordmark is copy, not a decorative underline. */
-header h1::after{display:none!important}
+/* Supporting copy remains separate from the reflective wordmark. */
 header p#tagline{color:#000!important}
 </style></head><body class="v-cards">
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div><div id="trade-atmosphere" aria-hidden="true"></div>
