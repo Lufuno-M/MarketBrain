@@ -480,7 +480,7 @@ header h1::after{display:none!important}
 .dk .fib-actions button:first-child{background:linear-gradient(90deg,#ffd7ea,#fff0a8);border-color:transparent;font-weight:700}
 .dk [data-d="fib-settings"]{font-weight:650}
 
-<style>.mb-price-plus{display:none;position:absolute;right:42px;z-index:14;width:24px;height:24px;transform:translateY(-50%);place-items:center;border:0;border-radius:50%;background:#1a1325;color:#fff;font:600 18px/1 -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 2px 9px #1a132544;cursor:pointer;padding:0}.mb-price-plus:hover,.mb-price-plus:focus-visible{background:#d84d96;outline:2px solid #fff;outline-offset:2px}</style></head><body class="v-cards">
+<style>.mb-price-plus{display:none;position:fixed;z-index:9999;width:24px;height:24px;transform:none;place-items:center;border:0;border-radius:50%;background:#1a1325;color:#fff;font:600 18px/1 -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 2px 9px #1a132544;cursor:pointer;padding:0}.mb-price-plus:hover,.mb-price-plus:focus-visible{background:#d84d96;outline:2px solid #fff;outline-offset:2px}</style></head><body class="v-cards">
 <div class="sky"><i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i></div><div id="lamp"></div><div id="trade-atmosphere" aria-hidden="true"></div>
 <header>
 <h1>MarketBrain</h1>
@@ -1494,12 +1494,14 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
 
  function drawDragLevels(m){
   if(!m||!m.sr||!m.chart)return;
-  const host=m.el.querySelector('.ch');if(!host)return;host.style.position='relative';
+  const host=m.el.querySelector('.ch');if(!host)return;
   let plus=m._pricePlus;
-  if(!plus){plus=document.createElement('button');plus.type='button';plus.className='mb-price-plus';plus.textContent='+';plus.setAttribute('aria-label','Create order at this price');host.appendChild(plus);m._pricePlus=plus;
-   plus.style.zIndex='99';plus.style.pointerEvents='auto';
-   const reveal=e=>{const r=host.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,axisWidth=m.chart.priceScale('right').width()||64;if(x>=r.width-axisWidth-18&&x<=r.width&&y>=0&&y<=r.height){const p=m.sr.coordinateToPrice(y);if(p>0){plus.style.top=y+'px';plus.style.right=Math.max(2,axisWidth/2-12)+'px';plus.style.display='grid';plus.dataset.price=String(p);}}else plus.style.display='none';};
-   host.addEventListener('pointermove',reveal);host.addEventListener('mousemove',reveal);host.addEventListener('pointerleave',()=>{plus.style.display='none'});
+  if(!plus){plus=document.createElement('button');plus.type='button';plus.className='mb-price-plus';plus.textContent='+';plus.setAttribute('aria-label','Create order at this price');document.body.appendChild(plus);m._pricePlus=plus;
+   plus.style.position='fixed';plus.style.zIndex='9999';plus.style.pointerEvents='auto';
+   const hide=()=>{plus.style.display='none'};
+   const reveal=e=>{const r=host.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let axisWidth=64;try{axisWidth=m.chart.priceScale('right').width()||64}catch(_){}if(x>=r.width-axisWidth-22&&x<=r.width+2&&y>=0&&y<=r.height){const p=m.sr.coordinateToPrice(y);if(p>0){plus.style.left=Math.max(0,Math.min(innerWidth-28,e.clientX-axisWidth/2-12))+'px';plus.style.top=Math.max(0,Math.min(innerHeight-28,e.clientY-12))+'px';plus.style.display='grid';plus.dataset.price=String(p);}}else hide();};
+   host.addEventListener('pointermove',reveal);host.addEventListener('mousemove',reveal);host.addEventListener('pointerleave',e=>{if(e.relatedTarget!==plus)hide()});
+   plus.addEventListener('pointerleave',hide);
    plus.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const price=+plus.dataset.price;if(!(price>0))return;const d=m._d;d.type='limit';d.entry.value=String(price);d._draft=true;d._draftSide=price<priceOf(m)?'buy':'sell';const y=m.sr.priceToCoordinate(price),sg=d._draftSide==='buy'?1:-1,slp=m.sr.coordinateToPrice(y+sg*55),tpp=m.sr.coordinateToPrice(y-sg*85);d._draftLevels={entry:price,sl:slp>0?slp:null,tp:tpp>0?tpp:null};d.sl.value=slp>0?String(slp):'';d.tp.value=tpp>0?String(tpp):'';$('[data-type]',m._side).forEach(b=>b.classList.toggle('on',b.dataset.type==='limit'));$('[data-pxrow]',m._side).hidden=false;const msg=m._side.querySelector('[data-msg]');msg.textContent='';msg.className='dk-msg';drawDesk(m);drawDragLevels(m);m._side.scrollIntoView({behavior:'smooth',block:'nearest'});setTimeout(()=>d.buyK.focus(),250);});
   }
   let layer=m._dragLayer;
@@ -1550,9 +1552,12 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  function showAccountMarket(m){
   if(!m||!m._side)return;
   if(!m.chart){
+   const priorVisibility=m.el.style.visibility;
+   m.el.style.visibility='hidden';
    if(!m.el.classList.contains('open'))toggle(m,true);
-   if(!m.res){load(m).then(()=>{if(!m.chart)toggle(m,true);showAccountMarket(m)});return;}
+   if(!m.res){load(m).then(()=>{if(!m.chart)toggle(m,true);showAccountMarket(m)}).finally(()=>{m.el.style.visibility=priorVisibility});return;}
    if(!m.chart)toggle(m,true);
+   m.el.style.visibility=priorVisibility;
   }
   const previous=mOf(accountMarket.value);if(previous&&previous!==m)restoreAccountChart(previous);
   accountMarket.value=m.k;accountSlot.replaceChildren(m._side);
