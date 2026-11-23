@@ -1510,7 +1510,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  account.innerHTML=`<div class="account-panel" role="dialog" aria-modal="true" aria-labelledby="account-title">
   <div class="account-head"><div><span class="account-kicker">PAPER TRADING · SIMULATED</span><h2 id="account-title">Account</h2><p>Your practice account, kept separate from any broker.</p></div><button type="button" class="account-close" aria-label="Close account">×</button></div>
   <div class="account-summary" id="account-summary"></div>
-  <label class="account-market-label">Instrument<select id="account-market"></select></label>
+  <div class="account-market-field"><label for="account-market">INSTRUMENT</label><div class="account-market-select"><select id="account-market" aria-label="Choose instrument"></select><span aria-hidden="true">⌄</span></div></div>
   <div class="account-workspace">
    <section class="account-chart-column"><div class="account-chart-title"><strong data-account-chart-title>Chart</strong><span>Drag STOP and TARGET levels to adjust protection.</span></div><div id="account-chart-controls"></div><div id="account-chart-slot"></div><div id="account-readout-slot"></div></section>
    <aside class="account-order-column"><div id="account-desk-slot"></div></aside>
@@ -2228,6 +2228,56 @@ body.v-cards .m.open .p>div>.c-ch{height:clamp(440px,66vh,760px);min-height:400p
 #account-chart-controls>.tf,#account-chart-controls>.tg{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:0!important}
 #account-chart-controls button{min-height:34px;padding:7px 11px;border-radius:9px;font-size:12px}
 #account-chart-controls .on{background:#f7eaf1;border-color:#e8bfd3;color:#8c315f}
+
+/* Account instrument selector and responsive terminal refinements */
+.account-market-field{display:flex;align-items:center;gap:14px;max-width:440px;margin:14px 0 8px;padding:11px 14px;border:1px solid #e8e1e9;border-radius:14px;background:linear-gradient(180deg,#fff,#fcfafc)}
+.account-market-field>label{flex:0 0 auto;font-size:10px;font-weight:800;letter-spacing:.12em;color:#817786}
+.account-market-select{position:relative;flex:1;min-width:0}
+.account-market-select select{display:block;width:100%;min-width:0;appearance:none;-webkit-appearance:none;border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;color:#28212e!important;font:600 14px/1.35 inherit!important;padding:4px 30px 4px 0!important;margin:0!important;cursor:pointer}
+.account-market-select select:focus-visible{outline:2px solid #d65a9b!important;outline-offset:4px!important;border-radius:5px}
+.account-market-select>span{position:absolute;right:2px;top:50%;transform:translateY(-55%);font-size:20px;line-height:1;color:#8a7d90;pointer-events:none}
+.account-panel{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.account-workspace,.account-chart-column,.account-order-column{min-width:0}
+#account-chart-slot>.c-ch{touch-action:pan-y}
+.mb-level-line,.mb-level-line i,.mb-level-line span{touch-action:none}
+@media(max-width:1000px){
+ .account-panel{width:min(94vw,900px)!important}
+ .account-workspace{grid-template-columns:minmax(0,1fr)!important;gap:12px}
+ .account-chart-column{order:0}
+ .account-order-column{order:1}
+ #account-chart-slot>.c-ch{height:clamp(300px,44svh,470px)!important;min-height:280px!important}
+ #account-desk-slot>.c-side{padding:14px!important}
+}
+@media(max-width:640px){
+ #account-modal{padding:0!important;align-items:stretch!important}
+ .account-panel{width:100%!important;max-width:none!important;height:100svh!important;max-height:100svh!important;min-height:0!important;border-radius:0!important;padding: max(12px,env(safe-area-inset-top)) 12px max(16px,env(safe-area-inset-bottom))!important;overflow-y:auto!important}
+ .account-head{position:sticky;top:calc(-1 * max(12px,env(safe-area-inset-top)));z-index:30;padding:10px 0 12px;background:#fff}
+ .account-head h2{font-size:22px!important}
+ .account-head p{font-size:12px!important;margin:3px 0 0!important}
+ .account-summary{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;margin:8px 0!important}
+ .account-market-field{max-width:none;width:100%;margin:10px 0 8px;padding:10px 12px}
+ .account-market-select select{font-size:16px!important;min-height:28px!important}
+ .account-chart-column{padding:9px!important;border-radius:13px!important}
+ .account-chart-title{gap:4px!important;margin-bottom:8px!important}
+ .account-chart-title strong{font-size:15px!important}
+ .account-chart-title span{font-size:10px!important;line-height:1.35}
+ #account-chart-controls{gap:5px!important;margin-bottom:7px!important}
+ #account-chart-controls button{min-height:38px!important;padding:7px 9px!important;font-size:12px!important}
+ #account-chart-slot>.c-ch{height: min(43svh,390px)!important;min-height:260px!important}
+ #account-readout-slot>.c-rd{font-size:11px!important;padding:8px!important}
+ .account-order-column #account-desk-slot>.c-side{padding:12px!important;border-radius:13px!important}
+ .account-order-column .dk-keys{gap:8px!important}
+ .account-order-column .dk-keys button{min-height:52px!important}
+ .account-order-column .dk-book{max-height:240px!important}
+ .dk-lv{grid-template-columns:minmax(0,1fr)!important}
+ .account-foot{font-size:10px!important;line-height:1.45}
+}
+@media(max-width:380px){
+ .account-panel{padding-left:9px!important;padding-right:9px!important}
+ .account-summary{grid-template-columns:1fr 1fr!important}
+ #account-chart-slot>.c-ch{height:270px!important}
+}
+
 </style>
 
 <script>
