@@ -1477,6 +1477,30 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   if(pos){pl(pos.avg,(pos.qty<0?'short':'long')+' entry','#1a1325',0);pl(pos.sl,'stop','#df6b73',2);pl(pos.tp,'target','#45b889',2)}
   pe.forEach(o=>{pl(o.px,o.side+' '+o.type,'#8b5cf6',1);pl(o.sl,'stop','#df6b73',3);pl(o.tp,'target','#45b889',3)});
  }
+
+ function drawDragLevels(m){
+  if(!m||!m.sr||!m.chart)return;
+  const host=m.el.querySelector('.c-ch');if(!host)return;
+  let layer=m._dragLayer;
+  if(!layer){layer=document.createElement('div');layer.className='mb-level-layer';layer.setAttribute('aria-label','Draggable stop loss and take profit levels');host.appendChild(layer);m._dragLayer=layer;
+   layer.addEventListener('pointerdown',e=>{const line=e.target.closest('[data-level]');if(!line)return;e.preventDefault();const key=line.dataset.level;m._dragging={key,line,start:+line.dataset.price};line.setPointerCapture(e.pointerId);});
+   layer.addEventListener('pointermove',e=>{if(!m._dragging)return;const rect=layer.getBoundingClientRect(),y=e.clientY-rect.top,price=m.sr.coordinateToPrice(y);if(!(price>0))return;const v=+price;const line=m._dragging.line;line.dataset.price=String(v);line.style.top=y+'px';line.querySelector('span').textContent=(m._dragging.key==='sl'?'STOP · ':'TARGET · ')+fmt(v);const d=m._d;if(m._dragging.key==='sl')d.sl.value=String(v);else if(m._dragging.key==='tp')d.tp.value=String(v);d.risk.innerHTML=riskTxt(m);});
+   layer.addEventListener('pointerup',()=>{if(!m._dragging)return;const {key,line,start}=m._dragging,v=+line.dataset.price;const pos=paper.positions[m.k],pending=paper.pending.find(o=>o.k===m.k);let ref=pos?pos.avg:pending?pending.px:(m._d.type==='market'?priceOf(m):(+m._d.entry.value||priceOf(m)));let isLong=pos?pos.qty>0:pending?pending.side==='buy':true;const valid=key==='sl'?(isLong?v<ref:v>ref):(isLong?v>ref:v<ref);
+    if(!valid&&(pos||pending)){line.dataset.price=String(start);const msg=m._side.querySelector('[data-msg]');msg.className='dk-msg bad';msg.textContent=key==='sl'?'Stop loss must be beyond the entry in the loss direction.':'Take profit must be beyond the entry in the profit direction.';m._d[key].value=String(start);}
+    else if(pos){pos[key]=v;persist();m._d[key].value=String(v);}
+    else if(pending){pending[key]=v;persist();m._d[key].value=String(v);}
+    else m._d[key].value=String(v);
+    m._dragging=null;renderAll();drawDragLevels(m);
+   });
+   layer.addEventListener('pointercancel',()=>{m._dragging=null;drawDragLevels(m)});
+  }
+  const pos=paper.positions[m.k],pending=paper.pending.find(o=>o.k===m.k);
+  const rows=[];
+  if(pos){if(pos.sl)rows.push({key:'sl',price:pos.sl,label:'STOP',color:'stop'});if(pos.tp)rows.push({key:'tp',price:pos.tp,label:'TARGET',color:'target'});}
+  else if(pending){rows.push({key:'entry',price:pending.px,label:'ENTRY',color:'entry'});if(pending.sl)rows.push({key:'sl',price:pending.sl,label:'STOP',color:'stop'});if(pending.tp)rows.push({key:'tp',price:pending.tp,label:'TARGET',color:'target'});}
+  else{const sl=+m._d.sl.value,tp=+m._d.tp.value;if(sl)rows.push({key:'sl',price:sl,label:'STOP',color:'stop'});if(tp)rows.push({key:'tp',price:tp,label:'TARGET',color:'target'});}
+  layer.innerHTML=rows.map(r=>{const y=m.sr.priceToCoordinate(r.price);if(y==null||!isFinite(y))return '';return `<button type="button" class="mb-level-line ${r.color}" data-level="${r.key}" data-price="${r.price}" style="top:${y}px" aria-label="Drag ${r.label} level at ${fmt(r.price)}"><span>${r.label} · ${fmt(r.price)}</span><i></i></button>`}).join('');
+ }
  const ab=$('#demoopen');
  const account=document.createElement('div');
  account.id='account-modal';
@@ -1484,21 +1508,41 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   <div class="account-head"><div><span class="account-kicker">PAPER TRADING · SIMULATED</span><h2 id="account-title">Account</h2><p>Your practice account, kept separate from any broker.</p></div><button type="button" class="account-close" aria-label="Close account">×</button></div>
   <div class="account-summary" id="account-summary"></div>
   <label class="account-market-label">Instrument<select id="account-market"></select></label>
-  <div id="account-desk-slot"></div>
+  <div class="account-workspace">
+   <section class="account-chart-column"><div class="account-chart-title"><strong data-account-chart-title>Chart</strong><span>Drag STOP and TARGET levels to adjust protection.</span></div><div id="account-chart-slot"></div><div id="account-readout-slot"></div></section>
+   <aside class="account-order-column"><div id="account-desk-slot"></div></aside>
+  </div>
   <p class="account-foot">Demo orders use simulated funds only. Orders, positions and balance are saved in this browser on this device (local storage); they are not synced to an account or sent to a broker. Clearing browser data can remove them. USD conversion uses a fixed R18.00 assumption, not a live exchange rate.</p>
  </div>`;
  document.body.appendChild(account);
- const accountSlot=$('#account-desk-slot',account),accountMarket=$('#account-market',account),accountSummary=$('#account-summary',account);
+ const accountSlot=$('#account-desk-slot',account),accountMarket=$('#account-market',account),accountSummary=$('#account-summary',account),accountChartSlot=$('#account-chart-slot',account),accountReadoutSlot=$('#account-readout-slot',account),accountChartTitle=$('[data-account-chart-title]',account);
  accountMarket.innerHTML=live.map(m=>`<option value="${esc(m.k)}">${esc(m.k)} · ${esc(m.name)}</option>`).join('');
- function showAccountMarket(m){if(!m||!m._side)return;accountMarket.value=m.k;accountSlot.replaceChildren(m._side);drawDesk(m)}
+ function restoreAccountChart(m){
+  if(!m||!m._accountChartHome)return;
+  const h=m._accountChartHome;
+  if(h.chart&&h.chartParent){h.chartParent.insertBefore(h.chart,h.chartNext&&h.chartNext.parentNode===h.chartParent?h.chartNext:null)}
+  if(h.readout&&h.readoutParent){h.readoutParent.insertBefore(h.readout,h.readoutNext&&h.readoutNext.parentNode===h.readoutParent?h.readoutNext:null)}
+  m._accountChartHome=null;
+ }
+ function showAccountMarket(m){
+  if(!m||!m._side)return;
+  const previous=mOf(accountMarket.value);if(previous&&previous!==m)restoreAccountChart(previous);
+  accountMarket.value=m.k;accountSlot.replaceChildren(m._side);
+  const chart=m.el.querySelector('.c-ch'),readout=m.el.querySelector('.c-rd');
+  if(chart){
+   if(!m._accountChartHome)m._accountChartHome={chart,chartParent:chart.parentNode,chartNext:chart.nextSibling,readout,readoutParent:readout&&readout.parentNode,readoutNext:readout&&readout.nextSibling};
+   accountChartSlot.replaceChildren(chart);
+   if(readout)accountReadoutSlot.replaceChildren(readout);else accountReadoutSlot.replaceChildren();
+   accountChartTitle.textContent=m.k+' · '+m.name;
+   requestAnimationFrame(()=>{if(m.chart){const w=chart.clientWidth,h=chart.clientHeight;if(w&&h)m.chart.resize(w,h);m.chart.timeScale().fitContent();}});
+  }
+  drawDesk(m);drawDragLevels(m);
+ }
  accountMarket.onchange=()=>showAccountMarket(mOf(accountMarket.value));
  const closeAccount=()=>{
   account.classList.remove('show');
   const selected=mOf(accountMarket.value);
-  if(selected&&selected._side&&selected._panel){
-   const anchor=selected._panel.querySelector('.c-rd')||selected._panel.querySelector('.c-ch');
-   if(anchor)anchor.insertAdjacentElement('afterend',selected._side);
-  }
+  if(selected){restoreAccountChart(selected);if(selected._side&&selected._panel){const anchor=selected._panel.querySelector('.c-rd')||selected._panel.querySelector('.c-ch');if(anchor)anchor.insertAdjacentElement('afterend',selected._side);}}
  };
  $('.account-close',account).onclick=closeAccount;
  account.addEventListener('click',e=>{if(e.target===account)closeAccount()});
@@ -1513,7 +1557,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  function renderAll(){
   levels();let amb='';
   for(const m of live){
-   if(!m._d)continue;drawDesk(m);drawTL(m);invite(m);
+   if(!m._d)continue;drawDesk(m);drawTL(m);drawDragLevels(m);invite(m);
    const pos=paper.positions[m.k],p=priceOf(m);
    if(pos&&p&&m.el.classList.contains('open')){
     const pl=pnl(m,pos,p),tw=l=>{const sp=l-pos.avg;return sp?(p-pos.avg)/sp:0};
@@ -1752,9 +1796,9 @@ ${mbMarketContext()}`;
    <div class="dk-eq" data-eq></div>
    <div class="dk-seg" data-types>${TYPES.map((t,i)=>`<button type="button" data-type="${t[0]}"${i?'':' class="on"'}>${t[1]}</button>`).join('')}</div>
    <label class="dk-f" data-pxrow hidden><span>Entry price</span><input data-entry type="number" inputmode="decimal" min="0" step="any" placeholder="Enter price"><small class="dk-help">Your requested entry level. The order waits here until the market reaches it.</small></label>
-   <label class="dk-f"><span>Order value · ZAR</span><input data-size type="number" inputmode="decimal" min="0" step="any" value="10000" placeholder="e.g. 10000"><small class="dk-help">Amount in rand, not lots or units. Choose a quick amount below or type your own.</small></label>
-   <div class="dk-q">${[1000,5000,10000,25000].map(a=>`<button type="button" data-amt="${a}">R${a/1000}k</button>`).join('')}</div>
-   <div class="dk-lv"><label class="dk-f"><span>Stop loss · price</span><input data-sl type="number" inputmode="decimal" min="0" step="any" placeholder="Optional stop price"></label><label class="dk-f"><span>Take profit · price</span><input data-tp type="number" inputmode="decimal" min="0" step="any" placeholder="Optional target price"></label></div>
+   <label class="dk-f"><span>Trade value · ZAR</span><div class="dk-money-input"><span>R</span><input data-size type="number" inputmode="decimal" min="0" step="any" value="10000" placeholder="Enter trade value"></div><small class="dk-help">Enter the rand value you want to trade. MarketBrain calculates the position size for the selected instrument.</small></label>
+   <div class="dk-lv"><label class="dk-f"><span>Stop loss · chart or price</span><input data-sl type="number" inputmode="decimal" min="0" step="any" placeholder="Drag the stop line or enter price"></label><label class="dk-f"><span>Take profit · chart or price</span><input data-tp type="number" inputmode="decimal" min="0" step="any" placeholder="Drag the target line or enter price"></label></div>
+   <p class="dk-level-hint">You can drag the stop and target directly on the chart. Exact prices and estimated risk/reward update here.</p>
    <div class="dk-risk" data-risk></div>
    <div class="dk-keys"><button type="button" class="sell" data-side="sell"></button><button type="button" class="buy" data-side="buy"></button></div>
    <div class="dk-msg" data-msg role="status" aria-live="polite" aria-atomic="true"></div>
@@ -1762,7 +1806,7 @@ ${mbMarketContext()}`;
    <div class="dk-book" data-book></div>`;
   (rd||ch||panel.firstChild).insertAdjacentElement('afterend',side);m._side=side;
   const d=m._d={type:'market',tab:'pos',px:$('[data-px]',side),eq:$('[data-eq]',side),entry:$('[data-entry]',side),size:$('[data-size]',side),sl:$('[data-sl]',side),tp:$('[data-tp]',side),risk:$('[data-risk]',side),sellK:$('[data-side=sell]',side),buyK:$('[data-side=buy]',side),tabs:$('[data-tabs]',side),book:$('[data-book]',side)};
-  const msg=$('[data-msg]',side),sync=()=>{d.risk.innerHTML=riskTxt(m);drawDesk(m)};
+  const msg=$('[data-msg]',side),sync=()=>{d.risk.innerHTML=riskTxt(m);drawDesk(m);drawDragLevels(m)};
   $$('[data-type]',side).forEach(b=>b.onclick=()=>{d.type=b.dataset.type;$$('[data-type]',side).forEach(x=>x.classList.toggle('on',x===b));$('[data-pxrow]',side).hidden=d.type==='market';if(d.type!=='market'){const p=priceOf(m);if(p)d.entry.value=+p.toFixed(p<10?5:p<1000?3:2)}msg.textContent='';sync()});
   $$('[data-amt]',side).forEach(b=>b.onclick=()=>{d.size.value=b.dataset.amt;buzz(10);sync()});
   [d.entry,d.size,d.sl,d.tp].forEach(i=>i.addEventListener('input',sync));
@@ -2133,6 +2177,41 @@ body.v-cards .m.open .p>div>.c-ch{height:clamp(440px,66vh,760px);min-height:400p
 @media(prefers-reduced-motion:reduce){.mb-workbar button,.dk-keys button{transition:none!important}}
 
 .mb-trade-heading{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--mb-line)}.mb-trade-heading strong{font-size:19px;letter-spacing:-.02em;color:var(--mb-text)}.mb-trade-heading span{font-size:13px;color:var(--mb-muted)}
+
+/* Account terminal: live chart beside the order book */
+.account-panel{width:min(96vw,1480px)!important;max-height:96vh!important;padding:clamp(16px,2vw,26px)!important;overflow:auto!important}
+.account-workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,390px);gap:18px;align-items:start;margin-top:14px}
+.account-chart-column{min-width:0;padding:14px;border:1px solid rgba(63,43,75,.14);border-radius:18px;background:#fff}
+.account-chart-title{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.account-chart-title strong{font-size:18px;color:var(--mb-text)}
+.account-chart-title span{font-size:12px;color:var(--mb-muted)}
+#account-chart-slot>.c-ch{display:block!important;position:relative!important;width:100%!important;height:clamp(390px,55vh,650px)!important;min-height:340px!important;margin:0!important;overflow:hidden!important;border-radius:12px}
+#account-readout-slot>.c-rd{display:block!important;margin:9px 0 0!important;padding:10px 12px!important;border:1px solid var(--mb-line);border-radius:10px;background:#faf8fb;font-size:12px;line-height:1.5}
+.account-order-column{min-width:0}
+#account-desk-slot>.c-side{display:flex!important;flex-direction:column!important;position:static!important;grid-area:auto!important;width:100%!important;max-height:none!important;overflow:visible!important;margin:0!important;padding:16px!important;gap:12px!important}
+.account-order-column .dk-eq{padding:12px!important}
+.account-order-column .dk-eq strong{font-size:25px!important}
+.account-order-column .dk-keys button{min-height:58px!important}
+.account-order-column .dk-book{max-height:300px!important}
+.dk-money-input{display:flex;align-items:center;min-height:50px;border:1px solid rgba(89,67,103,.22);border-radius:14px;background:#fff;overflow:hidden}
+.dk-money-input>span{padding:0 0 0 15px;font-size:17px;font-weight:700;color:var(--mb-muted)}
+.dk-money-input input{border:0!important;box-shadow:none!important;background:transparent!important;min-height:48px!important;padding-left:8px!important}
+.dk-money-input:focus-within{outline:3px solid rgba(233,79,153,.14);border-color:#d65a9b}
+.dk-level-hint{font-size:12px;line-height:1.45;color:var(--mb-muted);margin:-4px 0 0}
+.dk-lv{gap:8px!important}
+.dk-lv .dk-f>span{font-size:12px!important;line-height:1.35}
+.dk-lv input{font-size:14px!important;padding:10px!important;min-height:44px!important}
+.dk-q{display:none!important}
+.mb-level-layer{position:absolute;inset:0;z-index:12;pointer-events:none;overflow:hidden}
+.mb-level-line{position:absolute;left:0;right:0;width:100%;height:0;padding:0;border:0;background:transparent;pointer-events:none;cursor:ns-resize;touch-action:none}
+.mb-level-line:before{content:"";position:absolute;left:0;right:0;top:0;border-top:2px dashed currentColor;opacity:.95}
+.mb-level-line span{position:absolute;right:12px;top:-13px;padding:5px 9px;border-radius:7px;background:#fff;border:1px solid currentColor;color:inherit;font-size:11px;font-weight:800;line-height:1;box-shadow:0 2px 8px #241a2b20;white-space:nowrap;pointer-events:auto;cursor:ns-resize;user-select:none}
+.mb-level-line i{position:absolute;right:0;top:-10px;width:100%;height:20px;pointer-events:auto;cursor:ns-resize}
+.mb-level-line.stop{color:#c44b5b}.mb-level-line.target{color:#25885c}.mb-level-line.entry{color:#8060b5}
+.mb-level-line:active span{background:#f8f2f6;box-shadow:0 3px 12px #241a2b30}
+@media(max-width:1000px){.account-workspace{grid-template-columns:minmax(0,1fr)}.account-order-column{order:2}#account-chart-slot>.c-ch{height:clamp(340px,48vh,520px)!important}}
+@media(max-width:640px){.account-panel{width:100%!important;max-height:98vh!important;border-radius:18px!important}.account-summary{margin:10px 0}.account-chart-column{padding:9px}#account-chart-slot>.c-ch{height:360px!important;min-height:320px!important}.account-workspace{gap:10px}.dk-lv{grid-template-columns:1fr 1fr}.account-order-column .dk-keys button{min-height:54px!important}}
+
 </style>
 
 <script>
