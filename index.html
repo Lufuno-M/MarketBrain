@@ -2148,7 +2148,7 @@ body.v-cards .m.open .p>div>.c-ch{height:clamp(440px,66vh,760px);min-height:400p
   m.dataset.mbWorkspace='1';
   if(desk){desk.style.setProperty('display','flex','important');desk.style.setProperty('position','static','important');}
   const bar=document.createElement('nav');bar.className='mb-workbar';bar.setAttribute('aria-label','Market workspace');
-  bar.innerHTML='<span class="mb-work-label">WORKSPACE</span><button type="button" data-work="chart" aria-current="true">Chart & analysis</button><button type="button" data-work="trade">Trade ticket</button><button type="button" data-work="journal">Journal / reflect</button><button type="button" data-work="account">Account</button>';
+  bar.innerHTML='<span class="mb-work-label">WORKSPACE</span><button type="button" data-work="chart" aria-current="true">Chart & analysis</button><button type="button" data-work="trade">Trade</button><button type="button" data-work="journal">Journal</button>';
   const anchor=readout||chart;
   anchor.insertAdjacentElement('afterend',bar);
   function mode(name){
@@ -2164,8 +2164,7 @@ body.v-cards .m.open .p>div>.c-ch{height:clamp(440px,66vh,760px);min-height:400p
     if(m.classList.contains('writing')){
      const back=$('.w-back',stage);if(back)back.click();
     }
-    const target=name==='trade'?(desk||chart):name==='account'?null:chart;
-    if(name==='account'){const b=$('#demoopen');if(b)b.click();return;}
+    const target=name==='trade'?(desk||chart):chart;
     (target||chart).scrollIntoView({behavior:'smooth',block:name==='chart'?'center':'start'});
    }
   }
