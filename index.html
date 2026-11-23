@@ -1492,7 +1492,14 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  accountMarket.innerHTML=live.map(m=>`<option value="${esc(m.k)}">${esc(m.k)} · ${esc(m.name)}</option>`).join('');
  function showAccountMarket(m){if(!m||!m._side)return;accountMarket.value=m.k;accountSlot.replaceChildren(m._side);drawDesk(m)}
  accountMarket.onchange=()=>showAccountMarket(mOf(accountMarket.value));
- const closeAccount=()=>account.classList.remove('show');
+ const closeAccount=()=>{
+  account.classList.remove('show');
+  const selected=mOf(accountMarket.value);
+  if(selected&&selected._side&&selected._panel){
+   const anchor=selected._panel.querySelector('.c-rd')||selected._panel.querySelector('.c-ch');
+   if(anchor)anchor.insertAdjacentElement('afterend',selected._side);
+  }
+ };
  $('.account-close',account).onclick=closeAccount;
  account.addEventListener('click',e=>{if(e.target===account)closeAccount()});
  addEventListener('keydown',e=>{if(e.key==='Escape')closeAccount()});
@@ -1822,7 +1829,8 @@ ${mbMarketContext()}`;
    if(!m._loaded){m._loaded=true;
     econ().then(d=>{m._st.ev=evFor(m,d)},()=>{m._st.evErr=1}).then(()=>drawCal(m));
     headlines(m).then(v=>{m._st.news=v},()=>{m._st.news=[]}).then(()=>drawCal(m));}}
-  if(!m._openingFromW){if(m.res){m._openJournalWhenReady=false;openW(m)}else m._openJournalWhenReady=true;}
+  // Opening a market opens the chart workspace. Journaling is an explicit, separate action.
+  m._openJournalWhenReady=false;
  };
  const _jr=jrender;
  jrender=function(m){
@@ -2025,5 +2033,154 @@ body.v-cards .m .sc,.nu,#mb-settings,#mb-settings-actions button{font-size:14px!
 #demoopen{min-width:210px}
 @media(max-width:640px){.account-panel{max-height:94vh;border-radius:22px}.account-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.account-summary>div{padding:11px}.desk{border-radius:19px}.bk{grid-template-columns:44px minmax(0,1fr) auto;gap:7px}.bk button{grid-column:3}.bk strong{grid-column:2}.bk.dim{grid-template-columns:44px minmax(0,1fr) auto}}
 
+
+/* ===== MarketBrain v4: chart-first execution workspace ===== */
+:root{--mb-text:#241a2b;--mb-muted:#62576b;--mb-line:rgba(63,43,75,.15);--mb-card:rgba(255,255,255,.9)}
+body{font-size:16px}
+body.v-cards .m.open .p>div{gap:0}
+body.v-cards .m.open .p>div>.c-ch{height:clamp(440px,66vh,760px);min-height:400px}
+.c-side{display:flex!important;position:static!important;grid-area:auto!important;width:100%!important;max-height:none!important;overflow:visible!important;margin:18px 0 24px!important}
+.desk{gap:16px!important;padding:clamp(18px,2.5vw,28px)!important;border:1px solid var(--mb-line)!important;border-radius:22px!important;background:rgba(255,255,255,.92)!important;box-shadow:0 12px 34px rgba(47,29,61,.08)!important;backdrop-filter:blur(18px) saturate(1.1)!important}
+.dk-sym{font-size:26px!important}.dk-name{font-size:14px!important;color:var(--mb-muted)!important}
+.dk-px{font-size:clamp(30px,4vw,42px)!important;font-weight:750!important}
+.dk-eq{padding:16px 18px!important;background:#fff!important;border:1px solid var(--mb-line)!important}
+.dk-eq strong{font-size:clamp(28px,3.2vw,38px)!important}
+.dk-eq small{font-size:14px!important;line-height:1.5}
+.dk-seg{gap:5px;padding:5px;background:#f5f1f6!important}
+.dk-seg button{min-height:44px;font-size:15px!important}
+.dk-f>span{font-size:14px!important}
+.dk-f input{min-height:50px!important;font-size:17px!important;background:#fff!important;border:1px solid var(--mb-line)!important}
+.dk-q button{min-height:42px;font-size:14px!important}
+.dk-risk{font-size:15px!important;line-height:1.55!important;padding:10px 12px;border-radius:12px;background:#f8f5f9}
+.dk-keys{gap:12px!important}
+.dk-keys button{min-height:68px!important;border-radius:15px!important;font-size:19px!important;box-shadow:none!important;animation:none!important;transform:none!important;filter:none!important}
+.dk-keys .buy{background:#e8f4ed!important;border:1px solid #8ab99c!important;color:#175b39!important}
+.dk-keys .sell{background:#f8ecee!important;border:1px solid #d5a0a7!important;color:#842f3b!important}
+.dk-keys button:hover{filter:brightness(.98)!important;transform:translateY(-1px)!important;box-shadow:0 5px 14px rgba(47,29,61,.08)!important}
+.dk-keys button:active{transform:translateY(1px)!important;box-shadow:none!important}
+.dk-msg{font-size:15px!important;line-height:1.5!important}
+.dk-confirm{padding:17px 18px!important}
+.dk-confirm strong{font-size:17px!important}.dk-confirm span:not(.dk-confirm-mark){font-size:15px!important}.dk-confirm small{font-size:13px!important}
+.dk-tabs{gap:8px!important;margin-top:8px!important}
+.dk-tabs button{font-size:15px!important;padding:12px 16px!important}
+.dk-tabs button.on{color:#7d315d!important;border-color:#d65a9b!important}
+.dk-book{max-height:440px!important}
+.bk{font-size:15px!important;padding:14px 0!important}
+.bk span{font-size:14px!important;line-height:1.5!important}
+.bk button{font-size:14px!important;padding:9px 14px!important}
+.bk-e{font-size:15px!important}
+.position-heading b{font-size:18px!important}.position-heading>strong{font-size:21px!important}
+.position-levels small{font-size:12px!important}.position-levels strong{font-size:16px!important}
+.position-note{font-size:14px!important;line-height:1.55!important}
+.mb-workbar{position:sticky;top:10px;z-index:18;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 16px;padding:9px;border:1px solid rgba(89,67,103,.14);border-radius:17px;background:rgba(255,255,255,.94);box-shadow:0 8px 24px rgba(47,29,61,.09);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.mb-workbar .mb-work-label{font-size:12px;font-weight:750;color:var(--mb-muted);padding:0 8px;letter-spacing:.04em}
+.mb-workbar button{min-height:42px;padding:9px 16px;border:1px solid var(--mb-line);border-radius:12px;background:#fff;color:var(--mb-text);font:inherit;font-size:14px;font-weight:650;cursor:pointer}
+.mb-workbar button[aria-current=true]{background:#f8edf3;border-color:#e8bfd3;color:#8c315f}
+.mb-workbar button.primary{background:#f7eaf1;border-color:#e8bfd3}
+.mb-workbar button:hover{background:#f8f5f9}
+.m .c-cal{padding:8px 0 12px;gap:9px}
+.c-cal .ev{max-width:300px;min-width:170px;border-radius:13px;background:rgba(255,255,255,.78);border-color:var(--mb-line)}
+.c-cal .ev.nws{flex-basis:min(340px,82vw);max-width:340px;white-space:normal;border-left:3px solid #d65a9b;background:#fff}
+.c-cal .ev.nws .ev-t{font-size:13px;color:#8c315f}
+.c-cal .ev.nws .ev-n{font-size:14px;line-height:1.4;color:var(--mb-text)}
+.c-cal .ev.nws:hover{background:#fbf6f9}
+.m .dl{font-size:16px!important;font-weight:700!important;color:var(--mb-text)!important;margin-top:28px!important}
+.m .fx-row{grid-template-columns:minmax(135px,180px) minmax(0,1fr) auto;gap:10px 18px;padding:16px 0;font-size:15px}
+.m .fx-row>b{font-size:13px!important;color:var(--mb-muted)!important}
+.m .fx-row .lead{font-size:16px}
+.m .fx-row .rest{font-size:14px;line-height:1.5}
+.m .rd{font-size:14px;line-height:1.5;color:var(--mb-muted)}
+.m .tf .chip{min-height:40px;font-size:14px;padding:9px 14px}
+.m .ar{margin-top:12px;padding:5px;background:#f2edf3;box-shadow:none}
+.m .ar input{min-height:52px;font-size:16px!important}
+.m .ar .chip{min-height:48px;padding:0 22px}
+.m .w-stage{margin:24px 0 16px}
+.m .w-invite{animation:none!important;background:#f8f2f6!important;border:1px solid #eadce7!important;box-shadow:none!important;border-radius:20px!important;padding:22px 24px!important}
+.m .w-q{font-size:clamp(23px,3vw,34px)!important}
+.m .w-sub{font-size:15px!important}
+.m .w-canvas{background:#fff!important}
+.m .w-ta{min-height:260px!important;font-size:18px!important;background:#fff!important;border:1px solid var(--mb-line)!important}
+.m .w-save{min-height:52px;padding:14px 24px!important;background:#f3e8ef!important;border:1px solid #e5cbd9!important;box-shadow:none!important;animation:none!important}
+.m .w-back{min-height:42px;background:#f8f5f9!important;border:1px solid var(--mb-line)!important}
+.m .w-chips span{font-size:13px!important;background:#f8f5f9!important;border-color:var(--mb-line)!important}
+.m .w-mem{font-size:14px!important;background:#f8f5f9!important}
+.m .en{background:#fff!important;border-color:var(--mb-line)!important}
+.m .en .d{font-size:13px!important}.m .en .t{font-size:16px!important;line-height:1.55!important}
+.m.mb-journal-mode .p>div>*:not(.w-stage){display:none!important}
+.m.mb-journal-mode .w-stage{margin-top:0}
+.m.mb-journal-mode .w-invite{display:none!important}
+.m.mb-journal-mode .w-canvas{grid-template-rows:1fr!important;opacity:1!important;border:1px solid var(--mb-line)!important}
+.m.mb-journal-mode .w-canvas>div{padding:clamp(18px,4vw,38px)!important}
+.m.mb-journal-mode .w-canvas .w-asks,.m.mb-journal-mode .w-canvas .w-sure{display:none!important}
+.m.mb-journal-mode .w-canvas .w-h{font-size:clamp(30px,5vw,48px)!important}
+.m .market-news-dock,.m .market-extra{font-size:14px}
+#account-modal .account-panel{font-size:15px}
+#account-modal .account-summary strong{font-size:clamp(18px,2.2vw,24px)}
+#account-modal .account-summary small{font-size:13px}
+#account-modal .account-foot{font-size:13px!important}
+#dock{z-index:40}
+@media(max-width:700px){
+ .mb-workbar{top:5px;gap:6px;padding:7px}
+ .mb-workbar .mb-work-label{display:none}
+ .mb-workbar button{flex:1;min-width:0;padding:9px 8px;font-size:13px}
+ .c-side{margin:12px 0 20px!important}
+ .dk-lv{grid-template-columns:1fr 1fr}
+ .dk-keys button{min-height:62px!important}
+ .m .fx-row{grid-template-columns:1fr auto;gap:6px 12px}
+ .m .fx-row>b,.m .fx-row .lead,.m .fx-row .rest{grid-column:1}
+ .m .fx-row .ak{grid-column:2;grid-row:1/4}
+}
+@media(prefers-reduced-motion:reduce){.mb-workbar button,.dk-keys button{transition:none!important}}
+
+.mb-trade-heading{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--mb-line)}.mb-trade-heading strong{font-size:19px;letter-spacing:-.02em;color:var(--mb-text)}.mb-trade-heading span{font-size:13px;color:var(--mb-muted)}
 </style>
+
+<script>
+/* Chart, execution and journal are distinct workspaces, not hidden account subtabs. */
+(function(){
+ const $=(s,r=document)=>r.querySelector(s);
+ const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+ const cards=$$('.m');
+ function mount(m){
+  if(m.dataset.mbWorkspace==='1')return;
+  const panel=$('.p>div',m),chart=$('.c-ch',m),readout=$('.c-rd',m),desk=$('.c-side',m),stage=$('.w-stage',m);
+  if(!panel||!chart||!stage)return;
+  m.dataset.mbWorkspace='1';
+  if(desk){desk.style.setProperty('display','flex','important');desk.style.setProperty('position','static','important');}
+  const bar=document.createElement('nav');bar.className='mb-workbar';bar.setAttribute('aria-label','Market workspace');
+  bar.innerHTML='<span class="mb-work-label">WORKSPACE</span><button type="button" data-work="chart" aria-current="true">Chart & analysis</button><button type="button" data-work="trade">Trade ticket</button><button type="button" data-work="journal">Journal / reflect</button><button type="button" data-work="account">Account</button>';
+  const anchor=readout||chart;
+  anchor.insertAdjacentElement('afterend',bar);
+  function mode(name){
+   $$('.mb-workbar button',bar).forEach(b=>b.setAttribute('aria-current',String(b.dataset.work===name)));
+   m.classList.toggle('mb-journal-mode',name==='journal');
+   if(name==='journal'){
+    const invite=$('.w-invite',stage);
+    if(invite && !m.classList.contains('writing'))invite.click();
+    else if(invite && !$('.w-canvas',stage).classList.contains('writing'))invite.click();
+    setTimeout(()=>{const area=$('.w-ta',stage);if(area)area.focus({preventScroll:true});},160);
+    stage.scrollIntoView({behavior:'smooth',block:'start'});
+   }else{
+    if(m.classList.contains('writing')){
+     const back=$('.w-back',stage);if(back)back.click();
+    }
+    const target=name==='trade'?(desk||chart):name==='account'?null:chart;
+    if(name==='account'){const b=$('#demoopen');if(b)b.click();return;}
+    (target||chart).scrollIntoView({behavior:'smooth',block:name==='chart'?'center':'start'});
+   }
+  }
+  bar.addEventListener('click',e=>{const b=e.target.closest('[data-work]');if(b)mode(b.dataset.work)});
+  const invite=$('.w-invite',stage),back=$('.w-back',stage);
+  if(invite)invite.addEventListener('click',()=>{m.classList.add('mb-journal-mode');$$('.mb-workbar button',bar).forEach(b=>b.setAttribute('aria-current',String(b.dataset.work==='journal')))});
+  if(back)back.addEventListener('click',()=>{m.classList.remove('mb-journal-mode');$$('.mb-workbar button',bar).forEach(b=>b.setAttribute('aria-current',String(b.dataset.work==='chart')))});
+  if(desk){
+   const heading=document.createElement('div');heading.className='mb-trade-heading';
+   heading.innerHTML='<strong>Execution & risk</strong><span>Demo orders · simulated funds only</span>';
+   desk.insertBefore(heading,desk.firstChild);
+  }
+ }
+ cards.forEach(m=>{mount(m);new MutationObserver(()=>mount(m)).observe(m,{childList:true,subtree:true})});
+})();
+</script>
+
 </body></html>
