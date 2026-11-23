@@ -481,7 +481,7 @@ button:disabled{cursor:not-allowed;opacity:.48;transform:none!important}
 
 </header>
 <main id="app"></main>
-<footer id="mb-settings"><span>MarketBrain · Local settings</span><details id="mb-storage-info"><summary>Where your information lives</summary><div><p><strong>Journal, AI conversation history and account:</strong> saved in this browser on this device.</p><p><strong>Chart screenshots:</strong> stored in this browser\’s IndexedDB.</p><p><strong>Market prices and calendar:</strong> retrieved from external data providers; some results are cached in this browser.</p><p><strong>AI questions and attached screenshots:</strong> sent to the AI provider you have connected when you submit them.</p><p><strong>Orders:</strong> simulated only. They are not sent to a broker and do not execute real trades.</p><p>Browser storage is not cloud backup. Clearing site data or changing browsers/devices can remove or separate these records.</p></div></details><div id="mb-settings-actions"><button id="tdkey" type="button">Connect market data</button><button id="aikey" type="button">Connect AI assistant</button></div></footer>
+<footer id="mb-settings"><span>MarketBrain · Local settings</span><details id="mb-storage-info"><summary>Where your information lives</summary><div><p><strong>Journal, AI conversation history and account:</strong> saved in this browser on this device.</p><p><strong>Chart screenshots:</strong> stored in this browser\’s IndexedDB.</p><p><strong>Market prices and calendar:</strong> retrieved from external data providers; some results are cached in this browser.</p><p><strong>AI questions and attached screenshots:</strong> sent to the AI provider you have connected when you submit them.</p><p>Browser storage is not cloud backup. Clearing site data or changing browsers/devices can remove or separate these records.</p></div></details><div id="mb-settings-actions"><button id="tdkey" type="button">Connect market data</button><button id="aikey" type="button">Connect AI assistant</button></div></footer>
 <div id="dock"><button class="ask" id="dk">Talk to MarketBrain</button></div>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
@@ -2198,7 +2198,7 @@ body.v-cards .m.open .p>div>.c-ch{height:clamp(440px,66vh,760px);min-height:400p
 #account-readout-slot>.c-rd{display:block!important;margin:9px 0 0!important;padding:10px 12px!important;border:1px solid var(--mb-line);border-radius:10px;background:#faf8fb;font-size:12px;line-height:1.5}
 .account-order-column{min-width:0}
 #account-desk-slot>.c-side{display:flex!important;flex-direction:column!important;position:static!important;grid-area:auto!important;width:100%!important;max-height:none!important;overflow:visible!important;margin:0!important;padding:16px!important;gap:12px!important}
-.account-order-column .dk-eq{padding:12px!important}
+.account-order-column .dk-eq{display:none!important}
 .account-order-column .dk-eq strong{font-size:25px!important}
 .account-order-column .dk-keys button{min-height:58px!important}
 .account-order-column .dk-book{max-height:300px!important}
