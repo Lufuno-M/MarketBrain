@@ -1501,7 +1501,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   const rows=[];
   if(pos){if(pos.sl)rows.push({key:'sl',price:pos.sl,label:'STOP',color:'stop'});if(pos.tp)rows.push({key:'tp',price:pos.tp,label:'TARGET',color:'target'});}
   else if(pending){rows.push({key:'entry',price:pending.px,label:'ENTRY',color:'entry'});if(pending.sl)rows.push({key:'sl',price:pending.sl,label:'STOP',color:'stop'});if(pending.tp)rows.push({key:'tp',price:pending.tp,label:'TARGET',color:'target'});}
-  else{const sl=+m._d.sl.value,tp=+m._d.tp.value;if(sl)rows.push({key:'sl',price:sl,label:'STOP',color:'stop'});if(tp)rows.push({key:'tp',price:tp,label:'TARGET',color:'target'});}
+  
   layer.innerHTML=rows.map(r=>{const y=m.sr.priceToCoordinate(r.price);if(y==null||!isFinite(y))return '';return `<button type="button" class="mb-level-line ${r.color}" data-level="${r.key}" data-price="${r.price}" style="top:${y}px" aria-label="Drag ${r.label} level at ${fmt(r.price)}"><span>${r.label} · ${fmt(r.price)}</span><i></i></button>`}).join('');
  }
  const ab=$('#demoopen');
@@ -1807,7 +1807,7 @@ ${mbMarketContext()}`;
    <div class="dk-seg" data-types>${TYPES.map((t,i)=>`<button type="button" data-type="${t[0]}"${i?'':' class="on"'}>${t[1]}</button>`).join('')}</div>
    <label class="dk-f" data-pxrow hidden><span>Entry price</span><input data-entry type="number" inputmode="decimal" min="0" step="any" placeholder="Set entry price"><small class="dk-help">Required for Limit and Stop orders.</small></label>
    <label class="dk-f"><span>Trade value · ZAR</span><div class="dk-money-input"><span>R</span><input data-size type="number" inputmode="decimal" min="0" step="any" value="10000" placeholder="Enter trade value"></div></label>
-   <div class="dk-lv"><label class="dk-f"><span>Stop loss</span><input data-sl type="number" inputmode="decimal" min="0" step="any" placeholder="Optional price"></label><label class="dk-f"><span>Take profit</span><input data-tp type="number" inputmode="decimal" min="0" step="any" placeholder="Optional price"></label></div>
+   <div class="dk-lv"><label class="dk-f"><span>Stop loss (optional)</span><input data-sl type="number" inputmode="decimal" min="0" step="any" placeholder="Price"></label><label class="dk-f"><span>Take profit (optional)</span><input data-tp type="number" inputmode="decimal" min="0" step="any" placeholder="Price"></label></div>
    <div class="dk-risk" data-risk></div>
    <div class="dk-keys"><button type="button" class="sell" data-side="sell"></button><button type="button" class="buy" data-side="buy"></button></div>
    <div class="dk-msg" data-msg role="status" aria-live="polite" aria-atomic="true"></div>
