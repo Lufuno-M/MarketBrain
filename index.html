@@ -1244,7 +1244,7 @@ const MB=(()=>{
    const sig=[d.el.clientWidth,d.el.clientHeight,vr&&vr.from.toFixed(3),vr&&vr.to.toFixed(3),m.sr.priceToCoordinate(ref.c),m.sr.priceToCoordinate(ref.c*1.01),m.c.length,ref.t,m.tf,m.chart.priceScale('right').width()].join('|');
    if(d.dirty||sig!==d.sig){d.sig=sig;d.dirty=false;render(m)}}
   requestAnimationFrame(loop)})();
- return{attach,touch:m=>{if(m.dr){m.dr.pend=null;m.dr.ghost=null;m.dr.dirty=true}}};
+ return{attach,fibLevels,fibLabel,fibMeaning,touch:m=>{if(m.dr){m.dr.pend=null;m.dr.ghost=null;m.dr.dirty=true}}};
 })();
 
 function draw(m){
@@ -1252,7 +1252,7 @@ function draw(m){
  m.lines.forEach(l=>m.sr.removePriceLine(l));m.lines=[];
  const pl=(price,title,color)=>m.lines.push(m.sr.createPriceLine({price,title,color,lineWidth:1,lineStyle:2,axisLabelVisible:true}));
  if(m.show.gap&&m.res.near){pl(m.res.near.hi,'gap top','#8b5cf6');pl(m.res.near.lo,'gap bottom','#8b5cf6');}
- if(m.show.fib&&m.res.fib){for(const r of fibLevels())pl(m.res.fib.lvl(r),fibLabel(r)+fibMeaning(r),'#e0408f');}
+ if(m.show.fib&&m.res.fib){for(const r of MB.fibLevels())pl(m.res.fib.lvl(r),MB.fibLabel(r)+MB.fibMeaning(r),'#e0408f');}
 }
 function jrender(m,updateMarkers=true){
  const L=m.el.querySelector('.el'),es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)||b.at-a.at);
