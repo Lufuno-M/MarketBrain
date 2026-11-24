@@ -476,6 +476,10 @@ button:disabled{cursor:not-allowed;opacity:.48;transform:none!important}
 .dk .fib-actions{display:flex;flex-wrap:wrap;gap:6px}
 .dk .fib-actions button{font:inherit;font-size:12px;padding:8px 10px;border:1px solid #e5dce9;border-radius:99px;background:#ffffffd9;color:var(--ink);cursor:pointer}
 .dk .fib-actions button:first-child{background:linear-gradient(90deg,#ffd7ea,#fff0a8);border-color:transparent;font-weight:700}
+.dk .fib-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:9px;border:1px solid #eee5ef;border-radius:12px;background:#fff}
+.dk .fib-check{display:flex!important;align-items:center;gap:8px!important;font-size:13px!important;font-weight:600!important;padding:4px 2px;color:#51465b}
+.dk .fib-check input{width:16px!important;height:16px!important;min-width:16px;accent-color:#d65a9b}
+.dk .fib-panel hr{width:100%;border:0;border-top:1px solid #e8e0e9;margin:5px 0}
 .dk [data-d="fib-settings"]{font-weight:650}
 
 <style>
@@ -659,7 +663,16 @@ function motion(c,tfm){
  const r=Math.abs(net)/(rng||1);
  return{k:r>=STRONG?'strong':r>=MOVING?'moving':'still',up:net>0,pct:Math.abs(net)/b*100,span:LOOK*tfm,r,a,b,bt:c[base].t,at:c[end].t};
 }
-function gapsOf(c){const g=[];for(let i=2;i<c.length;i++){const a=c[i-2],b=c[i];if(a.h<b.l)g.push({up:true,lo:a.h,hi:b.l,i});else if(a.l>b.h)g.push({up:false,lo:b.h,hi:a.l,i});}return g}
+function gapsOf(c){const g=[];for(let i=2;i<c.length;i++){const a=c[i-2],b=c[i];if(a.h<b.l)g.push({up:true,lo:a.h,hi:b.l,i,kind:'BISI'});else if(a.l>b.h)g.push({up:false,lo:b.h,hi:a.l,i,kind:'SIBI'});}return g}
+const STRUCT_KEY='mb_structure_rules_v1',STRUCT_DEFAULT={minTouches:3,toleranceATR:.15};
+function structureRules(){const x=store.get(STRUCT_KEY,STRUCT_DEFAULT)||{},m=+x.minTouches,t=+x.toleranceATR;return{minTouches:[2,3,4,5].includes(m)?m:3,toleranceATR:Number.isFinite(t)&&t>=.03&&t<=1?t:.15}}
+function structureOf(c,tfm){const n=c.length;if(n<9)return{pivots:[],pools:[],event:null,sweep:null,atr:0,tolerance:0,rules:structureRules()};const rules=structureRules(),ranges=[];for(let i=1;i<n;i++)ranges.push(Math.max(c[i].h-c[i].l,Math.abs(c[i].h-c[i-1].c),Math.abs(c[i].l-c[i-1].c)));const atr=ranges.slice(-Math.min(60,ranges.length)).reduce((a,b)=>a+b,0)/Math.max(1,Math.min(60,ranges.length)),tolerance=Math.max(atr*rules.toleranceATR,Math.abs(c[n-1].c)*1e-8),pivots=[];
+for(let i=3;i<n-3;i++){const w=c.slice(i-3,i+4),h=c[i].h,l=c[i].l;if(w.every((v,j)=>j===3||h>=v.h)&&w.some((v,j)=>j!==3&&h>v.h))pivots.push({type:'high',i,t:c[i].t/1000,p:h});if(w.every((v,j)=>j===3||l<=v.l)&&w.some((v,j)=>j!==3&&l<v.l))pivots.push({type:'low',i,t:c[i].t/1000,p:l})}
+function group(type){const a=pivots.filter(p=>p.type===type).sort((x,y)=>x.p-y.p),out=[],used=new Set();for(let i=0;i<a.length;i++){if(used.has(a[i].i))continue;const members=a.filter(p=>Math.abs(p.p-a[i].p)<=tolerance);if(members.length<rules.minTouches)continue;members.forEach(p=>used.add(p.i));const prices=members.map(p=>p.p).sort((x,y)=>x-y);out.push({type,price:prices[Math.floor(prices.length/2)],low:prices[0],high:prices.at(-1),touches:members.length,first:Math.min(...members.map(p=>p.i)),last:Math.max(...members.map(p=>p.i)),members})}return out.sort((x,y)=>y.last-x.last)}
+const pools=[...group('high'),...group('low')].map(p=>{let swept=null;for(let j=p.last+1;j<n;j++){const k=c[j],b=p.type==='high'?k.h>p.high:k.l<p.low,r=p.type==='high'?k.c<=p.high:k.c>=p.low;if(b&&r){swept={i:j,t:k.t/1000,wick:p.type==='high'?k.h:k.l,close:k.c};break}}return{...p,swept}});
+const highs=pivots.filter(p=>p.type==='high').sort((a,b)=>a.i-b.i),lows=pivots.filter(p=>p.type==='low').sort((a,b)=>a.i-b.i),hm=new Map(highs.map(p=>[p.i+3,p])),lm=new Map(lows.map(p=>[p.i+3,p]));let hi=null,lo=null,bias=0,event=null;const events=[];
+for(let j=6;j<n;j++){if(hm.has(j))hi=hm.get(j);if(lm.has(j))lo=lm.get(j);const prev=c[j-1].c,now=c[j].c,up=!!hi&&prev<=hi.p&&now>hi.p,dn=!!lo&&prev>=lo.p&&now<lo.p;if(up||dn){const dir=up?1:-1,kind=up&&dn?'Ambiguous break':bias===0?'Initial structure break':bias===dir?'BOS':'CHoCH',ref=up?hi:lo;event={kind,direction:up&&dn?'both':up?'up':'down',price:ref.p,i:j,t:c[j].t/1000,referenceIndex:ref.i,referenceTime:ref.t};events.push(event);if(!up||!dn)bias=dir}}
+const sweep=pools.filter(p=>p.swept).sort((a,b)=>b.swept.i-a.swept.i)[0]||null;return{pivots,pools,event,events:events.slice(-8),sweep,atr,tolerance,rules,bias:bias===1?'up':bias===-1?'down':'unestablished'}}
 function read(c,tfm){
  const last=c[c.length-1];
  const open=gapsOf(c).filter(g=>{for(let j=g.i+1;j<c.length;j++){const k=c[j];if(g.up?k.l<=g.lo:k.h>=g.hi)return false}return true});
@@ -674,8 +687,9 @@ function read(c,tfm){
  let fib=null;
  if(sh&&sl){const down=sl.i>sh.i,range=sh.p-sl.p,end=down?sl.p:sh.p;
   fib={down,from:down?sh.p:sl.p,to:end,back:Math.abs(last.c-end)/range,lvl:r=>down?sl.p+r*range:sh.p-r*range};}
- const inside=!!near&&run>0;
- return{last,near,run,fib,sh,sl,open,tfm,inside,mo:motion(c,tfm),dist:near?Math.abs(mid(near)-last.c)/last.c:9};
+ const inside=!!near&&run>0,structure=structureOf(c,tfm);
+ const inversions=gapsOf(c).filter(g=>g.up?c.slice(g.i+1).some(k=>k.c<g.lo):c.slice(g.i+1).some(k=>k.c>g.hi)).slice(-8).map(g=>({...g,kind:g.up?'iFVG from BISI':'iFVG from SIBI'}));
+ return{last,near,run,fib,sh,sl,open,tfm,inside,structure,inversions,mo:motion(c,tfm),dist:near?Math.abs(mid(near)-last.c)/last.c:9};
 }
 
 /* ---- the card sentence: an opener about motion + a body about the gap, each with many phrasings.
@@ -735,7 +749,8 @@ function marketBrainUpdatedLabel(m){
 
 const LOGIC=`How this page reads a chart (this is all it does):
 Gap: three candles where the first high is below the third low (buying gap), or the first low is above the third high (selling gap). The space between is the gap. Open = no later candle has traded fully back through it. Entered = a later candle overlapped it without filling it. Closest = the open gap whose middle is nearest the latest price; size and importance are not weighed.
-Swing: a candle whose high (or low) is the highest (lowest) of the 3 candles on each side. The latest swing high and low make the swing. Fib levels (50%, 70.5%) are measured on it; pullback is how much of the swing price has retraced.
+Swing: a confirmed pivot is the highest high or lowest low across three candles on each side. The latest swing high and low define the current swing. Fib ratios are user-configurable and independently enabled. Pullback is how much of the swing price has retraced.
+Structure: candidate equal-high/low pools group at least the configured number of confirmed pivots inside a tolerance measured in ATR. They are price clusters, not proof of resting orders. A sweep is a wick beyond the cluster boundary followed by a close back inside. A close through the latest confirmed swing is an initial structure break, BOS when it continues the previous break direction, or CHoCH when it changes direction. BISI is the bullish three-candle wick gap; SIBI is the bearish three-candle wick gap. A later close through the far boundary marks a possible iFVG. These labels describe candle geometry, not signals.
 Motion: net change over the last ${LOOK} candles divided by the average candle size over the last 60. ${MOVING} or more = moving, ${STRONG} or more = moving fast, otherwise quiet.
 Timeframes: each card reads up to six (1m, 5m, 15m, 30m, 1h, 1d) and opens on the one with the most going on: the nearest open gap changed since the last look, a swing was taken out within ${LOOK} candles, price is inside a gap, or motion. Each is judged against its own usual candle size, so no timeframe wins just for being busier by nature. "Quiet on every timeframe" is only said when all six were read and none stood out. Forex and index markets read only timeframes already fetched, to protect data credits.
 Blind spots: no liquidity pools, no count of broken swing lows, nothing drawn or set as alerts in TradingView, nothing older than the loaded candles, no news.`;
@@ -744,7 +759,7 @@ const LOCAL={
  closest:()=>'"Open" means nothing has traded fully back through the gap since it formed. "Closest" means the open gap whose middle is nearest the latest price. It does not weigh how big or how important a gap is.',
  fib:m=>{const f=m.res.fib;return f?`The latest swing ran ${f.down?'down':'up'} from ${fmt(f.from)} to ${fmt(f.to)}. Price has pulled back ${Math.round(f.back*100)}% of it. The 50% level is ${fmt(f.lvl(.5))} and the 70.5% level is ${fmt(f.lvl(.705))}. A swing is a candle that is the highest or lowest of the three on each side.`:'No swing is clear enough in these candles yet.'},
  moving:()=>`"Moving" compares how far price travelled over the last ${LOOK} candles with the usual candle size on this chart. ${MOVING} times that is moving, ${STRONG} times is moving fast. Anything less says quiet.`,
- blind:m=>`This rests on ${m.src==='b'?'Binance':'Twelve Data'} prices for ${m.sym}: the last ${m.c.length} ${tfl(m.tf)} candles, about ${span(m.c.length*m.tf)}. It does not know liquidity pools, how many swing lows have broken, or anything you drew in TradingView. It describes the chart. It is not a prediction or advice.`
+ blind:m=>`This rests on ${m.src==='b'?'Binance':'Twelve Data'} prices for ${m.sym}: the last ${m.c.length} ${tfl(m.tf)} candles, about ${span(m.c.length*m.tf)}. Candidate pools and structure breaks are detected from the loaded candles, not verified orders or institutional intent. It describes the chart. It is not a prediction or advice.`
 };
 const unit=m=>m.src==='b'||m.etf||m.k==='XAUUSD'||m.k==='XAGUSD'?0:m.k.endsWith('JPY')?0.01:0.0001;
 const dst=(m,d)=>{d=Math.abs(d);const u=unit(m);if(u)return (d/u).toFixed(1)+' pips';const px=m.c&&m.c.length?m.c[m.c.length-1].c:1;return '$'+d.toFixed(px<0.1?5:px<1?4:2)};
@@ -794,19 +809,23 @@ function ctx(m){
  const r=m.res;if(!r||!m.fx)return;
  const c=m.c,last=r.last,P=pos(m),n=r.near,L=[['The clock',clock(m)],['Since you last looked',seen(m)]];
  L.push(['Where price sits',`The loaded candles run from ${fmt(P.lo)} to ${fmt(P.hi)} (${dst(m,P.hi-P.lo)}). Price is in the ${third(P.p)} third of that. That says where it is, not where it goes.`]);
- L.push(['The gap',n?`The nearest open ${n.up?'buying':'selling'} gap runs ${fmt(n.lo)} to ${fmt(n.hi)} (${dst(m,n.hi-n.lo)} wide) and formed ${ago(m,n.i)}. ${r.inside?'Price is inside it now.':`Price is ${dst(m,n.lo>last.c?n.lo-last.c:last.c-n.hi)} away.`}`:'No open gap in the loaded candles. Nothing here is waiting to be revisited.']);
+ L.push(['The gap',n?`The nearest open ${n.kind|| (n.up?'BISI':'SIBI')} runs ${fmt(n.lo)} to ${fmt(n.hi)} (${dst(m,n.hi-n.lo)} wide) and formed ${ago(m,n.i)}. ${r.inside?'Price is inside it now.':`Price is ${dst(m,n.lo>last.c?n.lo-last.c:last.c-n.hi)} away.`}`:'No open three-candle imbalance in the loaded candles.']);
+ if(r.structure)L.push(['Structure',structureBrief(r)]);
+ if(r.inversions?.length)L.push(['Possible iFVGs',r.inversions.slice(-3).map(g=>`${g.kind} at ${fmt(g.lo)}–${fmt(g.hi)}; later candle close crossed the far boundary`).join('. ')]);
  const lt=c[c.length-1].t,late=m.tf<1440&&!m.etf&&!closedNow(m)&&Date.now()-lt>m.tf*18e4;
  L.push(['The data',`Latest candle opened ${m.tf===1440?new Date(lt).toISOString().slice(0,10)+' (daily, UTC)':ny(lt)}. ${marketBrainUpdatedLabel(m)}. Source: ${m.src==='b'?'Binance':'Twelve Data'} ${m.sym}, ${c.length} ${tfl(m.tf)} candles covering ${span(c.length*m.tf)}.`+(late?' That candle is more than three candles old, so either the feed is late or the market has gone quiet. The page cannot tell which.':'')]);
  m.fx.innerHTML=L.filter(x=>x[1]).map(x=>{const[a,b]=sp(x[1]);return `<div class="fx-row${m.big.has(x[0])?' expanded':''}" data-key="${x[0]}"><b>${x[0]}</b><span><span class="lead">${esc(a)}</span>${b?`<span class="rest">${esc(b)}</span>`:''}</span><button class="chip ak" data-ak>Ask about this</button></div>`}).join('');
 }
 
 /* ---- interpretation without prediction: what is unfinished above and below, and where a reading would break ---- */
+function structureBrief(r){const s=r.structure;if(!s)return 'not computed';const pools=s.pools.filter(p=>p.touches>=s.rules.minTouches),last=s.event?`${s.event.kind} ${s.event.direction} through ${fmt(s.event.price)}`:'no confirmed swing break in the loaded candles',poolText=pools.slice(0,4).map(p=>`${p.type==='high'?'equal highs':'equal lows'} (${p.touches} touches near ${fmt(p.price)})${p.swept?' — swept':''}`).join('; ')||'no qualifying equal-high/low pool',sw=s.sweep?`${s.sweep.type==='high'?'high-side':'low-side'} pool swept at ${fmt(s.sweep.swept.wick)} and closed back inside`:'no pool sweep detected';return `${last}; ${poolText}; ${sw}. Pools require ${s.rules.minTouches} confirmed 3-left/3-right pivots within ${s.rules.toleranceATR} ATR.`}
 function around(m){
  const r=m.res,l=r.last.c,c=m.c;
  const up=r.open.filter(g=>g.lo>l).sort((a,b)=>a.lo-b.lo)[0],dn=r.open.filter(g=>g.hi<l).sort((a,b)=>b.hi-a.hi)[0];
  const sh=r.sh&&!c.slice(r.sh.i+1).some(x=>x.h>r.sh.p)?r.sh:null,sl=r.sl&&!c.slice(r.sl.i+1).some(x=>x.l<r.sl.p)?r.sl:null;
- const above=[up&&`a ${up.up?'buying':'selling'} gap at ${fmt(up.lo)} to ${fmt(up.hi)}`,sh&&`the swing high at ${fmt(sh.p)}`].filter(Boolean);
- const below=[dn&&`a ${dn.up?'buying':'selling'} gap at ${fmt(dn.lo)} to ${fmt(dn.hi)}`,sl&&`the swing low at ${fmt(sl.p)}`].filter(Boolean);
+ const pools=r.structure?.pools||[],hp=pools.filter(p=>p.type==='high'&&p.price>l).sort((a,b)=>a.price-b.price)[0],lp=pools.filter(p=>p.type==='low'&&p.price<l).sort((a,b)=>b.price-a.price)[0];
+ const above=[up&&`a ${up.kind||'imbalance'} at ${fmt(up.lo)} to ${fmt(up.hi)}`,sh&&`the swing high at ${fmt(sh.p)}`,hp&&`candidate equal-high pool near ${fmt(hp.price)} (${hp.touches} touches)`].filter(Boolean);
+ const below=[dn&&`a ${dn.kind||'imbalance'} at ${fmt(dn.lo)} to ${fmt(dn.hi)}`,sl&&`the swing low at ${fmt(sl.p)}`,lp&&`candidate equal-low pool near ${fmt(lp.price)} (${lp.touches} touches)`].filter(Boolean);
  return{above:above.join(' and ')||'nothing marked',below:below.join(' and ')||'nothing marked'};
 }
 function cond(m){
@@ -852,7 +871,7 @@ function qdeal(m){m.qs=[];[0,0,1,1,2,2].forEach(lv=>{const i=qpick(m,lv,m.qs);if
 function qrender(m){m.el.querySelector('.qs').innerHTML=m.qs.map((i,j)=>`<button class="chip${QB[i][0]===2?' think':''}" data-qi="${j}">${QB[i][1]}</button>`).join('')+'<button class="chip shuf" data-qi="s">New questions</button>'}
 
 function sysFor(m,win){
- const r=m.res,n=r.near,f=r.fib;
+ const r=m.res,n=r.near,f=r.fib,st=r.structure;
  const es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(e=>`[${e.date}] ${e.text.slice(0,400)}`).join('\n')||'none';
  const ev=evidence(m,win);
  return `You are the assistant inside MarketBrain, which restores context for a trader. Answer the user's question about the chart they are looking at, in plain friendly language, under 180 words, no markdown. Keep apart what the data shows, what you infer, and what is uncertain whenever it matters. Never predict price, give trade calls or advice, or describe, score, profile, or assess the user. Use only the information below; if asked about something the page cannot see, say so.
@@ -860,14 +879,17 @@ function sysFor(m,win){
 ANSWER MODE: identify the kind of question before answering. A CONCEPT question (for example, “what is liquidity?”) needs a direct definition; do not pretend the chart proves the concept. An OBSERVATION question (what happened between dates?) needs a chronological account grounded in the requested-period candles. A CAUSE question (why did price move?) must separate the observed sequence from possible explanations; candles alone do not establish participant intent, resting orders, news causation, or motive. Say what additional evidence would be needed when relevant.
 
 When asked where price is going or what it is doing, interpret the present rather than refusing to read it: say what price just did, what unfinished structure sits above and below, and give an if/then reading using closes beyond specific levels from the data. State what would contradict the reading. These are conditions, not forecasts.
-Do not invent liquidity, orders, institutional intent, news, or reasons for a move. A detector output is a detected structure, not proof of the underlying market mechanism.
+Do not invent liquidity, orders, institutional intent, news, or reasons for a move. A detector output is a detected structure, not proof of the underlying market mechanism. Never call a candidate equal-high/low cluster confirmed resting liquidity. A sweep is only a wick beyond the detected cluster boundary followed by a close back inside. BOS/CHoCH are classified from candle closes through the latest confirmed opposing swing; the first break is left unclassified. These are descriptive labels, not entry signals.
 
 ${LOGIC}
 
 NOW: ${m.k} (${m.name}), ${tfl(m.tf)} chart. ${sentence(r)}
 Gap: ${gapStateLabel(r)}
-Swing: ${f?`${f.down?'down':'up'} from ${fmt(f.from)} to ${fmt(f.to)}, pulled back ${Math.round(f.back*100)}%, 50% at ${fmt(f.lvl(.5))}, 70.5% at ${fmt(f.lvl(.705))}`:'none clear'}
+Swing: ${f?`${f.down?'down':'up'} from ${fmt(f.from)} to ${fmt(f.to)}, pulled back ${Math.round(f.back*100)}%`:'none clear'}
+Structure: ${structureBrief(r)}
 Above price: ${around(m).above}. Below price: ${around(m).below}.
+Structure: ${structureBrief(r)}
+Detected imbalances: ${r.open.slice(-8).map(g=>`${g.kind} ${fmt(g.lo)}–${fmt(g.hi)}${g.entered?' (entered)':' (open)'}`).join('; ')||'none open'}; possible inversions: ${(r.inversions||[]).slice(-5).map(g=>`${g.kind} ${fmt(g.lo)}–${fmt(g.hi)}`).join('; ')||'none detected'}.
 Since last look: ${seen(m)||'not applicable'}
 Timeframes read: ${scopeFacts(m)}
 Reading now: ${cond(m)}
@@ -1006,12 +1028,12 @@ app.appendChild(launch);
 const live=MARKETS.filter(m=>m.on!==false);let group='',n=0;
 for(const m of live){
  if(m.g!==group){group=m.g;app.insertAdjacentHTML('beforeend',`<h2 data-g="${group}">${group}</h2>`);}
- m.tf=15;m.rd={};m.pinned=false;m.show={gap:true,fib:true};m.lines=[];m.hist=[];m.big=new Set();
+ m.tf=15;m.rd={};m.pinned=false;m.show={gap:true,fib:false};m.lines=[];m.hist=[];m.big=new Set();
  const el=m.el=document.createElement('section');el.className='m';el.dataset.g=m.g;el.style.setProperty('--c',HUES[n++%HUES.length]);
  el.innerHTML=`<button aria-expanded="false"><div class="n"><i class="dot"></i>${m.k} · ${m.name}</div><div class="s w">Reading the last few hours…</div><div class="sc"></div><span class="x">+</span></button><div class="p"><div>
  <div class="tf">${TFS.map(t=>`<button class="chip${t[1]===15?' on':''}" data-tf="${t[1]}">${t[0]}</button>`).join('')}<button class="chip" data-readall hidden>Read the other timeframes</button></div>
  <div class="ch"></div><p class="rd"></p>
- <div class="tf"><button class="chip on" data-t="gap">Show the gap</button><button class="chip on" data-t="fib">Show the fib levels</button></div>
+ <div class="tf"><button class="chip on" data-t="gap">Show the gap</button><button class="chip" data-t="fib">Show the fib levels</button></div>
  <div class="dl">What the chart is telling us</div><div class="fx" aria-label="Market context and evidence"></div>
  <div class="dl">Ask ${m.k} anything</div><div class="th"></div>
  <div class="tf qs"></div>
@@ -1034,13 +1056,13 @@ async function ask(m,q){
 /* ---- marks: the crosshair, the magnet, and your own drawings, on one overlay ---- */
 const MB=(()=>{
  const INK='#1a1325',PINK='#e0408f',GOLD='#e0a800';
- const FIB_KEY='mb_fib_settings_v1',FIB_DEFAULT=[0,.5,.705,1];
+ const FIB_KEY='mb_fib_settings_v1',FIB_COMMON=[0,.236,.382,.5,.618,.705,.786,1,1.272,1.618],FIB_DEFAULT=[...FIB_COMMON];
  const fibState=store.get(FIB_KEY,{levels:FIB_DEFAULT,presets:{Default:FIB_DEFAULT},active:'Default'});
- fibState.levels=validLevels(fibState.levels)?fibState.levels:FIB_DEFAULT;
+ if(Array.isArray(fibState.levels)&&fibState.levels.length===4&&fibState.levels.every((v,i)=>Math.abs(v-[0,.5,.705,1][i])<1e-8))fibState.levels=FIB_DEFAULT;if(Array.isArray(fibState.presets.Default)&&fibState.presets.Default.length===4&&fibState.presets.Default.every((v,i)=>Math.abs(v-[0,.5,.705,1][i])<1e-8))fibState.presets.Default=FIB_DEFAULT;fibState.levels=validLevels(fibState.levels)?fibState.levels:FIB_DEFAULT;
  fibState.presets=fibState.presets&&typeof fibState.presets==='object'?fibState.presets:{Default:FIB_DEFAULT};
  if(!fibState.presets.Default)fibState.presets.Default=FIB_DEFAULT;
- function validLevels(a){return Array.isArray(a)&&a.length>=1&&a.length<=20&&a.every(v=>Number.isFinite(v)&&v>=0&&v<=1)&&new Set(a).size===a.length}
- const fibLevels=()=>fibState.levels.slice().sort((a,b)=>a-b),fibLabel=r=>Number.isInteger(r*100)?(r*100)+'%':(r*100).toFixed(1)+'%',fibMeaning=r=>Math.abs(r-.5)<1e-8?' · midpoint':Math.abs(r-.705)<1e-8?' · deep retracement':Math.abs(r)<1e-8?' · swing end':Math.abs(r-1)<1e-8?' · swing start':'';
+ function validLevels(a){return Array.isArray(a)&&a.length>=1&&a.length<=24&&a.every(v=>Number.isFinite(v)&&v>=-1&&v<=3)&&new Set(a).size===a.length}
+ const fibLevels=()=>fibState.levels.slice().sort((a,b)=>a-b),fibLabel=r=>(r*100).toFixed(Number.isInteger(r*100)?0:1)+'%',fibMeaning=r=>Math.abs(r-.5)<1e-8?' · midpoint':Math.abs(r-.705)<1e-8?' · deep retracement':Math.abs(r)<1e-8?' · swing end':Math.abs(r-1)<1e-8?' · swing start':r>1?' · extension':r<0?' · external level':'';
  const saveFib=()=>store.set(FIB_KEY,fibState);
  const COARSE=matchMedia('(pointer:coarse)').matches,V=COARSE?'Tap':'Click',FONT='600 11px -apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif';
  const HINT={level:V+' where the level sits',line:V+' the first point',zone:V+' one corner',fib:V+' the start of the swing'};
@@ -1070,7 +1092,7 @@ const MB=(()=>{
   if(bar){let bd=1e9,bv=0,bk=null;for(const[k,v]of[['open',bar.o],['high',bar.h],['low',bar.l],['close',bar.c]]){const vy=Y(m,v);if(vy==null)continue;const dd=Math.abs(vy-y);if(dd<bd){bd=dd;bv=v;bk=k}}
    if(bk&&bd<=(COARSE?40:24)){p=bv;sy=Y(m,bv);kind=bk}}
   if(p==null)return null;
-  return{x:sx,y:sy,t:i2t(m,i),p,snapped:!!kind,kind}}
+  let out={x:sx,y:sy,t:i2t(m,i),p,snapped:!!kind,kind};const piv=m.res?.structure?.pivots||[];let best=null,bd=COARSE?30:18;for(const q of piv){const qx=X(m,q.t),qy=Y(m,q.p);if(qx==null||qy==null)continue;const dd=Math.hypot(qx-x,qy-y);if(dd<bd){bd=dd;best={x:qx,y:qy,t:q.t,p:q.p,snapped:true,kind:'swing '+q.type}}}if(best)out=best;return out}
 
  const seg=(px,py,ax,ay,bx,by)=>{const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;let u=l?((px-ax)*dx+(py-ay)*dy)/l:0;u=Math.max(0,Math.min(1,u));return Math.hypot(px-ax-u*dx,py-ay-u*dy)};
  const P=(m,o)=>({ax:X(m,o.a.t),ay:Y(m,o.a.p),bx:o.b?X(m,o.b.t):null,by:o.b?Y(m,o.b.p):null});
@@ -1141,14 +1163,17 @@ const MB=(()=>{
   const el=m.el.querySelector('.ch');
   const d=m.dr={el,list:store.get(key(m),[]),sel:null,tool:null,pend:null,ghost:null,mouse:null,down:null,drag:null,hold:false,free:false,dirty:true,sig:'',pt:null};
   d.cv=el.appendChild(Object.assign(document.createElement('canvas'),{className:'mbc'}));
-  el.insertAdjacentHTML('beforeend','<div class="dk" role="toolbar" aria-label="Chart marks"><button data-d="mag" title="Snap to the open, high, low and close (M). Hold Alt to place freely.">Magnet</button><button data-d="level">Level</button><button data-d="line">Line</button><button data-d="zone">Zone</button><button data-d="fib">Fib</button><button data-d="fib-settings" aria-expanded="false">Fib levels</button><button data-d="del" hidden>Remove</button><button data-d="clr" hidden>Clear</button><span class="dh"></span><section class="fib-panel" hidden><strong>Fibonacci levels</strong><p>50% marks the swing midpoint; 70.5% marks a deeper retracement. Add, remove or change levels below. These settings apply to automatic swing levels and new Fib drawings.</p><label>Levels (%)<input data-fib-levels type="text" inputmode="decimal" value="0, 50, 70.5, 100" aria-label="Fibonacci levels as percentages"></label><label>Preset<select data-fib-preset></select></label><div class="fib-actions"><button type="button" data-fib-apply>Apply levels</button><button type="button" data-fib-save>Save preset</button><button type="button" data-fib-delete>Delete preset</button><button type="button" data-fib-reset>Restore defaults</button></div><small data-fib-note role="status">Default: 0, 50, 70.5 and 100.</small></section></div>');
+  el.insertAdjacentHTML('beforeend','<div class="dk" role="toolbar" aria-label="Chart marks"><button data-d="mag" title="Snap to candle OHLC or nearby confirmed swing pivots. Hold Alt to place freely.">Magnet</button><button data-d="level">Level</button><button data-d="line">Line</button><button data-d="zone">Zone</button><button data-d="fib">Fib</button><button data-d="fib-settings" aria-expanded="false">Fib levels</button><button data-d="del" hidden>Remove</button><button data-d="clr" hidden>Clear</button><span class="dh"></span><section class="fib-panel" hidden><strong>Fibonacci levels</strong><p>Choose each ratio independently. Checked levels appear on your Fib drawings. Standard retracements, your 70.5% reference and extension levels are available; nothing is drawn automatically when the chart opens.</p><div class="fib-checks" data-fib-checks></div><label>Add a custom level (%)<input data-fib-add-value type="number" step="0.1" min="-100" max="300" placeholder="e.g. 200"></label><div class="fib-actions"><button type="button" data-fib-add>Add level</button></div><label>Levels (%)<input data-fib-levels type="text" inputmode="decimal" value="0, 23.6, 38.2, 50, 61.8, 70.5, 78.6, 100, 127.2, 161.8" aria-label="Enabled Fibonacci levels as percentages"></label><label>Preset<select data-fib-preset></select></label><div class="fib-actions"><button type="button" data-fib-apply>Apply list</button><button type="button" data-fib-save>Save preset</button><button type="button" data-fib-delete>Delete preset</button><button type="button" data-fib-reset>Restore defaults</button></div><hr><strong>Structure rules</strong><p>These rules identify candidate structure from loaded candles. They do not place drawings or issue signals.</p><label>Minimum equal-high / equal-low touches<select data-structure-count><option value="2">2 pivots</option><option value="3">3 pivots</option><option value="4">4 pivots</option><option value="5">5 pivots</option></select></label><label>Cluster tolerance (ATR)<input data-structure-tolerance type="number" min="0.03" max="1" step="0.01"></label><div class="fib-actions"><button type="button" data-structure-apply>Apply structure rules</button></div><small data-fib-note role="status">Default structure rule: 3 confirmed pivots within 0.15 ATR.</small></section></div>');
   d.dk=el.querySelector('.dk');
-  const fibPanel=d.dk.querySelector('.fib-panel'),fibInput=fibPanel.querySelector('[data-fib-levels]'),fibSelect=fibPanel.querySelector('[data-fib-preset]'),fibNote=fibPanel.querySelector('[data-fib-note]');
-  function refreshFibPanel(){fibInput.value=fibLevels().map(v=>String(v*100)).join(', ');fibSelect.innerHTML=Object.keys(fibState.presets).map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join('');fibSelect.value=fibState.active in fibState.presets?fibState.active:'Default'}
+  const fibPanel=d.dk.querySelector('.fib-panel'),fibInput=fibPanel.querySelector('[data-fib-levels]'),fibSelect=fibPanel.querySelector('[data-fib-preset]'),fibNote=fibPanel.querySelector('[data-fib-note]'),fibChecks=fibPanel.querySelector('[data-fib-checks]'),structCount=fibPanel.querySelector('[data-structure-count]'),structTolerance=fibPanel.querySelector('[data-structure-tolerance]');
+  function refreshFibPanel(){fibInput.value=fibLevels().map(v=>String(v*100)).join(', ');fibSelect.innerHTML=Object.keys(fibState.presets).map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join('');fibSelect.value=fibState.active in fibState.presets?fibState.active:'Default';const vals=[...new Set([...FIB_COMMON,...fibLevels()])].sort((a,b)=>a-b);fibChecks.innerHTML=vals.map(v=>`<label class="fib-check"><input type="checkbox" data-fib-ratio="${v}" ${fibState.levels.some(x=>Math.abs(x-v)<1e-8)?'checked':''}><span>${fibLabel(v)}</span></label>`).join('');const sr=structureRules();structCount.value=String(sr.minTouches);structTolerance.value=String(sr.toleranceATR)}
   function applyFibValues(values,name){if(!validLevels(values)){fibNote.textContent='Use 1–20 unique levels between 0 and 100.';return false}fibState.levels=values.slice().sort((a,b)=>a-b);fibState.active=name||'Custom';saveFib();refreshFibPanel();live.forEach(x=>{if(x.dr){x.dr.dirty=true;render(x)}if(x.sr)draw(x)});fibNote.textContent='Applied '+fibLevels().map(fibLabel).join(', ')+'.';return true}
   refreshFibPanel();
   fibSelect.addEventListener('change',()=>{const n=fibSelect.value,vals=fibState.presets[n];if(validLevels(vals)){fibState.active=n;applyFibValues(vals,n)}});
+  fibChecks.addEventListener('change',e=>{const box=e.target.closest('[data-fib-ratio]');if(!box)return;const v=+box.dataset.fibRatio,vals=fibLevels().filter(x=>Math.abs(x-v)>1e-8);if(box.checked)vals.push(v);if(!validLevels(vals)){box.checked=!box.checked;fibNote.textContent='Keep at least one enabled level.';return}applyFibValues(vals,'Custom')});
   fibPanel.querySelector('[data-fib-apply]').onclick=()=>{const vals=fibInput.value.split(',').map(x=>Number(x.trim())/100);applyFibValues(vals,'Custom')};
+  fibPanel.querySelector('[data-fib-add]').onclick=()=>{const raw=fibPanel.querySelector('[data-fib-add-value]').value;if(raw==='')return;const vals=[...fibLevels(),Number(raw)/100];if(applyFibValues(vals,'Custom'))fibPanel.querySelector('[data-fib-add-value]').value=''};
+  fibPanel.querySelector('[data-structure-apply]').onclick=()=>{const minTouches=+structCount.value,toleranceATR=+structTolerance.value;if(![2,3,4,5].includes(minTouches)||!Number.isFinite(toleranceATR)||toleranceATR<.03||toleranceATR>1){fibNote.textContent='Use 2–5 touches and a tolerance from 0.03 to 1.00 ATR.';return}store.set(STRUCT_KEY,{minTouches,toleranceATR});live.forEach(card=>{Object.keys(card.rd||{}).forEach(tf=>{const e=card.rd[tf];e.res=read(e.c,+tf);e.a=act(card,+tf,e.c,e.res)});if(card.rd[card.tf]){use(card,card.tf);if(card.classList.contains('open'))paint(card)}});fibNote.textContent='Structure rules applied to loaded candles. No chart annotations were added.'};
   fibPanel.querySelector('[data-fib-save]').onclick=()=>{const name=prompt('Name this Fibonacci preset');if(!name||!name.trim())return;const vals=fibInput.value.split(',').map(x=>Number(x.trim())/100);if(!validLevels(vals)){fibNote.textContent='Enter 1–20 unique percentages between 0 and 100 first.';return}const n=name.trim().slice(0,32);fibState.presets[n]=vals.slice().sort((a,b)=>a-b);fibState.active=n;applyFibValues(vals,n);fibNote.textContent='Saved preset “'+n+'” on this device.'};
   fibPanel.querySelector('[data-fib-delete]').onclick=()=>{const n=fibSelect.value;if(n==='Default'){fibNote.textContent='The Default preset is protected.';return}if(!fibState.presets[n])return;delete fibState.presets[n];fibState.active='Default';applyFibValues(fibState.presets.Default,'Default');fibNote.textContent='Deleted preset “'+n+'”.'};
   fibPanel.querySelector('[data-fib-reset]').onclick=()=>{fibState.presets.Default=[...FIB_DEFAULT];fibState.active='Default';applyFibValues(FIB_DEFAULT,'Default');fibNote.textContent='Restored the original default levels.'};
