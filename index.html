@@ -574,6 +574,16 @@ const store={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==
 const day=t=>new Date(t*1000).toISOString().slice(0,10);
 const nice=d=>new Date(d+'T12:00:00Z').toLocaleDateString('en-US',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
 let J=store.get('mb_journal',[]);const saveJ=()=>store.set('mb_journal',J);
+function mbOutcomeSummary(){
+ try{
+  const p=JSON.parse(localStorage.getItem('mb_demo_account_v2')||'null');
+  if(!p||!Array.isArray(p.orders))return 'No recorded account exits yet.';
+  const exits=p.orders.filter(o=>o.closedTrade===true||Number(o.realisedZar)!==0);
+  const wins=exits.filter(o=>Number(o.realisedZar)>0).length,losses=exits.filter(o=>Number(o.realisedZar)<0).length,be=exits.length-wins-losses;
+  const net=exits.reduce((a,o)=>a+(Number(o.realisedZar)||0),0),den=wins+losses;
+  return 'MarketBrain local account exit records (not broker-imported trades): '+exits.length+' outcomes; '+wins+' wins, '+losses+' losses, '+be+' breakeven; win rate '+(den?(wins/den*100).toFixed(1)+'% excluding breakeven':'not yet defined')+'; net realised '+(net>=0?'+':'-')+'R'+Math.abs(net).toFixed(2)+'. Recent outcomes: '+exits.slice(0,8).map(o=>o.symbol+' '+(Number(o.realisedZar)>0?'win':Number(o.realisedZar)<0?'loss':'breakeven')+' '+(Number(o.realisedZar)>=0?'+':'-')+'R'+Math.abs(Number(o.realisedZar)||0).toFixed(2)).join('; ');
+ }catch(e){return 'Trade outcome records are not available in this browser.'}
+}
 const hsh=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
 const cap=s=>s[0].toUpperCase()+s.slice(1);
 
@@ -876,7 +886,7 @@ function qrender(m){m.el.querySelector('.qs').innerHTML=m.qs.map((i,j)=>`<button
 function sysFor(m,win){
  const r=m.res,n=r.near,f=r.fib,st=r.structure;
  const es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(e=>`[${e.date}] ${e.text.slice(0,400)}`).join('\n')||'none';
- const ev=evidence(m,win);
+ const ev=evidence(m,win)+'\n\n'+mbOutcomeSummary();
  return `You are the assistant inside MarketBrain, which restores context for a trader. Answer the user's question about the chart they are looking at, in plain friendly language, under 180 words, no markdown. Keep apart what the data shows, what you infer, and what is uncertain whenever it matters. Never predict price, give trade calls or advice, or describe, score, profile, or assess the user. Use only the information below; if asked about something the page cannot see, say so.
 
 ANSWER MODE: identify the kind of question before answering. A CONCEPT question (for example, “what is liquidity?”) needs a direct definition; do not pretend the chart proves the concept. An OBSERVATION question (what happened between dates?) needs a chronological account grounded in the requested-period candles. A CAUSE question (why did price move?) must separate the observed sequence from possible explanations; candles alone do not establish participant intent, resting orders, news causation, or motive. Say what additional evidence would be needed when relevant.
@@ -1416,7 +1426,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  const equity=()=>paper.balance+unreal(paper.positions);
  const avail=()=>Math.max(0,equity()-exposure(paper.positions));
  const realised=()=>paper.orders.reduce((a,o)=>a+(o.realisedZar||0),0);
- const logOrder=(m,side,qty,price,real,why)=>{paper.orders.unshift({id:Date.now(),symbol:m.k,side,qty,price,valueZar:notional(m,price,qty),realisedZar:real,why:why||'',at:new Date().toISOString()});paper.orders=paper.orders.slice(0,200)};
+ const logOrder=(m,side,qty,price,real,why)=>{paper.orders.unshift({id:Date.now(),symbol:m.k,side,qty,price,valueZar:notional(m,price,qty),realisedZar:real,closedTrade:!!real||/^(stop|target|closed)$/i.test(why||''),why:why||'',at:new Date().toISOString()});paper.orders=paper.orders.slice(0,200)};
 
  /* ---- engine: market fills, resting orders, stops and targets ---- */
  function place(m,side,amt,sl,tp,px,why){
@@ -1645,7 +1655,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   document.body.classList.remove('trade-profit','trade-drawdown','trade-near-sl','trade-near-tp');if(amb)document.body.classList.add(amb);
   if(amb!==lastAmb){if(amb==='trade-near-sl')buzz([70,50,70]);else if(amb==='trade-near-tp')buzz([40,40,40]);lastAmb=amb}
   if(ab){const ks=Object.keys(paper.positions);ab.classList.toggle('in',ks.length>0);ab.innerHTML=`<span class="ab-l">Account</span><span class="ab-v">${R(equity())}</span><span class="ab-s">${ks.length?'Open: '+esc(ks.join(', ')):'No open positions'}${paper.pending.length?' · '+paper.pending.length+' resting':''}</span>`}
-  if(accountSummary)accountSummary.innerHTML=`<div><small>Equity</small><strong>${R(equity())}</strong></div><div><small>Available</small><strong>${R(avail())}</strong></div><div><small>Open P/L</small><strong class="${unreal(paper.positions)>=0?'up':'dn'}">${RS(unreal(paper.positions))}</strong></div><div><small>Realised P/L</small><strong class="${realised()>=0?'up':'dn'}">${RS(realised())}</strong></div>`;
+  if(accountSummary){const exits=paper.orders.filter(o=>o.closedTrade===true||Number(o.realisedZar)!==0),wins=exits.filter(o=>Number(o.realisedZar)>0).length,losses=exits.filter(o=>Number(o.realisedZar)<0).length,be=exits.length-wins-losses,wr=wins+losses?(wins/(wins+losses)*100).toFixed(1)+'%':'—';accountSummary.innerHTML=`<div><small>Equity</small><strong>${R(equity())}</strong></div><div><small>Available</small><strong>${R(avail())}</strong></div><div><small>Open P/L</small><strong class="${unreal(paper.positions)>=0?'up':'dn'}">${RS(unreal(paper.positions))}</strong></div><div><small>Realised P/L</small><strong class="${realised()>=0?'up':'dn'}">${RS(realised())}</strong></div><div><small>Win rate</small><strong>${wr}</strong><small>${wins}W · ${losses}L · ${be}BE</small></div>`;}
   const o=paper.orders[0];
   if(o&&o.id!==seenId){seenId=o.id;const m=mOf(o.symbol);if(o.realisedZar&&m&&m._w){m._w.ctx={real:o.realisedZar,why:o.why||'',at:Date.parse(o.at)||Date.now()};call.textContent=o.symbol+' closed '+RS(o.realisedZar)+'. Write it down?';call.hidden=false;dock.style.setProperty('--wc',o.realisedZar>=0?'#3fbf7f':'#ef6878');wb.classList.add('call')}}
  }
@@ -1752,13 +1762,13 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  const mbMarketContext=()=>{
   const rows=live.filter(m=>m.res).slice(0,14).map(m=>m.k+': '+sentence(m.res)+'; timeframe '+tfl(m.tf)+'.');
   const notes=J.slice().sort((a,b)=>b.at-a.at).slice(0,8).map(e=>'['+e.date+' '+e.k+'] '+e.text.slice(0,420)).join('\n');
-  return 'MARKET SNAPSHOT FROM THIS PAGE (may be stale; respect each instrument data timestamp):\n'+(rows.join('\n')||'No chart readings have loaded yet.')+'\n\nRECENT JOURNAL NOTES (the trader’s own words, not verified market facts):\n'+(notes||'No journal notes yet.');
+  return 'MARKET SNAPSHOT FROM THIS PAGE (may be stale; respect each instrument data timestamp):\n'+(rows.join('\n')||'No chart readings have loaded yet.')+'\n\nRECENT JOURNAL NOTES (the trader’s own words, not verified market facts):\n'+(notes||'No journal notes yet.')+'\n\nLONGITUDINAL OUTCOME RECORD (local MarketBrain account records, not broker-imported):\n'+mbOutcomeSummary();
  };
  const mbSystem=()=>`You are MarketBrain: a genuinely conversational, market-centred thinking partner inside a trader's workspace. You are warm, alert, curious about markets, grounded and naturally enthusiastic about understanding price action. You are not a form, checklist, therapist, trading signal service, or motivational chatbot.
 
 CONVERSATION:
 - Talk like a thoughtful human conversation partner. Understand the meaning of the whole message, including context, references, corrections, uncertainty and changes of mind. Do not classify messages by keyword or force the user through a fixed sequence of questions.
-- Remember the conversation history supplied with each turn. Refer back to relevant details naturally; distinguish what the user said previously from what the market data shows.
+- Remember the conversation history supplied with each turn. Refer back to relevant details naturally; distinguish what the user said previously from what the market data shows.\n- When outcome records exist, help review win rate, net realised result and repeated setup/process patterns over time. State the sample size, avoid conclusions from small samples, and never turn past results into a prediction or trade signal.
 - Ask one useful follow-up only when it genuinely advances the conversation. Sometimes answer directly, reflect an insight, disagree with reasoning, or simply acknowledge. Do not end every response with a question.
 - If the user says hello or opens the day, greet them with genuine market-centred enthusiasm. It is appropriate to ask how they slept, what they did since the last conversation, and what is on their mind today, but vary the wording and do not ask all of these mechanically every time.
 - Be interested in screenshots and written observations. When a chart image is supplied, describe only what is actually visible; ask for instrument/timeframe if unclear. Separate visible evidence, interpretation and unknowns.
