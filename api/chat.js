@@ -2,7 +2,7 @@
 // Configure OPENAI_API_KEY and MB_AI_ENABLED=true in the deployment environment.
 // Never put the provider key in index.html or browser storage.
 
-const MODEL = process.env.MB_OPENAI_MODEL || 'gpt-4.1-mini';
+const MODEL = process.env.MB_OPENAI_MODEL || 'gpt-6-luna';
 const MAX_MESSAGES = 12;
 const MAX_TEXT_CHARS = 12000;
 const MAX_SYSTEM_CHARS = 18000;
