@@ -20,7 +20,7 @@ The included per-IP throttle is best-effort and resets with serverless instances
 
 ## Memory and records
 
-The existing journal and conversation remain browser-local. The assistant can use the current conversation and the journal context MarketBrain already supplies. This does **not** create cloud-synced or cross-device memory. Persistent trading-performance memory should be built from explicit journal/trade records and outcome fields, not by silently training the model or treating its past answers as facts.
+The existing journal and conversation remain browser-local. The assistant can use the current conversation and the journal context MarketBrain already supplies. The local account now accumulates lifetime wins, losses, breakevens, realised P/L and profit factor, and shares those aggregate outcomes plus recent exits with the assistant. The order detail list is still capped at 200 records; the aggregate counters continue accumulating locally. These outcomes are from MarketBrain's built-in account, not broker-imported trades. This does **not** create cloud-synced or cross-device memory. A proper shared memory system still requires user sign-in and a private database, and should store structured trade/journal facts rather than silently training the model or treating its past answers as facts.
 
 ## Privacy
 
