@@ -8,11 +8,11 @@ MarketBrain is currently a static GitHub Pages app. Static hosting cannot keep a
 2. In Vercel → Project → Settings → Environment Variables, add:
    - `OPENAI_API_KEY`: your private OpenAI API key (server-side only)
    - `MB_AI_ENABLED`: `true`
-   - Optional `MB_OPENAI_MODEL`: defaults to `gpt-4.1-mini`
+   - Optional `MB_OPENAI_MODEL`: defaults to `gpt-6-luna`
 3. Redeploy after adding the environment variables.
 4. Open the Vercel deployment and test text chat and a chart screenshot. Do not put the key in the repository, HTML, or browser local storage.
 
-The API route is deliberately disabled until `MB_AI_ENABLED=true`. OpenAI usage is billed to the MarketBrain owner account.
+The API route is deliberately disabled until `MB_AI_ENABLED=true`. OpenAI usage is billed to the MarketBrain owner account. The default model is GPT-6 Luna, OpenAI's efficient text-and-image model for high-volume workloads.
 
 ## Important before public launch
 
