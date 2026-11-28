@@ -57,6 +57,8 @@ module.exports = async function handler(req, res) {
   const system = typeof body.system === 'string' ? body.system.slice(0, MAX_SYSTEM_CHARS) : '';
   const incoming = Array.isArray(body.messages) ? body.messages.slice(-MAX_MESSAGES) : [];
   if (!system || !incoming.length) return send(res, 400, { error: 'The assistant needs a question and its market context.' });
+  const totalChars = system.length + incoming.reduce((sum, item) => sum + (item && typeof item.text === 'string' ? item.text.length : 0), 0);
+  if (totalChars > 24000) return send(res, 413, { error: 'That conversation is too long for one request. Start a new conversation or shorten the attached context.' });
 
   const messages = [{ role: 'system', content: system }];
   for (const item of incoming) {
