@@ -498,7 +498,7 @@ header p#tagline{color:#000!important}
 
 </header>
 <main id="app"></main>
-<footer id="mb-settings"><span>MarketBrain · Local settings</span><details id="mb-storage-info"><summary>Where your information lives</summary><div><p><strong>Journal, AI conversation history and account:</strong> saved in this browser on this device.</p><p><strong>Chart screenshots:</strong> stored in this browser\’s IndexedDB.</p><p><strong>Market prices and calendar:</strong> retrieved from external data providers; some results are cached in this browser.</p><p><strong>AI questions and attached screenshots:</strong> sent to the AI provider you have connected when you submit them.</p><p>Browser storage is not cloud backup. Clearing site data or changing browsers/devices can remove or separate these records.</p></div></details><div id="mb-settings-actions"><button id="tdkey" type="button">Connect market data</button><button id="aikey" type="button">Connect AI assistant</button></div></footer>
+<footer id="mb-settings"><span>MarketBrain · Local settings</span><details id="mb-storage-info"><summary>Where your information lives</summary><div><p><strong>Journal, AI conversation history and account:</strong> saved in this browser on this device.</p><p><strong>Chart screenshots:</strong> stored in this browser\’s IndexedDB.</p><p><strong>Market prices and calendar:</strong> retrieved from external data providers; some results are cached in this browser.</p><p><strong>MarketBrain AI:</strong> questions and chart screenshots are sent to OpenAI through MarketBrain's server when enabled. The OpenAI API key is stored server-side, not in this browser. OpenAI processes submitted content to generate replies.</p><p><strong>Conversation history and journal:</strong> currently saved in this browser on this device. The assistant can use saved journal notes and recent chat as context, but cloud accounts and cross-device memory are not implemented yet.</p><p>Browser storage is not cloud backup. Clearing site data or changing browsers/devices can remove or separate these records.</p></div></details><div id="mb-settings-actions"><button id="tdkey" type="button">Connect market data</button></div></footer>
 <div id="dock"><button class="ask" id="dk">Talk to MarketBrain</button></div>
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 <script>
@@ -528,7 +528,7 @@ header p#tagline{color:#000!important}
 <script>
 // Keep the product promise stable. The interface should restore context, not compete for attention.
 const TWELVE_KEY=localStorage.getItem('mb_td_key')||'';
-const AI_MODEL='claude-sonnet-5-5',GEMINI_MODEL='gemini-3.8-flash';
+const AI_MODEL='gpt-6-luna';
 // Add or remove markets here. on:false hides one until you switch it on (change it to true or delete it).
 // src:'b' = Binance (free, no key). src:'t' = Twelve Data (needs your Data key; the free plan allows about 8 requests a minute).
 // etf:true marks a fund that trades only in US stock hours, not the 24-hour forex week.
@@ -574,6 +574,16 @@ const store={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==
 const day=t=>new Date(t*1000).toISOString().slice(0,10);
 const nice=d=>new Date(d+'T12:00:00Z').toLocaleDateString('en-US',{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
 let J=store.get('mb_journal',[]);const saveJ=()=>store.set('mb_journal',J);
+function mbOutcomeSummary(){
+ try{
+  const p=JSON.parse(localStorage.getItem('mb_demo_account_v2')||'null');
+  if(!p||!Array.isArray(p.orders))return 'No recorded account exits yet.';
+  const old=p.orders.filter(o=>o.closedTrade===true||Number(o.realisedZar)!==0),st=p.performance||{};
+  const count=Number.isFinite(st.count)?st.count:old.length,wins=Number.isFinite(st.wins)?st.wins:old.filter(o=>Number(o.realisedZar)>0).length,losses=Number.isFinite(st.losses)?st.losses:old.filter(o=>Number(o.realisedZar)<0).length,be=Number.isFinite(st.breakeven)?st.breakeven:count-wins-losses;
+  const net=Number.isFinite(st.net)?st.net:old.reduce((a,o)=>a+(Number(o.realisedZar)||0),0),grossWin=Number(st.grossWin)||old.reduce((a,o)=>a+Math.max(0,Number(o.realisedZar)||0),0),grossLoss=Math.abs(Number(st.grossLoss)||old.reduce((a,o)=>a+Math.min(0,Number(o.realisedZar)||0),0)),den=wins+losses,recent=Array.isArray(st.recent)?st.recent:old,pf=grossLoss?(grossWin/grossLoss).toFixed(2):grossWin?'uncapped':'—';
+  return 'MarketBrain local account exit records (not broker-imported trades): '+count+' outcomes total; '+wins+' wins, '+losses+' losses, '+be+' breakeven; win rate '+(den?(wins/den*100).toFixed(1)+'% excluding breakeven':'not yet defined')+'; profit factor '+pf+'; net realised '+(net>=0?'+':'-')+'R'+Math.abs(net).toFixed(2)+'. Recent outcomes: '+recent.slice(0,8).map(o=>o.symbol+' '+(Number(o.realisedZar)>0?'win':Number(o.realisedZar)<0?'loss':'breakeven')+' '+(Number(o.realisedZar)>=0?'+':'-')+'R'+Math.abs(Number(o.realisedZar)||0).toFixed(2)).join('; ');
+ }catch(e){return 'Trade outcome records are not available in this browser.'}
+}
 const hsh=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
 const cap=s=>s[0].toUpperCase()+s.slice(1);
 
@@ -876,7 +886,7 @@ function qrender(m){m.el.querySelector('.qs').innerHTML=m.qs.map((i,j)=>`<button
 function sysFor(m,win){
  const r=m.res,n=r.near,f=r.fib,st=r.structure;
  const es=J.filter(e=>e.k===m.k).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(e=>`[${e.date}] ${e.text.slice(0,400)}`).join('\n')||'none';
- const ev=evidence(m,win);
+ const ev=evidence(m,win)+'\n\n'+mbOutcomeSummary();
  return `You are the assistant inside MarketBrain, which restores context for a trader. Answer the user's question about the chart they are looking at, in plain friendly language, under 180 words, no markdown. Keep apart what the data shows, what you infer, and what is uncertain whenever it matters. Never predict price, give trade calls or advice, or describe, score, profile, or assess the user. Use only the information below; if asked about something the page cannot see, say so.
 
 ANSWER MODE: identify the kind of question before answering. A CONCEPT question (for example, “what is liquidity?”) needs a direct definition; do not pretend the chart proves the concept. An OBSERVATION question (what happened between dates?) needs a chronological account grounded in the requested-period candles. A CAUSE question (why did price move?) must separate the observed sequence from possible explanations; candles alone do not establish participant intent, resting orders, news causation, or motive. Say what additional evidence would be needed when relevant.
@@ -900,14 +910,12 @@ ${ev}
 THE USER'S JOURNAL NOTES on ${m.k} (their words, not facts):
 ${es}`;
 }
-async function callAI(key,sys,msgs){
- const gm=/^(AIza|AQ\.)/.test(key),H={'content-type':'application/json'};let r;
- if(gm)r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,{method:'POST',headers:{...H,'x-goog-api-key':key},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:msgs.map(x=>({role:x.role==='user'?'user':'model',parts:[{text:x.text}]})),generationConfig:{maxOutputTokens:4096,temperature:.55}})});
- else r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{...H,'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:AI_MODEL,max_tokens:1200,system:sys,messages:msgs.map(x=>({role:x.role,content:x.text}))})});
- const j=await r.json();
- if(!r.ok)throw(j.error&&(j.error.message||j.error))||'Request failed ('+r.status+')';
- const t=gm?(j.candidates?.[0]?.content?.parts||[]).map(b=>b.text||'').join('\n'):(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
- if(!t)throw 'The AI service returned no text. Check the key, model access, and limits.';return t;
+async function callAI(sys,msgs,imageData=null){
+ const response=await fetch('/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({system:sys,messages:msgs.map(x=>({role:x.role,text:x.text})),image:imageData?{dataUrl:imageData.url,mime:imageData.mime}:null})});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(data.error||'MarketBrain AI is not available right now ('+response.status+').');
+ if(!data.answer)throw new Error('The AI service returned no answer.');
+ return data.answer;
 }
 
 async function getDaily(m){
@@ -1024,8 +1032,8 @@ document.getElementById('dexnew').onclick=()=>dexFeed('new');document.getElement
 const app=document.getElementById('app'),note=document.getElementById('note'),bar=document.getElementById('bar');
 const keyBtn=(id,msg,k,reload)=>document.getElementById(id).onclick=()=>{const v=prompt(msg,localStorage.getItem(k)||'');if(v!==null){try{v.trim()?localStorage.setItem(k,v.trim()):localStorage.removeItem(k);if(reload)location.reload()}catch(e){alert('Could not save the key in this browser.')}}};
 keyBtn('tdkey','Paste your Twelve Data API key. It is stored only in this browser. Leave empty to remove it.','mb_td_key',true);
-keyBtn('aikey','Paste a Google Gemini key (AIza… or AQ…) or Anthropic key (sk-ant-…). Stored only in this browser. Leave empty to remove it.','mb_ai_key',false);
-const settingsActions=document.getElementById('mb-settings-actions');['tdkey','aikey'].forEach((id,i)=>{const b=document.getElementById(id);if(b){b.textContent=i?'Connect AI assistant':'Connect market data';settingsActions.appendChild(b)}});
+// AI credentials stay on MarketBrain's server; users do not provide a key.
+const settingsActions=document.getElementById('mb-settings-actions');const dataKeyButton=document.getElementById('tdkey');if(dataKeyButton){dataKeyButton.textContent='Connect market data';settingsActions.appendChild(dataKeyButton)}
 app.appendChild(launch);
 const live=MARKETS.filter(m=>m.on!==false);let group='',n=0;
 for(const m of live){
@@ -1049,10 +1057,8 @@ function say(m,who,text){const d=document.createElement('div');d.className='msg 
 async function ask(m,q){
  q=q.trim();if(!q||!m.res)return;
  say(m,'u',q);
- const key=localStorage.getItem('mb_ai_key');
- if(!key){say(m,'a','Typed questions need an AI key. Add one with the AI key button at the top. The quick questions work without it.');return}
  m.hist.push({role:'user',text:q});const w=say(m,'a','Checking the evidence…');
- try{const fresh=!!askedDays(q),win=await windowFor(m,q),t=await callAI(key,sysFor(m,win),m.hist.slice(-7));m.hist.push({role:'assistant',text:t});w.textContent=(fresh&&win?'Coverage checked: '+winInfo(m,win).line+'\n\n':'')+t}
+ try{const fresh=!!askedDays(q),win=await windowFor(m,q),t=await callAI(sysFor(m,win),m.hist.slice(-7));m.hist.push({role:'assistant',text:t});w.textContent=(fresh&&win?'Coverage checked: '+winInfo(m,win).line+'\n\n':'')+t}
  catch(e){m.hist.pop();w.textContent=(e instanceof TypeError?"The browser couldn't reach the AI service. ":"The assistant couldn't answer: ")+(e.message||e)}
 }
 /* ---- marks: the crosshair, the magnet, and your own drawings, on one overlay ---- */
@@ -1404,7 +1410,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const START=100000,ZAR=18,KEY='mb_demo_account_v2';
  const fresh=()=>({balance:START,positions:{},orders:[],pending:[]});
- const readP=()=>{try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&typeof v.balance==='number'&&v.positions&&Array.isArray(v.orders)){v.pending=v.pending||[];return v}}catch(e){}return fresh()};
+ const readP=()=>{try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&typeof v.balance==='number'&&v.positions&&Array.isArray(v.orders)){v.pending=v.pending||[];if(!v.performance||v.performance.version!==2){const exits=v.orders.filter(o=>o.closedTrade===true||Number(o.realisedZar)!==0),wins=exits.filter(o=>Number(o.realisedZar)>0).length,losses=exits.filter(o=>Number(o.realisedZar)<0).length,breakeven=exits.length-wins-losses;v.performance={version:2,count:exits.length,wins,losses,breakeven,net:exits.reduce((a,o)=>a+(Number(o.realisedZar)||0),0),grossWin:exits.reduce((a,o)=>a+Math.max(0,Number(o.realisedZar)||0),0),grossLoss:exits.reduce((a,o)=>a+Math.min(0,Number(o.realisedZar)||0),0),recent:exits.slice(0,40).map(o=>({symbol:o.symbol,realisedZar:Number(o.realisedZar)||0,why:o.why||'',at:o.at||''}))}}return v}}catch(e){}return fresh()};
  let paper=readP(),lastAmb='',seenId=paper.orders[0]?paper.orders[0].id:0;
  let lastPersistOK=true;const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(paper));lastPersistOK=true;return true}catch(e){lastPersistOK=false;return false}};
  const R=n=>(n<0?'-':'')+'R'+Math.abs(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -1419,8 +1425,8 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  const unreal=ps=>Object.entries(ps).reduce((a,[k,q])=>{const m=mOf(k),p=m&&priceOf(m);return a+(m&&p?pnl(m,q,p):0)},0);
  const equity=()=>paper.balance+unreal(paper.positions);
  const avail=()=>Math.max(0,equity()-exposure(paper.positions));
- const realised=()=>paper.orders.reduce((a,o)=>a+(o.realisedZar||0),0);
- const logOrder=(m,side,qty,price,real,why)=>{paper.orders.unshift({id:Date.now(),symbol:m.k,side,qty,price,valueZar:notional(m,price,qty),realisedZar:real,why:why||'',at:new Date().toISOString()});paper.orders=paper.orders.slice(0,200)};
+ const realised=()=>paper.performance&&Number.isFinite(paper.performance.net)?paper.performance.net:paper.orders.reduce((a,o)=>a+(o.realisedZar||0),0);
+ const logOrder=(m,side,qty,price,real,why)=>{const at=new Date().toISOString(),closedTrade=!!real||/^(stop|target|closed)$/i.test(why||''),result=Number(real)||0;paper.orders.unshift({id:Date.now(),symbol:m.k,side,qty,price,valueZar:notional(m,price,qty),realisedZar:result,closedTrade,why:why||'',at});paper.orders=paper.orders.slice(0,200);if(closedTrade){const p=paper.performance||(paper.performance={version:2,count:0,wins:0,losses:0,breakeven:0,net:0,grossWin:0,grossLoss:0,recent:[]});p.count++;if(result>0){p.wins++;p.grossWin=(p.grossWin||0)+result}else if(result<0){p.losses++;p.grossLoss=(p.grossLoss||0)+result}else p.breakeven++;p.net+=result;p.recent.unshift({symbol:m.k,realisedZar:result,why:why||'',at});p.recent=p.recent.slice(0,40)}};
 
  /* ---- engine: market fills, resting orders, stops and targets ---- */
  function place(m,side,amt,sl,tp,px,why){
@@ -1649,7 +1655,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   document.body.classList.remove('trade-profit','trade-drawdown','trade-near-sl','trade-near-tp');if(amb)document.body.classList.add(amb);
   if(amb!==lastAmb){if(amb==='trade-near-sl')buzz([70,50,70]);else if(amb==='trade-near-tp')buzz([40,40,40]);lastAmb=amb}
   if(ab){const ks=Object.keys(paper.positions);ab.classList.toggle('in',ks.length>0);ab.innerHTML=`<span class="ab-l">Account</span><span class="ab-v">${R(equity())}</span><span class="ab-s">${ks.length?'Open: '+esc(ks.join(', ')):'No open positions'}${paper.pending.length?' · '+paper.pending.length+' resting':''}</span>`}
-  if(accountSummary)accountSummary.innerHTML=`<div><small>Equity</small><strong>${R(equity())}</strong></div><div><small>Available</small><strong>${R(avail())}</strong></div><div><small>Open P/L</small><strong class="${unreal(paper.positions)>=0?'up':'dn'}">${RS(unreal(paper.positions))}</strong></div><div><small>Realised P/L</small><strong class="${realised()>=0?'up':'dn'}">${RS(realised())}</strong></div>`;
+  if(accountSummary){const perf=paper.performance||{wins:0,losses:0,breakeven:0,grossWin:0,grossLoss:0},wins=perf.wins||0,losses=perf.losses||0,be=perf.breakeven||0,wr=wins+losses?(wins/(wins+losses)*100).toFixed(1)+'%':'—',pf=perf.grossLoss?(Math.abs(perf.grossWin/perf.grossLoss)).toFixed(2):perf.grossWin?'∞':'—';accountSummary.innerHTML=`<div><small>Equity</small><strong>${R(equity())}</strong></div><div><small>Available</small><strong>${R(avail())}</strong></div><div><small>Open P/L</small><strong class="${unreal(paper.positions)>=0?'up':'dn'}">${RS(unreal(paper.positions))}</strong></div><div><small>Realised P/L</small><strong class="${realised()>=0?'up':'dn'}">${RS(realised())}</strong></div><div><small>Win rate</small><strong>${wr}</strong><small>${wins}W · ${losses}L · ${be}BE · PF ${pf}</small></div>`;}
   const o=paper.orders[0];
   if(o&&o.id!==seenId){seenId=o.id;const m=mOf(o.symbol);if(o.realisedZar&&m&&m._w){m._w.ctx={real:o.realisedZar,why:o.why||'',at:Date.parse(o.at)||Date.now()};call.textContent=o.symbol+' closed '+RS(o.realisedZar)+'. Write it down?';call.hidden=false;dock.style.setProperty('--wc',o.realisedZar>=0?'#3fbf7f':'#ef6878');wb.classList.add('call')}}
  }
@@ -1756,13 +1762,13 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  const mbMarketContext=()=>{
   const rows=live.filter(m=>m.res).slice(0,14).map(m=>m.k+': '+sentence(m.res)+'; timeframe '+tfl(m.tf)+'.');
   const notes=J.slice().sort((a,b)=>b.at-a.at).slice(0,8).map(e=>'['+e.date+' '+e.k+'] '+e.text.slice(0,420)).join('\n');
-  return 'MARKET SNAPSHOT FROM THIS PAGE (may be stale; respect each instrument data timestamp):\n'+(rows.join('\n')||'No chart readings have loaded yet.')+'\n\nRECENT JOURNAL NOTES (the trader’s own words, not verified market facts):\n'+(notes||'No journal notes yet.');
+  return 'MARKET SNAPSHOT FROM THIS PAGE (may be stale; respect each instrument data timestamp):\n'+(rows.join('\n')||'No chart readings have loaded yet.')+'\n\nRECENT JOURNAL NOTES (the trader’s own words, not verified market facts):\n'+(notes||'No journal notes yet.')+'\n\nLONGITUDINAL OUTCOME RECORD (local MarketBrain account records, not broker-imported):\n'+mbOutcomeSummary();
  };
  const mbSystem=()=>`You are MarketBrain: a genuinely conversational, market-centred thinking partner inside a trader's workspace. You are warm, alert, curious about markets, grounded and naturally enthusiastic about understanding price action. You are not a form, checklist, therapist, trading signal service, or motivational chatbot.
 
 CONVERSATION:
 - Talk like a thoughtful human conversation partner. Understand the meaning of the whole message, including context, references, corrections, uncertainty and changes of mind. Do not classify messages by keyword or force the user through a fixed sequence of questions.
-- Remember the conversation history supplied with each turn. Refer back to relevant details naturally; distinguish what the user said previously from what the market data shows.
+- Remember the conversation history supplied with each turn. Refer back to relevant details naturally; distinguish what the user said previously from what the market data shows.\n- When outcome records exist, help review win rate, net realised result and repeated setup/process patterns over time. State the sample size, avoid conclusions from small samples, and never turn past results into a prediction or trade signal.
 - Ask one useful follow-up only when it genuinely advances the conversation. Sometimes answer directly, reflect an insight, disagree with reasoning, or simply acknowledge. Do not end every response with a question.
 - If the user says hello or opens the day, greet them with genuine market-centred enthusiasm. It is appropriate to ask how they slept, what they did since the last conversation, and what is on their mind today, but vary the wording and do not ask all of these mechanically every time.
 - Be interested in screenshots and written observations. When a chart image is supplied, describe only what is actually visible; ask for instrument/timeframe if unclear. Separate visible evidence, interpretation and unknowns.
@@ -1813,32 +1819,20 @@ ${mbMarketContext()}`;
   if(mbGreetingStarted)return;mbGreetingStarted=true;
   if(mbChat.length){mbChat.slice(-12).forEach(x=>mbBubble(x.role==='user'?'user':'assistant',x.text));}
   if(localStorage.getItem(MB_GREETING_KEY)===new Date().toISOString().slice(0,10))return;
-  const key=localStorage.getItem('mb_ai_key');
-  if(!key){mbBubble('assistant',mbWelcome()+' Connect your AI assistant in Local settings to enable live replies.');return}
   const pending=mbBubble('assistant','Getting the market conversation ready…');pending.classList.add('pending');
-  try{const greetingHistory=mbChat.slice(-10).map(x=>({role:x.role,text:x.text}));greetingHistory.push({role:'user',text:'Open today’s MarketBrain conversation.'});const t=await callAI(key,mbSystem()+'\n\nYou are opening the conversation. Greet the trader naturally for the current time of day. Be warm and genuinely interested in markets. Ask how they slept or how they are arriving, and invite them to share what they did since the last conversation or what is on their mind. Use prior conversation and journal context if available. Do not claim to have monitored markets while they were away. Keep it to 2–4 natural sentences.',greetingHistory);pending.textContent=t;pending.classList.remove('pending');mbChat.push({role:'assistant',text:t});mbSave();localStorage.setItem(MB_GREETING_KEY,new Date().toISOString().slice(0,10));}
+  try{const greetingHistory=mbChat.slice(-10).map(x=>({role:x.role,text:x.text}));greetingHistory.push({role:'user',text:'Open today’s MarketBrain conversation.'});const t=await callAI(mbSystem()+'\n\nYou are opening the conversation. Greet the trader naturally for the current time of day. Be warm and genuinely interested in markets. Ask how they slept or how they are arriving, and invite them to share what they did since the last conversation or what is on their mind. Use prior conversation and journal context if available. Do not claim to have monitored markets while they were away. Keep it to 2–4 natural sentences.',greetingHistory);pending.textContent=t;pending.classList.remove('pending');mbChat.push({role:'assistant',text:t});mbSave();localStorage.setItem(MB_GREETING_KEY,new Date().toISOString().slice(0,10));}
   catch(e){pending.textContent=mbWelcome()+' I could not reach the AI service just now: '+(e.message||e);pending.classList.remove('pending')}
  };
  const mbReadImage=f=>new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result));r.onerror=()=>reject(r.error);r.readAsDataURL(f)});
  const mbSend=async()=>{
   const q=input.value.trim();if(!q&&!mbImage)return;
-  const key=localStorage.getItem('mb_ai_key');if(!key){mbBubble('assistant','Connect your AI assistant in Local settings first. The key stays in this browser and is sent directly to your selected AI provider.');return}
   const imageData=mbImage,preview=imageData&&imageData.url;
   mbBubble('user',q||'Please read this chart screenshot.',preview);
   const userText=q+(imageData?'\n[The user attached a chart screenshot for visual analysis.]':'');
   mbChat.push({role:'user',text:userText});mbSave();input.value='';mbImage=null;fileInput.value='';fileLabel.textContent='';
   const pending=mbBubble('assistant','Reading the conversation and market context…');pending.classList.add('pending');
   try{
-   let answer;
-   if(imageData){
-    if(!/^(AIza|AQ\.)/.test(key))throw new Error('Screenshot understanding currently requires a Google Gemini API key. Connect a Gemini key in Local settings, then send the screenshot again.');
-    const base64=imageData.url.split(',')[1];
-    const contents=mbChat.slice(-12).map((x,i)=>({role:x.role==='assistant'?'model':'user',parts:[{text:x.text}]}));
-    contents[contents.length-1].parts.push({inline_data:{mime_type:imageData.mime,data:base64}});
-    const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODEL+':generateContent',{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':key},body:JSON.stringify({systemInstruction:{parts:[{text:mbSystem()}]},contents,generationConfig:{maxOutputTokens:1800,temperature:.55}})});
-    const data=await response.json();if(!response.ok)throw new Error(data.error?.message||'Gemini request failed ('+response.status+').');
-    answer=(data.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('\n');if(!answer)throw new Error('Gemini returned no readable answer.');
-   }else answer=await callAI(key,mbSystem(),mbChat.slice(-12).map(x=>({role:x.role,text:x.text})));
+   const answer=await callAI(mbSystem(),mbChat.slice(-12).map(x=>({role:x.role,text:x.text})),imageData);
    pending.textContent=answer;pending.classList.remove('pending');mbChat.push({role:'assistant',text:answer});mbSave();
   }catch(e){pending.textContent='I could not complete that reply. '+(e.message||String(e));pending.classList.remove('pending');}
  };
@@ -2131,7 +2125,7 @@ body.v-cards .m .sc,.nu,#mb-settings,#mb-settings-actions button{font-size:14px!
 .account-head h2{font-size:clamp(30px,5vw,42px);letter-spacing:-.04em;margin:5px 0;color:var(--ink)}
 .account-head p{font-size:14px;color:var(--mute);margin:0}
 .account-close{width:42px;height:42px;flex:none;border:1px solid #ffffffdf;border-radius:50%;background:#ffffffa8;color:var(--ink);font-size:26px;cursor:pointer}
-.account-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:18px 0}
+.account-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:18px 0}
 .account-summary>div{min-width:0;padding:13px 14px;border:1px solid #ffffffd9;border-radius:16px;background:#ffffff8a}
 .account-summary small{display:block;font-size:12px;color:var(--mute)}
 .account-summary strong{display:block;margin-top:4px;font-size:clamp(16px,2.2vw,22px);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
