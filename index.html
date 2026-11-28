@@ -578,10 +578,10 @@ function mbOutcomeSummary(){
  try{
   const p=JSON.parse(localStorage.getItem('mb_demo_account_v2')||'null');
   if(!p||!Array.isArray(p.orders))return 'No recorded account exits yet.';
-  const exits=p.orders.filter(o=>o.closedTrade===true||Number(o.realisedZar)!==0);
-  const wins=exits.filter(o=>Number(o.realisedZar)>0).length,losses=exits.filter(o=>Number(o.realisedZar)<0).length,be=exits.length-wins-losses;
-  const net=exits.reduce((a,o)=>a+(Number(o.realisedZar)||0),0),den=wins+losses;
-  return 'MarketBrain local account exit records (not broker-imported trades): '+exits.length+' outcomes; '+wins+' wins, '+losses+' losses, '+be+' breakeven; win rate '+(den?(wins/den*100).toFixed(1)+'% excluding breakeven':'not yet defined')+'; net realised '+(net>=0?'+':'-')+'R'+Math.abs(net).toFixed(2)+'. Recent outcomes: '+exits.slice(0,8).map(o=>o.symbol+' '+(Number(o.realisedZar)>0?'win':Number(o.realisedZar)<0?'loss':'breakeven')+' '+(Number(o.realisedZar)>=0?'+':'-')+'R'+Math.abs(Number(o.realisedZar)||0).toFixed(2)).join('; ');
+  const old=p.orders.filter(o=>o.closedTrade===true||Number(o.realisedZar)!==0),st=p.performance||{};
+  const count=Number.isFinite(st.count)?st.count:old.length,wins=Number.isFinite(st.wins)?st.wins:old.filter(o=>Number(o.realisedZar)>0).length,losses=Number.isFinite(st.losses)?st.losses:old.filter(o=>Number(o.realisedZar)<0).length,be=Number.isFinite(st.breakeven)?st.breakeven:count-wins-losses;
+  const net=Number.isFinite(st.net)?st.net:old.reduce((a,o)=>a+(Number(o.realisedZar)||0),0),den=wins+losses,recent=Array.isArray(st.recent)?st.recent:old;
+  return 'MarketBrain local account exit records (not broker-imported trades): '+count+' outcomes total; '+wins+' wins, '+losses+' losses, '+be+' breakeven; win rate '+(den?(wins/den*100).toFixed(1)+'% excluding breakeven':'not yet defined')+'; net realised '+(net>=0?'+':'-')+'R'+Math.abs(net).toFixed(2)+'. Recent outcomes: '+recent.slice(0,8).map(o=>o.symbol+' '+(Number(o.realisedZar)>0?'win':Number(o.realisedZar)<0?'loss':'breakeven')+' '+(Number(o.realisedZar)>=0?'+':'-')+'R'+Math.abs(Number(o.realisedZar)||0).toFixed(2)).join('; ');
  }catch(e){return 'Trade outcome records are not available in this browser.'}
 }
 const hsh=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
@@ -1410,7 +1410,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const START=100000,ZAR=18,KEY='mb_demo_account_v2';
  const fresh=()=>({balance:START,positions:{},orders:[],pending:[]});
- const readP=()=>{try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&typeof v.balance==='number'&&v.positions&&Array.isArray(v.orders)){v.pending=v.pending||[];return v}}catch(e){}return fresh()};
+ const readP=()=>{try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&typeof v.balance==='number'&&v.positions&&Array.isArray(v.orders)){v.pending=v.pending||[];if(!v.performance||v.performance.version!==1){const exits=v.orders.filter(o=>o.closedTrade===true||Number(o.realisedZar)!==0),wins=exits.filter(o=>Number(o.realisedZar)>0).length,losses=exits.filter(o=>Number(o.realisedZar)<0).length,breakeven=exits.length-wins-losses;v.performance={version:1,count:exits.length,wins,losses,breakeven,net:exits.reduce((a,o)=>a+(Number(o.realisedZar)||0),0),recent:exits.slice(0,40).map(o=>({symbol:o.symbol,realisedZar:Number(o.realisedZar)||0,why:o.why||'',at:o.at||''}))}}return v}}catch(e){}return fresh()};
  let paper=readP(),lastAmb='',seenId=paper.orders[0]?paper.orders[0].id:0;
  let lastPersistOK=true;const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(paper));lastPersistOK=true;return true}catch(e){lastPersistOK=false;return false}};
  const R=n=>(n<0?'-':'')+'R'+Math.abs(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -1426,7 +1426,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
  const equity=()=>paper.balance+unreal(paper.positions);
  const avail=()=>Math.max(0,equity()-exposure(paper.positions));
  const realised=()=>paper.orders.reduce((a,o)=>a+(o.realisedZar||0),0);
- const logOrder=(m,side,qty,price,real,why)=>{paper.orders.unshift({id:Date.now(),symbol:m.k,side,qty,price,valueZar:notional(m,price,qty),realisedZar:real,closedTrade:!!real||/^(stop|target|closed)$/i.test(why||''),why:why||'',at:new Date().toISOString()});paper.orders=paper.orders.slice(0,200)};
+ const logOrder=(m,side,qty,price,real,why)=>{const at=new Date().toISOString(),closedTrade=!!real||/^(stop|target|closed)$/i.test(why||''),result=Number(real)||0;paper.orders.unshift({id:Date.now(),symbol:m.k,side,qty,price,valueZar:notional(m,price,qty),realisedZar:result,closedTrade,why:why||'',at});paper.orders=paper.orders.slice(0,200);if(closedTrade){const p=paper.performance||(paper.performance={version:1,count:0,wins:0,losses:0,breakeven:0,net:0,recent:[]});p.count++;if(result>0)p.wins++;else if(result<0)p.losses++;else p.breakeven++;p.net+=result;p.recent.unshift({symbol:m.k,realisedZar:result,why:why||'',at});p.recent=p.recent.slice(0,40)}};
 
  /* ---- engine: market fills, resting orders, stops and targets ---- */
  function place(m,side,amt,sl,tp,px,why){
@@ -1655,7 +1655,7 @@ view='cards';document.body.classList.remove('v-wall','v-focus');document.body.cl
   document.body.classList.remove('trade-profit','trade-drawdown','trade-near-sl','trade-near-tp');if(amb)document.body.classList.add(amb);
   if(amb!==lastAmb){if(amb==='trade-near-sl')buzz([70,50,70]);else if(amb==='trade-near-tp')buzz([40,40,40]);lastAmb=amb}
   if(ab){const ks=Object.keys(paper.positions);ab.classList.toggle('in',ks.length>0);ab.innerHTML=`<span class="ab-l">Account</span><span class="ab-v">${R(equity())}</span><span class="ab-s">${ks.length?'Open: '+esc(ks.join(', ')):'No open positions'}${paper.pending.length?' · '+paper.pending.length+' resting':''}</span>`}
-  if(accountSummary){const exits=paper.orders.filter(o=>o.closedTrade===true||Number(o.realisedZar)!==0),wins=exits.filter(o=>Number(o.realisedZar)>0).length,losses=exits.filter(o=>Number(o.realisedZar)<0).length,be=exits.length-wins-losses,wr=wins+losses?(wins/(wins+losses)*100).toFixed(1)+'%':'—';accountSummary.innerHTML=`<div><small>Equity</small><strong>${R(equity())}</strong></div><div><small>Available</small><strong>${R(avail())}</strong></div><div><small>Open P/L</small><strong class="${unreal(paper.positions)>=0?'up':'dn'}">${RS(unreal(paper.positions))}</strong></div><div><small>Realised P/L</small><strong class="${realised()>=0?'up':'dn'}">${RS(realised())}</strong></div><div><small>Win rate</small><strong>${wr}</strong><small>${wins}W · ${losses}L · ${be}BE</small></div>`;}
+  if(accountSummary){const perf=paper.performance||{wins:0,losses:0,breakeven:0},wins=perf.wins||0,losses=perf.losses||0,be=perf.breakeven||0,wr=wins+losses?(wins/(wins+losses)*100).toFixed(1)+'%':'—';accountSummary.innerHTML=`<div><small>Equity</small><strong>${R(equity())}</strong></div><div><small>Available</small><strong>${R(avail())}</strong></div><div><small>Open P/L</small><strong class="${unreal(paper.positions)>=0?'up':'dn'}">${RS(unreal(paper.positions))}</strong></div><div><small>Realised P/L</small><strong class="${realised()>=0?'up':'dn'}">${RS(realised())}</strong></div><div><small>Win rate</small><strong>${wr}</strong><small>${wins}W · ${losses}L · ${be}BE</small></div>`;}
   const o=paper.orders[0];
   if(o&&o.id!==seenId){seenId=o.id;const m=mOf(o.symbol);if(o.realisedZar&&m&&m._w){m._w.ctx={real:o.realisedZar,why:o.why||'',at:Date.parse(o.at)||Date.now()};call.textContent=o.symbol+' closed '+RS(o.realisedZar)+'. Write it down?';call.hidden=false;dock.style.setProperty('--wc',o.realisedZar>=0?'#3fbf7f':'#ef6878');wb.classList.add('call')}}
  }
